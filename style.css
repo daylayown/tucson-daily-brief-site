@@ -1,0 +1,215 @@
+/* Tucson Daily Brief — Desert/Southwest palette */
+
+:root {
+    --sand: #f5f0e6;
+    --tan: #e8dfd1;
+    --terracotta: #c75b39;
+    --terracotta-dark: #a84a2e;
+    --sage: #7a8b6f;
+    --brown: #3d3029;
+    --brown-light: #5c4a3f;
+    --rule: #d4c9b8;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--sand);
+    color: var(--brown);
+    line-height: 1.7;
+    font-size: 17px;
+    -webkit-font-smoothing: antialiased;
+}
+
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 2rem 1.25rem;
+}
+
+/* Header */
+
+header {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid var(--terracotta);
+}
+
+header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+}
+
+header h1 a {
+    color: var(--brown);
+    text-decoration: none;
+}
+
+header .tagline {
+    color: var(--brown-light);
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+    font-style: italic;
+}
+
+/* Navigation */
+
+nav {
+    margin-top: 0.75rem;
+}
+
+nav a {
+    color: var(--terracotta);
+    text-decoration: none;
+    font-size: 0.85rem;
+    margin-right: 1rem;
+}
+
+nav a:hover {
+    text-decoration: underline;
+}
+
+/* Post list on index */
+
+.post-list {
+    list-style: none;
+}
+
+.post-list li {
+    margin-bottom: 1.75rem;
+    padding-bottom: 1.75rem;
+    border-bottom: 1px solid var(--rule);
+}
+
+.post-list li:last-child {
+    border-bottom: none;
+}
+
+.post-list .post-date {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--sage);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.15rem;
+}
+
+.post-list a {
+    color: var(--terracotta);
+    text-decoration: none;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.post-list a:hover {
+    text-decoration: underline;
+}
+
+.post-list .post-lede {
+    color: var(--brown-light);
+    font-size: 0.92rem;
+    margin-top: 0.3rem;
+    line-height: 1.5;
+}
+
+/* Post page */
+
+article {}
+
+article .post-meta {
+    font-size: 0.8rem;
+    color: var(--sage);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 1.5rem;
+}
+
+article h2 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: var(--terracotta-dark);
+}
+
+article p {
+    margin-bottom: 1rem;
+}
+
+article strong {
+    font-weight: 600;
+}
+
+article .source {
+    font-size: 0.8rem;
+    color: var(--sage);
+    margin-top: -0.5rem;
+    margin-bottom: 1.25rem;
+}
+
+article hr {
+    border: none;
+    border-top: 1px solid var(--rule);
+    margin: 1.75rem 0;
+}
+
+article a {
+    color: var(--terracotta);
+    text-decoration: none;
+}
+
+article a:hover {
+    text-decoration: underline;
+}
+
+/* Footer */
+
+footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--rule);
+    font-size: 0.8rem;
+    color: var(--brown-light);
+    line-height: 1.6;
+}
+
+footer a {
+    color: var(--terracotta);
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
+
+footer .footer-links {
+    margin-top: 0.35rem;
+}
+
+/* Back link on post pages */
+
+.back-link {
+    display: inline-block;
+    margin-bottom: 1.5rem;
+    font-size: 0.85rem;
+    color: var(--terracotta);
+    text-decoration: none;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
+
+/* Empty state */
+
+.empty {
+    color: var(--brown-light);
+    font-style: italic;
+}
