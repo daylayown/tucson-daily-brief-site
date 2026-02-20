@@ -176,8 +176,8 @@ def render_post(date: datetime, body_html: str) -> str:
 <footer>
 <p>By Nicholas De Leon</p>
 <p class="footer-links">
-<a href="https://podcasts.apple.com/us/podcast/tucson-daily-brief/id1795533938">Apple Podcasts</a> &middot;
-<a href="https://www.youtube.com/@TucsonDailyBrief">YouTube</a>
+<a href="https://podcasts.apple.com/us/podcast/tucson-daily-brief/id1878173070">Apple Podcasts</a> &middot;
+<a href="https://www.youtube.com/@tucsondailybrief">YouTube</a>
 </p>
 </footer>
 
@@ -223,8 +223,8 @@ def render_index(posts: list[dict]) -> str:
 <footer>
 <p>By Nicholas De Leon</p>
 <p class="footer-links">
-<a href="https://podcasts.apple.com/us/podcast/tucson-daily-brief/id1795533938">Apple Podcasts</a> &middot;
-<a href="https://www.youtube.com/@TucsonDailyBrief">YouTube</a>
+<a href="https://podcasts.apple.com/us/podcast/tucson-daily-brief/id1878173070">Apple Podcasts</a> &middot;
+<a href="https://www.youtube.com/@tucsondailybrief">YouTube</a>
 </p>
 </footer>
 
