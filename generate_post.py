@@ -157,6 +157,13 @@ def render_post(date: datetime, body_html: str) -> str:
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{title}</title>
 <link rel="stylesheet" href="../style.css">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-MEYSB9GYF2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){{dataLayer.push(arguments);}}
+  gtag('js', new Date());
+  gtag('config', 'G-MEYSB9GYF2');
+</script>
 </head>
 <body>
 <div class="container">
@@ -177,7 +184,9 @@ def render_post(date: datetime, body_html: str) -> str:
 <p>By Nicholas De Leon</p>
 <p class="footer-links">
 <a href="https://podcasts.apple.com/us/podcast/tucson-daily-brief/id1878173070">Apple Podcasts</a> &middot;
-<a href="https://www.youtube.com/@tucsondailybrief">YouTube</a>
+<a href="https://www.youtube.com/@tucsondailybrief">YouTube</a> &middot;
+<a href="https://www.linkedin.com/in/nicholas-de-leon-3b5b6a9">LinkedIn</a> &middot;
+<a href="mailto:nicholas@daylayown.org">Email</a>
 </p>
 </footer>
 
@@ -207,6 +216,13 @@ def render_index(posts: list[dict]) -> str:
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tucson Daily Brief</title>
 <link rel="stylesheet" href="style.css">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-MEYSB9GYF2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){{dataLayer.push(arguments);}}
+  gtag('js', new Date());
+  gtag('config', 'G-MEYSB9GYF2');
+</script>
 </head>
 <body>
 <div class="container">
@@ -224,7 +240,9 @@ def render_index(posts: list[dict]) -> str:
 <p>By Nicholas De Leon</p>
 <p class="footer-links">
 <a href="https://podcasts.apple.com/us/podcast/tucson-daily-brief/id1878173070">Apple Podcasts</a> &middot;
-<a href="https://www.youtube.com/@tucsondailybrief">YouTube</a>
+<a href="https://www.youtube.com/@tucsondailybrief">YouTube</a> &middot;
+<a href="https://www.linkedin.com/in/nicholas-de-leon-3b5b6a9">LinkedIn</a> &middot;
+<a href="mailto:nicholas@daylayown.org">Email</a>
 </p>
 </footer>
 
