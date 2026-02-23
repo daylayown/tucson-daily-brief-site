@@ -44,7 +44,8 @@ Briefing files come from the Tucson Daily Brief podcast project at `~/.openclaw/
 - Single-column, max-width 600px, centered
 - System font stack, line-height 1.7
 - Mobile-friendly via viewport meta + fluid layout
-- Footer links to Apple Podcasts and YouTube
+- Footer links to Apple Podcasts, YouTube, LinkedIn, and Email
+- Google Analytics (GA4) tracking via gtag.js, measurement ID `G-MEYSB9GYF2`
 
 ## Deployment
 
