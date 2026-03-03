@@ -17,7 +17,7 @@ Static blog for GitHub Pages — minimal, text-first, Daring Fireball style. No 
 
 `generate_post.py` takes a briefing markdown file as input and:
 1. Extracts the date from the filename (e.g., `tucson-brief-2026-02-18.md` → `2026-02-18`)
-2. Converts the markdown to HTML (handles bold, emoji section headers, source citations, separators)
+2. Converts the markdown to HTML (handles bold, emoji section headers, source citations with links, separators)
 3. Writes an HTML post to `posts/YYYY-MM-DD.html`
 4. Rebuilds `index.html` by scanning all posts in `posts/` and listing them newest-first
 5. Is idempotent — running it twice with the same input overwrites cleanly, no duplicates
@@ -33,7 +33,9 @@ Briefing files come from the Tucson Daily Brief podcast project at `~/.openclaw/
 - Title line: "Tucson Daily Brief — February 18, 2026"
 - Emoji section headers (🏛️ Government, 🚨 Public Safety, etc.)
 - Bold story headlines with descriptions
-- Source citations prefixed with 📰 or 📄
+- Source citations prefixed with 📰 or 📄, in two possible formats:
+  - Markdown links (preferred): `📰 [Source Name](https://direct-article-url)`
+  - Plain text (legacy/fallback): `📰 Source Name`
 - ─── separators between sections
 - Weather section
 - Trailing metadata lines (stripped during conversion)
@@ -46,6 +48,19 @@ Briefing files come from the Tucson Daily Brief podcast project at `~/.openclaw/
 - Mobile-friendly via viewport meta + fluid layout
 - Footer links to Apple Podcasts, YouTube, LinkedIn, and Email
 - Google Analytics (GA4) tracking via gtag.js, measurement ID `G-MEYSB9GYF2`
+
+## Source Links
+
+`generate_post.py` includes a `SOURCE_URLS` dictionary mapping outlet names to their homepages, and a `linkify_sources()` function that handles two citation formats:
+
+1. **Markdown links** `[Source Name](url)` — links directly to the original article (preferred)
+2. **Plain text** `Source Name` — falls back to the outlet's homepage via `SOURCE_URLS` lookup
+
+The upstream briefing agent (`~/.openclaw/workspace/TUCSON-BRIEF.md`) is instructed to include direct article URLs in markdown link format. If it can't determine the URL for a story, plain text is acceptable and the homepage fallback kicks in.
+
+## Automation
+
+This site is part of a daily pipeline managed by `~/.openclaw/skills/tucson-daily-brief/scripts/run_podcast.sh`, triggered by cron at 6:10 AM MST. The pipeline: generates podcast audio → uploads RSS/R2 → generates YouTube video → uploads to YouTube → generates blog post → git push. Each distribution step (YouTube, blog post) is non-fatal so one failure doesn't block the others.
 
 ## Deployment
 
