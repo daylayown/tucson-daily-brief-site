@@ -16,6 +16,26 @@ from pathlib import Path
 SITE_DIR = Path(__file__).resolve().parent
 POSTS_DIR = SITE_DIR / "posts"
 
+# Map source outlet names to their homepages (longest names first to match greedily)
+SOURCE_URLS = {
+    "Arizona Luminaria": "https://azluminaria.org",
+    "AZ Luminaria": "https://azluminaria.org",
+    "Arizona Daily Star": "https://tucson.com",
+    "Arizona Mirror": "https://azmirror.com",
+    "AZPM": "https://www.azpm.org",
+    "Cronkite News": "https://cronkitenews.azpbs.org",
+    "Inside Tucson Business": "https://www.insidetucsonbusiness.com",
+    "KGUN 9": "https://www.kgun9.com",
+    "NWS Tucson": "https://forecast.weather.gov/MapClick.php?CityName=Tucson&state=AZ",
+    "SaddleBrooke Progress": "https://www.saddlebrookeprogress.com",
+    "This Is Tucson": "https://thisistucson.com",
+    "Tucson Agenda": "https://tucsonagenda.substack.com",
+    "Tucson Foodie": "https://www.tucsonfoodie.com",
+    "Tucson Local Media": "https://www.tucsonlocalmedia.com",
+    "Explorer News": "https://www.tucsonlocalmedia.com",
+    "CALÓ News": "https://calonews.org",
+}
+
 
 def parse_date_from_filename(filepath: str) -> datetime:
     """Extract date from a filename like tucson-brief-2026-02-18.md."""
@@ -67,7 +87,7 @@ def md_to_html(text: str) -> str:
         # Source citation line (starts with 📰 or 📄)
         if line.startswith("\U0001f4f0") or line.startswith("\U0001f4c4"):
             source_text = line.replace("\U0001f4f0", "").replace("\U0001f4c4", "").strip()
-            html_parts.append(f'<p class="source">{escape(source_text)}</p>')
+            html_parts.append(f'<p class="source">{linkify_sources(source_text)}</p>')
             i += 1
             continue
 
@@ -96,6 +116,21 @@ def md_to_html(text: str) -> str:
         html_parts.append(f"<p>{para_html}</p>")
 
     return "\n".join(html_parts)
+
+
+def linkify_sources(text: str) -> str:
+    """Replace known source names with hyperlinks. Matches longest names first
+    to avoid partial matches (e.g. 'Arizona Daily Star' before 'Arizona')."""
+    # Sort by length descending so longer names match first
+    for name in sorted(SOURCE_URLS, key=len, reverse=True):
+        url = SOURCE_URLS[name]
+        # Only replace if not already inside a tag
+        text = re.sub(
+            re.escape(name),
+            f'<a href="{url}">{escape(name)}</a>',
+            text,
+        )
+    return text
 
 
 def escape(text: str) -> str:
