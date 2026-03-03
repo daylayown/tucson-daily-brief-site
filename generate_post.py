@@ -119,18 +119,30 @@ def md_to_html(text: str) -> str:
 
 
 def linkify_sources(text: str) -> str:
-    """Replace known source names with hyperlinks. Matches longest names first
-    to avoid partial matches (e.g. 'Arizona Daily Star' before 'Arizona')."""
-    # Sort by length descending so longer names match first
+    """Convert source citation text to HTML with hyperlinks.
+
+    Handles two formats:
+    1. Markdown links: [Source Name](https://article-url) → direct article link
+    2. Plain text: Source Name → homepage link from SOURCE_URLS lookup
+    """
+    # First, convert any markdown-style links [Name](url)
+    def md_link_to_html(m):
+        name = m.group(1)
+        url = m.group(2)
+        return f'<a href="{escape(url)}">{escape(name)}</a>'
+
+    result = re.sub(r'\[([^\]]+)\]\((https?://[^)]+)\)', md_link_to_html, text)
+
+    # Then, linkify any remaining plain-text source names (fallback to homepage)
     for name in sorted(SOURCE_URLS, key=len, reverse=True):
         url = SOURCE_URLS[name]
-        # Only replace if not already inside a tag
-        text = re.sub(
-            re.escape(name),
+        # Only replace if not already inside an <a> tag
+        result = re.sub(
+            r'(?<![">])' + re.escape(name) + r'(?![^<]*</a>)',
             f'<a href="{url}">{escape(name)}</a>',
-            text,
+            result,
         )
-    return text
+    return result
 
 
 def escape(text: str) -> str:
