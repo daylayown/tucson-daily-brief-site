@@ -233,6 +233,7 @@ def render_post(date: datetime, body_html: str) -> str:
 <a href="https://podcasts.apple.com/us/podcast/tucson-daily-brief/id1878173070">Apple Podcasts</a> &middot;
 <a href="https://www.youtube.com/@tucsondailybrief">YouTube</a> &middot;
 <a href="https://www.linkedin.com/in/nicholas-de-leon-3b5b6a9">LinkedIn</a> &middot;
+<a href="https://www.instagram.com/daylayownphoto">Instagram</a> &middot;
 <a href="mailto:nicholas@daylayown.org">Email</a>
 </p>
 </footer>
@@ -289,6 +290,7 @@ def render_index(posts: list[dict]) -> str:
 <a href="https://podcasts.apple.com/us/podcast/tucson-daily-brief/id1878173070">Apple Podcasts</a> &middot;
 <a href="https://www.youtube.com/@tucsondailybrief">YouTube</a> &middot;
 <a href="https://www.linkedin.com/in/nicholas-de-leon-3b5b6a9">LinkedIn</a> &middot;
+<a href="https://www.instagram.com/daylayownphoto">Instagram</a> &middot;
 <a href="mailto:nicholas@daylayown.org">Email</a>
 </p>
 </footer>
