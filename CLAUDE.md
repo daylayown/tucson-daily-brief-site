@@ -18,7 +18,9 @@ Static blog for GitHub Pages — minimal, text-first, Daring Fireball style. No 
 ├── agenda_mining_tucson.py      # City of Tucson pipeline (Hyland OnBase PDF + pdftotext)
 ├── check_agendas.sh             # Daily cron wrapper: runs all 4 pipelines, auto-publishes, pushes
 ├── MEETING-WATCH-PIPELINE.md    # Full reference docs for the meeting watch system
+├── CNAME                        # Custom domain: tucsondailybrief.com
 ├── .nojekyll                    # Tells GitHub Pages to skip Jekyll
+├── .gitignore                   # Excludes __pycache__/
 └── CLAUDE.md
 ```
 
@@ -187,4 +189,14 @@ The hardest part is sourcing data, not the AI pipeline. Start with what Tucson/P
 
 ## Deployment
 
-Push to GitHub and enable GitHub Pages from the main branch root. `.nojekyll` ensures static serving.
+- **Live URL:** `https://tucsondailybrief.com` (custom domain via CNAME)
+- GitHub Pages from the main branch root, repo `daylayown/tucson-daily-brief-site`
+- `.nojekyll` ensures static serving
+
+### Cron schedule (system crontab)
+
+| Time (MST) | Job | Log |
+|---|---|---|
+| 6:00 AM | OpenClaw briefing agent | (OpenClaw internal) |
+| 6:10 AM | `run_podcast.sh` — Telegram, blog, podcast, YouTube | `/tmp/podcast-gen.log` |
+| 8:00 AM | `check_agendas.sh` — all 4 agenda pipelines | `/tmp/agenda-check.log` |
