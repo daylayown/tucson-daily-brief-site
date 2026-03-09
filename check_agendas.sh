@@ -102,7 +102,7 @@ while IFS= read -r preview_path; do
 
 A new \"What to Watch\" preview has been auto-published to Tucson Daily Brief.
 
-View it at: https://tucson.nicholasburk.com/meeting-watch/"
+View it at: https://tucsondailybrief.com/meeting-watch/"
 
             TMPFILE=$(mktemp /tmp/agenda-notify-XXXXX.md)
             echo "$NOTIFY_MSG" > "$TMPFILE"
