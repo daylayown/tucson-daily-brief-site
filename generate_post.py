@@ -280,6 +280,10 @@ def render_index(posts: list[dict]) -> str:
 <p class="tagline">An AI-powered local news pipeline by Nicholas De Leon</p>
 </header>
 
+<nav class="section-nav">
+<a href="meeting-watch.html">Meeting Watch &rarr;</a>
+</nav>
+
 <ul class="post-list">
 {post_list}
 </ul>
