@@ -1,5 +1,5 @@
 # Marana Town Council — Full Agenda Reference
-## Tuesday, March 03, 2026
+## Tuesday, March 17, 2026
 
 Council-Regular Meeting
 
@@ -23,7 +23,7 @@ NOTICE AND AGENDA
 
 11555 W. Civic Center Drive, Marana, Arizona 85653
 
-Council Chambers, March 3, 2026, at or after 6:00 PM
+Council Chambers, March 17, 2026, at or after 6:00 PM
 
 Jon Post, Mayor
 
@@ -39,15 +39,15 @@ Teri Murphy, Council Member
 
 John Officer, Council Member
 
- Pursuant to A.R.S. &sect;38-431.02, notice is hereby given to the members of the Marana Town Council and to the general public that the Town Council will hold a meeting open to the public on March 3, 2026, at or after 6:00 PM located in the Council Chambers of the Ed Honea Marana Municipal Complex, 11555 W. Civic Center Drive, Marana, Arizona.
+ Pursuant to A.R.S. &sect;38-431.02, notice is hereby given to the members of the Marana Town Council and to the general public that the Town Council will hold a meeting open to the public on March 17, 2026, at or after 6:00 PM located in the Council Chambers of the Ed Honea Marana Municipal Complex, 11555 W. Civic Center Drive, Marana, Arizona.
 
-ACTION MAY BE TAKEN BY THE COUNCIL ON ANY ITEM LISTED ON THIS AGENDA. Revisions to the agenda can occur up to 24 hours prior to the meeting. Added or revised language appears in italics. 
+ACTION MAY BE TAKEN BY THE COUNCIL ON ANY ITEM LISTED ON THIS AGENDA. Revisions to the agenda can occur up to 24 hours prior to the meeting. Added or revised language appears in italics . 
 
  As a courtesy to others, please turn off or put in silent mode all electronic devices. 
 
  Meeting Times 
 
-Welcome to this Marana Town Council meeting. Regular Council meetings are usually held the first and third Tuesday of each month at 6:00 PM at the Ed Honea Marana Municipal Complex, although the date or time may change and additional meetings may be called at other times and/or places. Contact the Town Clerk or watch for posted agendas for other meetings. This agenda may be revised up to 24 hours prior to the meeting. In such a case a new agenda will be posted in place of this agenda. Public access to the Council Chambers begins 20 minutes prior to the start of the meeting.
+Welcome to this Marana Town Council meeting. Regular Council meetings are usually held the first and third Tuesday of each month at 6:00 PM at the Ed Honea Marana Municipal Complex, although the date or time may change and additional meetings may be called at other times and/or places. Contact the Town Clerk or watch for posted agendas for other meetings. This agenda may be revised up to 24 hours prior to the meeting. In such a case a new agenda will be posted in place of this agenda. Public access to the Council Chambers begins 20 minutes prior to the start of the meeting. 
 
  Speaking at Meetings 
 
@@ -87,7 +87,7 @@ At this time any member of the public is allowed to address the Town Council on 
 
  P1 
 
- Presentation: Relating to Finance; presentation, discussion and possible direction on proposed changes to the Town of Marana Comprehensive Fee Schedule and other various rate and fee adjustments (Yiannis Kalaitzidis) 
+ Relating to Communications; Presentation and discussion regarding the Town of Marana's Tangerine Interchange Improvements Outreach Strategy (Vic Hathaway) 
 
  CONSENT AGENDA 
 
@@ -95,11 +95,19 @@ The Consent Agenda contains items requiring action by the Council which are gene
 
  C1 
 
- Resolution No. 2026-015: Relating to the Marana Police Department; approving and authorizing the Mayor to execute ADOA Agreement Number DBF2025SB1735-RMS18 with the Arizona Department of Administration for funding of a law enforcement records management and data sharing system (Callie LeRoy) 
+ Ordinance No. 2026.006 : Relating to Land Development; amending Town Code Title 17 (Land Development), Chapter 17-13 (Standards for Grading and Site Work); revising section 17-13-5 &ldquo;Submittal and procedures; general&rdquo; to revise provisions related to permit expiration and extension, and to add provisions related to permit reactivation; revising section 17-13-7 &ldquo;Submittals and procedures: major grading type 2&rdquo; to add provisions for at-risk permit revocations; and designating an effective date (Jane Fairall) 
 
  C2 
 
- Approval of Regular Council Meeting Summary Minutes of February 17, 2026, and Special Council Meeting / Retreat Summary Minutes of February 11-12, 2026 (Jill McCleary) 
+ Resolution No. 2026-017 : Relating to Mayor and Council; approving the updated Town of Marana Code of Principle- and Ethics-Centered Governance (Jane Fairall) 
+
+ C3 
+
+ Resolution No. 2026-018 : Relating to Real Estate; approving the established administrative process for the issuance of right-of-way license agreements for landscaping, irrigation, hardscape, drainage, decorative and interim driveway, entry monumentation, signage and other privately-owned improvements within the public right-of-way; and authorizing the Town Engineer and the Town Director of Public Works to execute right-of-way license agreements on behalf of the Town under appropriate circumstances (Jane Fairall) 
+
+ C4 
+
+ Approval of Regular Council Meeting Summary Minutes of March 3, 2026 (Jill McCleary) 
 
  LIQUOR LICENSES 
 
@@ -107,15 +115,19 @@ The Consent Agenda contains items requiring action by the Council which are gene
 
  COUNCIL ACTION 
 
+ A1 
+
+ PUBLIC HEARING: Ordinance No. 2026.007 : Relating to Land Development; amending Marana Town Code Title 17 (Land Development), Chapter 17-6 (General and Miscellaneous Development Regulations) by amending Section 17-6-14 &ldquo;Accessory Dwelling Units&rdquo; to revise the definition of &ldquo;Restricted-affordable dwelling unit&rdquo;, to clarify provisions related to the use of accessory dwelling units as short-term rentals, and to update an exception for land in the vicinity of a public airport; making conforming revisions to title 9 (Business Regulations), chapter 9-14 (Short-Term and Vacation Rentals), section 9-14-9 &ldquo;Compliance with laws; prohibited uses; accessory dwelling units&rdquo; regarding the use of accessory dwelling units as short-term rentals; and designating an effective date (Jane Fairall) 
+
  ITEMS FOR DISCUSSION / POSSIBLE ACTION 
 
  D1 
 
- Relating to Development and Public Works; update, discussion, and possible direction regarding public and private projects and development applications on the Town&rsquo;s Marana Current and Proposed Projects internet site (Jason Angell) 
+ Relating to Legislation and Government Actions; discussion and possible action or direction regarding all pending state, federal, and local legislation/government actions and on recent and upcoming meetings of other governmental bodies (Terry Rozema) 
 
  D2 
 
- Resolution No. 2026-016: Relating to Community Facility Districts; consideration and possible adoption of a resolution ordering and declaring formation of Cascada Community Facilities District (Yiannis Kalaitzidis) 
+ Relating to Budget; discussion, direction and possible action regarding development of the fiscal year 2026/2027 budget, including proposed budget initiatives and expenditures (Terry Rozema) 
 
  EXECUTIVE SESSIONS 
 
@@ -124,6 +136,14 @@ Pursuant to A.R.S. &sect; 38-431.03, the Town Council may vote to go into execut
  E1 
 
  Executive Session pursuant to A.R.S. &sect;38-431.03 (A), Council may ask for discussion or consideration, or consultation with designated Town representatives, or consultation for legal advice with the Town Attorney, concerning any matter listed on this agenda for any of the reasons listed in A.R.S. &sect;38-431.03 (A). 
+
+ E2 
+
+ Executive session pursuant to A.R.S. &sect; 38-431.03(A)(3) & (4) for discussion or consultation with the Town&rsquo;s attorneys to consider the Council&rsquo;s position and instruct the Town&rsquo;s attorneys regarding pending litigation related to Unrein v. Town of Marana, et al ., Pima County Superior Court case number C20254246. 
+
+ E3 
+
+ Executive session pursuant to A.R.S. &sect; 38-431.03(A)(3) & (4) for discussion or consultation with the Town&rsquo;s attorneys to consider the Council&rsquo;s position and instruct the Town&rsquo;s attorneys regarding pending litigation related to Marana Citizens for Ethical and Transparent Government, et al. v. Town of Marana, et al. , Pima County Superior Court case number C20261567, and Fremont Peak Properties, LLC v. Town of Marana, et al. , Pima County Superior Court case number C20261773. 
 
  FUTURE AGENDA ITEMS 
 

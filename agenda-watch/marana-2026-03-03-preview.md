@@ -7,7 +7,7 @@ Council-Regular Meeting
 
 # Marana Town Council Meeting — March 3, 2026
 
-This is a relatively light agenda for a fast-growing town, with just two substantive action items and one major presentation. However, the fee schedule overhaul and a new Community Facilities District formation carry real financial implications for Marana residents and developers.
+This is a relatively light agenda for a fast-growing town with several major controversies simmering, featuring just two substantive action items alongside a significant fee schedule presentation. The most newsworthy elements center on a new special taxing district for a major development and a town-wide fee increase discussion that will hit residents' wallets.
 
 ---
 
@@ -15,37 +15,49 @@ This is a relatively light agenda for a fast-growing town, with just two substan
 
 ---
 
-### 1. 💰 Town Fees Are Going Up — Here's What Could Cost You More
-**Item P1 — Presentation | NOT on consent agenda**
+### 1. 💰 Town Considering Fee Hikes Across Multiple Services — Public Has a Chance to Weigh In
 
-The town's finance director will present proposed changes to Marana's Comprehensive Fee Schedule, covering a wide range of rates and fees charged to residents and businesses. Fee schedule overhauls touch everything from development permits and utility hookups to parks and recreation charges, and in a rapidly growing town, development-related fee increases can directly affect housing costs and the pace of construction. This is a presentation with "possible direction," meaning the council could signal where it wants to go — residents and builders should pay close attention before final adoption.
+**Presentation Item P1 | Not on consent agenda — discussion item**
 
----
-
-### 2. 🏘️ New Community Facilities District Could Shift Tax Burden in Growing Area
-**Item D2 — Resolution No. 2026-016 | NOT on consent agenda**
-
-The council will consider formally creating the **Cascada Community Facilities District (CFD)**, a financing mechanism that allows new developments to issue bonds repaid through a special property tax levy on homeowners within the district. CFDs are a common tool in fast-growing Arizona towns to fund roads, water lines, and other infrastructure — but they mean buyers in that subdivision will pay a higher property tax rate than neighbors outside the district, sometimes for decades. Prospective homebuyers in the Cascada area need to understand this financial obligation before they sign.
+Finance staff will present proposed changes to Marana's Comprehensive Fee Schedule, covering a range of town services and rates. Fee schedule updates can affect everything residents and developers pay for permits, utilities, recreation programs, and municipal services — meaning this touches virtually every household and business in Marana. While this is listed as a presentation with "possible direction" rather than a final vote, it signals what's coming and represents the public's best early opportunity to push back before changes are locked in.
 
 ---
 
-### 3. 🚔 State Grant Would Modernize Marana PD's Records System
-**Item C1 — Resolution No. 2026-015 | ON CONSENT AGENDA**
+### 2. 🏘️ New Special Tax District Would Finance Infrastructure for Major Marana Development
 
-Marana is accepting state funding through the Arizona Department of Administration to upgrade its law enforcement **records management and data-sharing system**. While routine-looking, this matters: modern RMS platforms enable data sharing between agencies — relevant context given Marana's proximity to federal immigration enforcement operations and the proposed ICE detention facility at the former state prison. How Marana PD shares data, and with whom, is worth tracking as that controversy continues.
+**Action Item D2 — Resolution No. 2026-016 | Not on consent agenda — council vote required**
 
----
+The council will consider formally creating the **Cascada Community Facilities District (CFD)**, a special taxing mechanism that allows infrastructure costs for a large development to be financed through bonds repaid by property taxes levied on future residents within the district. CFDs are a common but consequential tool in Arizona's fast-growth communities — they can enable large subdivisions to proceed quickly, but homebuyers who purchase in CFD-burdened neighborhoods often pay significantly higher property tax rates than neighboring residents and may not fully understand the extra tax load at closing. Cascada is a large master-planned community in Marana's growth corridor, and this vote would mark a major step toward accelerating its buildout.
 
-### 4. 🏗️ Development Pipeline Update — What's Coming to Marana?
-**Item D1 — Discussion/Possible Direction | NOT on consent agenda**
-
-The council will receive its regular update on current and proposed development projects across town. Given the ongoing data center rezoning controversy, active litigation over referendum petitions, and rapid I-10 corridor growth, this briefing is a key opportunity to spot new applications or project changes before they become flashpoints. Beat reporters should review the linked **Marana Current and Proposed Projects** page ahead of the meeting for anything new in the pipeline.
+**Why it matters regionally:** Marana has been aggressively using CFDs to fund infrastructure for new growth, raising ongoing questions about whether the town is growing faster than its long-term fiscal capacity — a tension familiar to the broader Tucson metro area.
 
 ---
 
-*Note: The absence of any public hearings, major zoning votes, or immigration detention-related items on this agenda suggests the bigger Marana stories — the data center lawsuit and ICE facility proposal — are still playing out in courts and at the county/state level rather than at the council dais this week.*
+### 3. 🖥️ State Grant Would Fund Police Records Modernization and Data Sharing
+
+**Consent Item C1 — Resolution No. 2026-015 | On consent agenda**
+
+The council is set to approve an agreement with the **Arizona Department of Administration** to receive state funding for a new law enforcement **records management and data sharing system** for the Marana Police Department. The item is routine procedurally, but the substance matters: records management and inter-agency data sharing systems can affect how Marana PD shares information with other law enforcement agencies — including federal ones. Given the active controversy over a **proposed ICE immigration detention facility** tied to Marana's former state prison site, any expansion of Marana PD's data-sharing infrastructure is worth flagging for readers tracking that story. It's worth asking town officials which agencies the new system would share data with.
 
 ---
-*Generated 2026-03-12 08:00 by Tucson Daily Brief agenda mining pipeline using claude-sonnet-4-6.*
+
+### 4. 🏗️ Development Pipeline Update Offers Window Into Marana's Growth Pressure
+
+**Action Item D1 | Not on consent agenda — discussion item**
+
+Staff will present an update on public and private projects and development applications currently in Marana's pipeline. While this is a recurring agenda item, it consistently provides the most concrete, up-to-date look at what's being built — or proposed — along the I-10 corridor and elsewhere in town. Reporters and residents tracking the **data center rezoning controversy** or other land use disputes should monitor this update for any newly submitted applications or status changes on contested projects.
+
+---
+
+## What's Missing From This Agenda
+
+Notably absent from the March 3 agenda: any direct action on the **proposed ICE detention facility** at the former Arizona State Prison-Marana site, or any update on the **data center rezoning lawsuits**. Residents following those stories should watch for future agenda items and monitor the Call to the Public, where community members may raise those issues regardless of whether they appear as action items.
+
+---
+
+*The Marana Town Council meets at 6 p.m. Tuesday at the Ed Honea Marana Municipal Complex, 11555 W. Civic Center Drive. The meeting is open to the public.*
+
+---
+*Generated 2026-03-13 08:01 by Tucson Daily Brief agenda mining pipeline using claude-sonnet-4-6.*
 *AI-assisted journalism — reviewed by a human editor before publication.*
 *Source: [Town of Marana Agendas](https://destinyhosted.com/agenda_publish.cfm?id=62726)*
