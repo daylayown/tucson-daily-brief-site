@@ -5,82 +5,73 @@ Council-Regular Meeting
 
 ---
 
-# Marana Town Council Meeting — March 17, 2026
+# Marana Town Council Meeting Preview: March 17, 2026
 
-This meeting features several consequential items touching on development regulation, housing affordability, and short-term rental policy — but the biggest story of the night may happen behind closed doors, as the Council heads into executive session to discuss **two active lawsuits directly tied to the ongoing data center rezoning controversy**.
-
----
-
-## Top Stories to Watch
+Two active lawsuits over the data center rezoning controversy headline a packed agenda that also tackles housing policy, development regulations, and the town's next budget cycle — all against the backdrop of Marana's rapid growth along the I-10 corridor.
 
 ---
 
-### 1. 🔴 Data Center Lawsuit Strategy Discussed in Secret Session
-**E3 — Executive Session: *Marana Citizens for Ethical and Transparent Government v. Town of Marana* and *Fremont Peak Properties v. Town of Marana***
-
-The Town Council will meet privately to strategize with attorneys on two separate active lawsuits stemming from the data center rezoning fight — the most politically charged dispute in Marana in recent memory. One suit (*Marana Citizens*) appears tied to the rejected referendum petition effort, while the other (*Fremont Peak Properties*) suggests a developer or property owner is also in legal conflict with the Town. Because this is executive session, the public will hear nothing — but residents should know their tax dollars are now funding litigation defense on multiple fronts over this controversy.
-
-> ⚠️ *Not open to public. But the mere existence of two named lawsuits on the same agenda item is itself news.*
+## Top Items to Watch
 
 ---
 
-### 2. 🔴 A Second Lawsuit — Who Is Unrein, and What Are They Suing Over?
-**E2 — Executive Session: *Unrein v. Town of Marana*, Pima County Superior Court No. C20254246**
+### 1. Council Gets Legal Marching Orders on Three Active Lawsuits — Including Data Center Fight
+**Executive Sessions E2 and E3 | Not on Consent Agenda**
 
-A separate, previously low-profile lawsuit against the Town will also be discussed privately. The case number dates to 2025, suggesting it has been active for some time. The nature of the dispute is not disclosed on the agenda, which itself warrants a records request. Residents deserve to know what legal exposure the Town is carrying and why.
+The council will retreat behind closed doors to discuss litigation strategy in three separate lawsuits: *Unrein v. Town of Marana*, and two cases directly tied to the data center rezoning controversy — *Marana Citizens for Ethical and Transparent Government v. Town of Marana* and *Fremont Peak Properties, LLC v. Town of Marana*. The data center cases, filed in Pima County Superior Court in 2026, stem from the town's rejection of citizen referendum petitions challenging a rezoning decision, making this one of the highest-stakes legal battles in Marana's recent history. While the closed-door sessions are private by law, the mere existence of three simultaneous lawsuits signals significant legal and financial exposure for Marana taxpayers.
 
-> ⚠️ *Reporter action item: Pull court records on C20254246 before the meeting.*
-
----
-
-### 3. 🟠 Public Hearing: Can Your Neighbor Rent Their Backyard Casita on Airbnb?
-**A1 — PUBLIC HEARING: Ordinance No. 2026.007 — Accessory Dwelling Units & Short-Term Rentals**
-
-The Council is holding a public hearing on changes to rules governing **accessory dwelling units (ADUs)** — the casitas and garage apartments common in the Tucson metro — specifically clarifying when and whether they can be used as short-term rentals (think Airbnb, Vrbo). The ordinance also revises the definition of "restricted-affordable dwelling unit," which could affect how ADUs count toward affordability goals in a housing market under severe pressure. **This is the one item on the agenda where the public can formally weigh in**, making it the most important opportunity for community engagement at this meeting.
-
-> 📢 *This is a public hearing — residents can and should speak.*
+> **Why it matters:** Residents who signed or supported those referendum petitions — and those watching the data center development closely — should know the town is actively strategizing against citizen-led legal challenges. Any public statements from the mayor or manager after the executive session will be worth scrutinizing.
 
 ---
 
-### 4. 🟠 FY 2027 Budget Talks Begin — Watch for Growth-Related Spending
-**D2 — Budget Discussion: Fiscal Year 2026/2027 Development**
+### 2. Public Hearing: Town Revisits Rules on Accessory Dwelling Units and Short-Term Rentals
+**Item A1 | Public Hearing — Community Input Welcome**
 
-The Town is formally opening discussions on next year's budget, including proposed initiatives and expenditures. In a town growing as fast as Marana, budget priorities reveal everything: Is water infrastructure keeping pace with new subdivisions? Are roads and public safety staffed adequately for a larger population? What is the Town spending to defend its lawsuits? This is the opening move in a months-long process, and what gets proposed now shapes what gets funded later.
+The council will hold a public hearing on changes to Marana's accessory dwelling unit (ADU) ordinance, specifically revising the definition of "restricted-affordable dwelling units" and clarifying when ADUs can — and cannot — be used as short-term rentals like Airbnb or Vrbo. The amendment also updates rules for properties near a public airport. This is one of the few items on the agenda where residents can formally address the council.
 
-> 📋 *Consent Agenda: No — this is a discussion/direction item. Watch for any specific dollar figures or program proposals floated by the Town Manager.*
-
----
-
-### 5. 🟡 Grading Permit Rules Tightened Amid Development Boom
-**C1 — Ordinance No. 2026.006 — Grading Permit Expiration, Extension & Revocation Rules**
-***(Consent Agenda)***
-
-In a fast-growing town with active construction across the I-10 corridor, this ordinance update quietly matters: it revises when grading permits expire, how they can be extended or reactivated, and — critically — **adds provisions for "at-risk" permit revocations**. Grading is the first physical step in any major development, and tightening these rules could be a check on developers who sit on permits without building, a known issue in high-growth Arizona towns. Worth flagging even though it's on the consent agenda.
+> **Why it matters:** ADU policy sits at the intersection of two of the hottest issues in the Tucson metro: housing affordability and the proliferation of short-term rentals that remove housing stock from the long-term market. How Marana defines "affordable" ADUs and restricts their use as vacation rentals could set a precedent in the region and directly affect both renters and neighbors in fast-growing Marana subdivisions.
 
 ---
 
-### 6. 🟡 Tangerine Interchange Outreach — Major Road Project Affecting NW Tucson Commuters
-**P1 — Presentation: Tangerine Interchange Improvements Outreach Strategy**
+### 3. FY 2026-27 Budget: Early Look at How Marana Plans to Pay for Growth
+**Item D2 | Discussion and Possible Action**
 
-The Tangerine Road/I-10 interchange is a critical chokepoint for tens of thousands of northwest Tucson–area commuters and connects to the broader RTA regional transportation story. A formal "outreach strategy" presentation suggests the Town is gearing up for a significant public engagement phase on this project. While this is a presentation rather than a vote, understanding the timeline and scope matters for anyone who drives I-10 north of Tucson.
+Town Manager Terry Rozema will open the floor for discussion on proposed initiatives and expenditures for the upcoming fiscal year budget. This is the early-shaping stage — the moment when spending priorities get set before formal adoption.
 
----
-
-## What to Watch For Tonight
-
-| Priority | Item | Why It Matters |
-|---|---|---|
-| 🔴 High | E2 & E3 Executive Sessions | Data center lawsuits + mystery 2025 suit |
-| 🟠 High | A1 Public Hearing | ADU/short-term rental rules, public can speak |
-| 🟠 Medium | D2 Budget | FY27 spending priorities set tonight |
-| 🟡 Watch | C1 Grading Permits | Development oversight in a boom town |
-| 🟡 Watch | P1 Tangerine Interchange | Regional commuter infrastructure |
+> **Why it matters:** With Marana adding residents at a pace that strains infrastructure, roads, and water systems, the budget conversation will reveal whether the town is keeping up with its own growth. Watch for signals on water infrastructure funding, public safety staffing, and any line items connected to the contested data center or other large development projects. This is the right time for residents to weigh in before numbers get locked in.
 
 ---
 
-*Meeting begins at 6:00 PM at the Ed Honea Marana Municipal Complex, 11555 W. Civic Center Drive. Speaker cards for the public hearing must be submitted to the Town Clerk before that item is called.*
+### 4. Grading Permit Rules Tightened as Development Boom Continues
+**Item C1 — Ordinance No. 2026.006 | On Consent Agenda**
+
+A proposed ordinance would revise Marana's grading and site work rules, tightening permit expiration and extension timelines and — notably — adding a new provision allowing "at-risk permit revocations" for major grading projects. The changes amend Town Code Chapter 17-13.
+
+> **Why it matters:** In a town where earth is constantly being moved for new subdivisions and commercial pads along the I-10 corridor, grading permits are a routine but consequential tool. The addition of at-risk revocation authority gives the town new leverage over developers who may hold permits without actively building — a potential check on speculative land activity. Because it's on the consent agenda, it could pass without debate unless a council member pulls it.
 
 ---
-*Generated 2026-03-16 08:00 by Tucson Daily Brief agenda mining pipeline using claude-sonnet-4-6.*
+
+### 5. Tangerine Interchange Outreach Strategy Previewed
+**Presentation P1 | No Vote Required**
+
+Town communications staffer Vic Hathaway will present Marana's public outreach strategy for the Tangerine Road interchange improvement project. No vote is scheduled — this is informational only.
+
+> **Why it matters:** The Tangerine interchange is a critical chokepoint for residents in rapidly developing north Marana, and any construction or redesign will affect daily commutes for thousands of households. The outreach strategy presentation is worth watching to understand the project timeline, what public input opportunities are planned, and whether the community engagement approach is substantive or largely cosmetic. Tucson-area commuters who use Tangerine as an I-10 access point should also pay attention.
+
+---
+
+### 6. State and Federal Legislative Watch: Immigration Policy, Local Implications?
+**Item D1 | Discussion and Possible Action**
+
+The council's standing item on pending state, federal, and local legislation will be led by Town Manager Terry Rozema. The discussion is open-ended but could touch on any active policy fronts.
+
+> **Why it matters:** With the proposed ICE immigration detention facility at the former state prison site still an active story in Marana, any state or federal legislative developments related to immigration enforcement infrastructure are relevant here. Residents and advocates on all sides of that issue should watch whether council members raise it under this agenda item or whether it remains conspicuously absent from discussion.
+
+---
+
+*The meeting begins at 6:00 PM in the Council Chambers at 11555 W. Civic Center Drive, Marana. Speaker cards for public comment must be submitted to the Town Clerk before the relevant agenda item is called.*
+
+---
+*Generated 2026-03-17 08:00 by Tucson Daily Brief agenda mining pipeline using claude-sonnet-4-6.*
 *AI-assisted journalism — reviewed by a human editor before publication.*
 *Source: [Town of Marana Agendas](https://destinyhosted.com/agenda_publish.cfm?id=62726)*
