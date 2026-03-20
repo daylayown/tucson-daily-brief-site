@@ -205,10 +205,11 @@ Attachments (1):
 Recommended Use of Project Blue Land Sale Proceeds
 Discussion/Direction/Action regarding the recommended use of Project Blue land sale proceeds. _Agenda Item_
 
-Attachments (3):
+Attachments (4):
 - CA_CAMemo_ProjectBlueLandSaleProceeds
 - CA_CAMemo_ProjectBlueLandSaleProceeds_2-27-26
 - CA_ProjectBlueLandSaleProceeds_CommLtr_3-2-26
+- CA_CAMemo_ProjectBlueLandSaleProceeds_3-18-26
 
 [View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21001&GUID=206ECD04-67F9-4EAD-941D-77D359D4CA67)
 
@@ -271,8 +272,9 @@ Attachments (1):
 ### **40.** Canvass
 Pursuant to A.R.S. §16-642(A), canvass of the election results for the March 10, 2026 Special Election. _Agenda Item_
 
-Attachments (1):
+Attachments (2):
 - EL_BOSAIR_SpecialElectionCanvass
+- EL_SpecialElectionCanvass_3-19-26
 
 [View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=20933&GUID=AF1AB6DB-75E6-4BB4-AC1E-7798B3B10935)
 
@@ -678,5 +680,5 @@ Attachments (2):
 [View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21005&GUID=A19DEBC3-C8DF-4F74-BC41-1DA1FB02A7AF)
 
 ---
-*Generated 2026-03-19 08:00 by Tucson Daily Brief agenda mining pipeline*
+*Generated 2026-03-20 08:00 by Tucson Daily Brief agenda mining pipeline*
 *Source: [Pima County Legistar](https://pima.legistar.com/Calendar.aspx)*

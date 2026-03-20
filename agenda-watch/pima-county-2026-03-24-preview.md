@@ -7,93 +7,106 @@ Board of Supervisors' Hearing Room
 
 ---
 
-# Pima County Board of Supervisors Meeting Preview: March 24, 2026
+# Pima County Board of Supervisors — March 24, 2026
+### Meeting Preview: Tucson Daily Brief
 
-The March 24 agenda is unusually heavy, with supervisors tackling a politically charged ordinance targeting masked protest groups, a major comprehensive plan update affecting all development in the county, and critical decisions about the county's financial future and leadership. Residents should expect a long session with significant public comment on several contested items.
-
----
-
-## 🔴 Top Stories to Watch
+This packed agenda features a politically charged debate over regulating masked protest groups, a major vote on a new countywide comprehensive plan, and decisions on homelessness funding, sewer rate increases, and the county's long-term spending authority. Supervisors will also take up the ongoing search for a permanent County Administrator and decide how to spend proceeds from a major land sale.
 
 ---
 
-### 1. "Anti-Mask" Ordinance Returns After Contentious First Hearing — Civil Liberties Fight Brewing
-**Item 15 (Unfinished Business from 3/3/26) | Public Hearing — Full Board Vote Expected**
-
-The Board is revisiting Ordinance No. 2026-2, which would add a new chapter to the Pima County Code regulating "unidentified masked groups causing intimidation," explicitly exempting law enforcement. The item was tabled at the March 3 meeting (community letters were redacted in the agenda packet, suggesting significant public response) and the Board sought closed-door legal advice on the same topic earlier in today's session (Item 10). This is among the most politically charged items on the agenda — civil liberties advocates are likely to argue it criminalizes protest, while supporters frame it as a public safety measure; the outcome could set a precedent for how the county responds to masked demonstrations in the current national climate.
-
-*Connected story: Ongoing national tensions over protest rights, immigration enforcement, and militia activity in Southern Arizona.*
+## Top Stories to Watch
 
 ---
 
-### 2. Pima Prospers 2025: County's Blueprint for All Future Development Goes to a Vote
-**Item 22 | Public Hearing — Resolution No. 2026-14 | All Districts**
+### 1. 'Unmasked' Ordinance Heads to Final Vote — Civil Liberties Groups Watching Closely
+**Item 15 | Public Hearing | Unfinished Business from 3/3/26**
 
-The Board is being asked to adopt the Pima Prospers 2025 Comprehensive Plan Update (Resolution No. 2026-14), the county's foundational land-use policy document that governs where housing, industry, commerce, and open space can go for the next decade-plus. A comprehensive plan update affects every rezoning, every development application, and every infrastructure investment decision the county makes — it is effectively the rulebook for how Pima County grows. Any resident concerned about sprawl, water resources, housing affordability, or desert preservation should pay close attention, as this document will shape the county's physical and economic landscape for years.
+The Board will hold a final public hearing and vote on **Ordinance No. 2026-2**, which would add a new chapter to the Pima County Code regulating "unidentified masked groups causing intimidation." The ordinance explicitly exempts identified law enforcement officers. This item has been continued from the March 3 meeting, suggesting prior controversy or unresolved legal questions — and the Board is also seeking separate executive session legal advice on the same topic (Item 10), signaling ongoing concerns about the ordinance's constitutionality. Civil liberties advocates and First Amendment attorneys are likely to weigh in, and the political timing — amid heightened national tensions over protest activity — makes this one of the most watched items on the agenda.
 
----
-
-### 3. County Could Ask Voters to Lift a Spending Cap That's Been in Place Since 1979
-**Items 23 & 29 | Public Hearing + Meeting Schedule Amendment | All Districts**
-
-The Board is holding a public hearing on adjusting Pima County's 1979-80 base expenditure limit — a constitutional spending cap that restricts how much the county can spend regardless of revenue — and separately voting to add a special April 21 meeting specifically to refer a ballot measure to the November 2026 general election on the issue. This matters enormously for county finances: if the cap is constraining the county's ability to fund services amid ongoing budget pressures, lifting it could allow expanded public safety, health, and infrastructure spending — but it would also require voter approval and is likely to generate debate about government spending and accountability.
-
-*Connected story: Pima County's ongoing structural budget deficit.*
+> ⚠️ **Not on consent calendar** — Public hearing with community input opportunity.
 
 ---
 
-### 4. County Administrator Hiring Process Gets Scrutiny — District 3 Forces a Public Conversation
-**Items 30 & 31 | Executive Session + Discussion/Direction/Action | District 3**
+### 2. Pima Prospers 2025: A New Blueprint for County Growth Gets Its Final Hearing
+**Item 22 | Public Hearing | All Districts**
 
-Supervisors will go into closed session for legal advice on the County Administrator hiring process, then emerge to discuss and potentially act on it in open session — a sequence that signals real tension on the dais. The County Administrator is the top unelected official running day-to-day county government, and how that hire is conducted (search firm, public input, timeline, internal vs. external candidates) is a significant governance story. The fact that this was submitted by District 3 suggests at least one supervisor has concerns about how the process is being managed.
+**Resolution No. 2026-14** would formally adopt the **Pima Prospers 2025 Comprehensive Plan Update** — the county's foundational land-use and growth policy document that will govern development decisions across unincorporated Pima County for years to come. The plan affects everything from housing density and environmental protection to transportation and economic development corridors. This is one of the most consequential long-range planning votes the Board takes, and the outcome will shape rezoning decisions, infrastructure investment, and conservation priorities for the next decade-plus.
 
----
-
-### 5. Project Blue Land Sale Proceeds: How Will the County Spend a One-Time Windfall?
-**Item 32 (Unfinished Business from 3/3/26) | Discussion/Direction/Action**
-
-Also returning from the March 3 meeting, the Board must decide what to do with proceeds from the "Project Blue" land sale — a disposition of county-owned property that generated a lump sum of cash. The decision of how to deploy a one-time land sale windfall — whether toward debt reduction, affordable housing, infrastructure, or reserves — is both a fiscal and political story, especially given the county's budget deficit. Community letters were filed on the item, suggesting organized public interest in the outcome.
-
-*Connected story: County budget deficit, affordable housing shortage.*
+> ⚠️ **Not on consent calendar** — Public hearing open to all districts.
 
 ---
 
-### 6. $875K General Fund Hit to Repay Federal Grant — How Did This Happen?
-**Item 43 | Consent Calendar ⚠️**
+### 3. Voters May Decide Whether to Lift a 47-Year-Old County Spending Cap
+**Items 23 & 29 | Public Hearing + Amended Meeting Schedule**
 
-Buried in the consent calendar is a staff recommendation to pull **$874,974.34 from the General Fund Reserve** to reimburse United Way Worldwide for EFSP-HR22 (Emergency Food and Shelter Program) grant funds. The county is apparently on the hook to pay back federal grant money, and is doing so by raiding its reserve fund. This raises accountability questions — why did the county have to reimburse this grant, and what does it mean for already-stretched reserves? Because it's on the consent calendar, it could pass with zero public discussion.
+The Board is holding a public hearing on **adjusting Pima County's 1979-80 Base Expenditure Limit** — an Arizona constitutional cap on government spending that dates back to the Proposition 108 era. Item 29 would add a special April 21 meeting specifically to refer a ballot measure to the **November 2026 general election** asking voters to raise that limit. County officials have been signaling for months that the spending cap is increasingly constraining their ability to deliver services amid a structural budget deficit. This is a major fiscal and political story with direct implications for every county department and service.
 
----
-
-### 7. South Wilmot Road Industrial Rezoning: Solar Energy Facility Eyed for 18 Acres
-**Item 18 | Public Hearing | District 2**
-
-Wilmot 8890, L.L.C. — represented by Solace Energy Center — is seeking to rezone 18 acres along South Wilmot Road from suburban homestead to General Industrial (Cl-2) with Planning and Zoning recommending unanimous approval. The applicant's representation by an entity named "Solace Energy Center" strongly suggests a solar or other energy facility is planned, which would be a significant land-use change for the area and connects to broader questions about industrial development in south Pima County. Neighbors in District 2 should be aware this is a public hearing and their last formal opportunity to comment.
+> ⚠️ **Not on consent calendar** — Public hearing, with ballot referral vote coming April 21.
 
 ---
 
-### 8. St. Luke's Home on the Brink: County Asked to Provide $100K Lifeline for 53 Vulnerable Residents
-**Item 28 | Discussion/Direction/Action | District 1**
+### 4. Project Blue Land Sale: How Should Pima County Spend a Windfall?
+**Item 32 | Unfinished Business from 3/3/26**
 
-Supervisor Rex Scott's office is asking the Board to authorize **$100,000 from the General Fund Contingency** to provide bridge funding to Catholic Community Services to keep St. Luke's Home — a transitional/supportive housing facility — operating during a handoff year, directly protecting 53 current residents from losing housing. This is a human-impact story at the intersection of homelessness, social services, and county finances, and the use of contingency funds (rather than budgeted dollars) means it requires board authorization. It also connects directly to Item 33, a broader update on county homelessness and public safety initiatives also on the agenda.
+This item — continued for the second time — asks the Board to decide what to do with proceeds from the **Project Blue land sale**, a significant county real estate transaction. The multiple attached memos (including one dated as recently as March 18) suggest active deliberation and possible disagreement over competing priorities: debt reduction, capital improvements, housing, or other uses. Given the county's ongoing budget challenges, how supervisors direct this one-time windfall is both a fiscal and political decision worth scrutiny.
 
----
-
-## 📋 Additional Items Worth Watching
-
-| Item | Why It's Notable |
-|------|-----------------|
-| **Item 39** | County joins opioid distributor settlement — potential new dollars for treatment programs |
-| **Item 34** | Board petitions governor for 6 new Superior Court judgeships — signals court capacity crisis |
-| **Item 37** | Delgado Claim settlement — amount and circumstances not public yet; emerged from closed session |
-| **Item 14 (Consent)** | 77-year ground lease to Spire Development for affordable housing at Drexel/Bonney — significant long-term land commitment worth scrutiny |
-| **Item 41** | FY2026-27 Capital Improvement Program overview — first look at next year's infrastructure priorities |
+> ⚠️ **Not on consent calendar** — Action item, third attempt at resolution.
 
 ---
 
-*Items on the consent calendar are voted on as a package without individual discussion unless a supervisor or member of the public pulls them for separate consideration. Residents who want to speak on consent items should contact the Clerk of the Board before the meeting.*
+### 5. Sewer Rates Are Going Up — Here's What Residents Will Pay
+**Item 25 | Public Hearing**
+
+**Ordinance No. 2026-3** proposes amending the county code governing **sanitary sewer construction, connections, and fees** for the Regional Wastewater Reclamation Department. Fee increases for permits, inspections, and related services hit homeowners, developers, and businesses directly. With infrastructure costs rising and the county facing budget pressure, this hearing is the public's opportunity to weigh in before new rates take effect.
+
+> ⚠️ **Not on consent calendar** — Public hearing required before adoption.
 
 ---
-*Generated 2026-03-19 08:00 by Tucson Daily Brief agenda mining pipeline using claude-sonnet-4-6.*
+
+### 6. $100K Lifeline for 53 Vulnerable Residents at St. Luke's Home
+**Item 28 | Action Item | District 1**
+
+Supervisor-sponsored item requests **$100,000 from General Fund Contingency** to provide bridge funding for **St. Luke's Home**, partnering with Catholic Community Services to ensure 53 current residents — presumably elderly or disabled adults — do not lose housing during a transition period. The use of contingency funds (rather than budgeted dollars) raises questions about the county's safety net capacity and what happens after the one-year bridge period ends. This connects directly to the county's ongoing homelessness and housing stability challenges.
+
+> ⚠️ **Not on consent calendar** — Requires Board action and approval of contingency expenditure.
+
+---
+
+### 7. Who's Running the County? Administrator Hiring Process Gets a Public Airing
+**Items 30 & 31 | Executive Session + Action Item | District 3**
+
+The Board will go into executive session for legal advice on the **County Administrator hiring process**, then return to open session for discussion and possible action. The County Administrator position is one of the most powerful appointed roles in Pima County government, overseeing day-to-day operations of a multi-hundred-million-dollar organization. Any decisions about the search process, candidate pool, or timeline are significant governance news — particularly if there is disagreement among supervisors about how to proceed.
+
+> ⚠️ **Not on consent calendar** — Board direction expected.
+
+---
+
+### 8. Pima County Joins Opioid Settlement — More Money Coming for Treatment
+**Item 39 | Action Item**
+
+The Board will consider joining a **settlement agreement with six Opioid Distributor/Dispenser Remnant Defendants** — the latest in a series of national opioid litigation settlements. While the dollar amount isn't specified in the agenda, these settlements have previously brought millions to Arizona counties for addiction treatment and prevention services. This connects to an ongoing story about how Pima County is deploying opioid funds and whether those resources are reaching communities hit hardest by the crisis.
+
+> ⚠️ **Not on consent calendar** — Requires Board authorization to participate.
+
+---
+
+## Notable Consent Calendar Items to Flag
+
+These items could pass without discussion but are worth noting:
+
+- **Consent Item 14 — Affordable Housing Land Lease (Drexel Commons):** Pima County is leasing 2.08 acres of county-owned land to Spire Development for a **multi-family affordable housing project** through 2103 — for just $975 in revenue. A 77-year ground lease for near-zero revenue is a significant public land decision that deserves transparency, even if uncontested. 🏠
+
+- **Consent Item 12 — $844,616 Chiller Replacement at Juvenile Courts Complex:** A nearly $845,000 facilities contract for the juvenile courts building — notable size for a consent item. 💰
+
+- **Consent Items 3 & 4 — Election Services IGAs with Marana ($580K) and Sahuarita ($335K):** Pima County will provide election administration services to two growing municipalities for nearly $1 million combined through 2029. 🗳️
+
+- **Consent Item 9 — Detention Center Lock System Overhaul:** A $200,000 budget increase for locksmith supplies at the Adult and Juvenile Detention Centers, driven by a system-wide replacement of locks due to security vulnerabilities in an outdated system. 🔒
+
+---
+
+*Coverage note: The Marshall Foundation tax litigation settlement (Items 12 & 38) and the Delgado claim settlement (Items 11 & 37) involve undisclosed dollar amounts being negotiated in executive session — worth a public records request after the meeting.*
+
+---
+*Generated 2026-03-20 08:00 by Tucson Daily Brief agenda mining pipeline using claude-sonnet-4-6.*
 *AI-assisted journalism — reviewed by a human editor before publication.*
 *Source: [Pima County Legistar](https://pima.legistar.com/Calendar.aspx)*
