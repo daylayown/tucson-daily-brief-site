@@ -102,7 +102,7 @@ Automated "What to Watch" previews for government meetings across four municipal
 
 Each pipeline: checks for new agendas → sends to Claude Sonnet 4.6 for editorial analysis → saves preview + full reference markdown → auto-publishes to HTML → git commit & push → Telegram notification.
 
-Previews are only generated once per meeting (idempotent). If a preview already exists for a given date, it's skipped.
+Previews are only generated once per meeting (idempotent). Each script checks for an existing `{slug}-preview.md` in `agenda-watch/` before processing a meeting — if the file exists, it skips. This is critical: without the check, the cron wrapper re-publishes and re-sends Telegram notifications for old meetings every day. Any new pipeline script **must** include this guard.
 
 ### Publishing flow
 
@@ -120,7 +120,7 @@ The daily brief repackages existing journalism. The agenda mining pipeline (abov
 
 ### Planned content types
 
-- **Post-Meeting News Reports** — After meetings happen, ingest transcripts or minutes and have Claude write news reports on what actually happened. **Requires human editorial review before publishing.** Research on data sources completed (see below).
+- **Post-Meeting News Reports** — 🚧 **IN DEVELOPMENT (March 2026).** AI reporter that transcribes government meetings (live or from VOD) and generates AP-style news reports. Requires human editorial review before publishing. Two pipeline variants planned — see "AI Reporter Pipeline" section below.
 
 - **Agenda Mining** — ✅ **LIVE.** Before meetings happen, read every agenda and supporting document. Surface buried items that reporters would miss and publish "what to watch" previews. Auto-publishes for all four municipalities.
 
@@ -145,8 +145,43 @@ The daily brief repackages existing journalism. The agenda mining pipeline (abov
 **Recommended build order for post-meeting pipeline:**
 1. **Marana** (easiest) — Swagit transcripts already available as text, just fetch and send to Claude
 2. **Oro Valley** — Same Swagit platform, captions may be higher quality (human-generated)
-3. **Tucson** — Download audio from YouTube via `yt-dlp`, transcribe with ElevenLabs
+3. **Tucson** — Download audio from YouTube via `yt-dlp`, transcribe with Deepgram
 4. **Pima County** (hardest) — Need to figure out Granicus video/audio download, then transcribe
+
+### AI Reporter Pipeline (in development)
+
+Two variants planned — VOD-first for production reliability, live for real-time capability and demo purposes.
+
+**Architecture (shared by both variants):**
+1. **Audio capture** → 2. **Speech-to-text** (Deepgram) → 3. **Transcript** → 4. **Claude Sonnet 4.6 news report** (AP style) → 5. **Telegram for human review** → 6. **Approve & publish** to site
+
+**Variant 1: VOD pipeline (production workhorse)**
+- Wait for YouTube/Swagit VOD to appear after meeting ends
+- `yt-dlp` downloads audio → Deepgram batch API transcribes
+- Cost: ~$0.0043/min (~$0.78 for a 3-hour meeting)
+- Simple, robust, no streaming complexity
+- Can also use Marana/OV Swagit transcripts directly where available
+
+**Variant 2: Live pipeline (real-time, demo-ready)**
+- Streamlink captures live YouTube audio stream → pipe to Deepgram WebSocket API
+- Real-time transcript with sub-300ms latency, interim results, speaker diarization
+- Cost: ~$0.0077/min (~$1.38 for a 3-hour meeting)
+- More complex: needs reconnection logic, stream drop handling
+- Compelling for ASU lecture demo — "watch the AI reporter work live"
+
+**Build order:**
+1. Build shared downstream pipeline first (transcript → Sonnet news report → Telegram review → publish)
+2. Wire up VOD input (yt-dlp + Deepgram batch) — this is the daily production path
+3. Layer live input (Streamlink + Deepgram WebSocket) on top — same downstream pipeline
+
+**Dry run plan:** Test live pipeline on Pentagon press briefings (Hegseth/Caine Iran war briefings, several per week, 30-60 min each, well-mic'd). DOW publishes official transcripts at war.gov/News/Transcripts/ for accuracy comparison. Schedule not fixed — check [DOW Live Events](https://www.war.gov/News/Live-events/) or [DVIDS](https://www.dvidshub.net/feature/PentagonPressBriefings) for upcoming streams.
+
+**Key dependencies:**
+- Deepgram API key + $200 free credit to start
+- Streamlink (for live YouTube audio capture — better than yt-dlp for live streams)
+- `yt-dlp` (for VOD downloads, already in use)
+- Sonnet 4.6 via existing `ANTHROPIC_API_KEY`
+- New site section for published reports (human-approved only)
 
 **No municipality publishes verbatim transcripts as official records** — all four produce summary/action minutes only. For full meeting content, video/audio recordings + transcription is the only path.
 
@@ -176,6 +211,7 @@ The Tucson metro area broadly: City of Tucson, Pima County, Town of Marana, Town
 
 - **Daily Brief** (`index.html`, `posts/`) — daily news synthesis from local sources (live)
 - **Meeting Watch** (`meeting-watch.html`, `meeting-watch/`) — AI-generated agenda previews for 4 municipalities (live, auto-published)
+- **News Reports** — AI-drafted, human-reviewed post-meeting news reports (in development)
 - **Public Record** — flagged permits, filings, contracts (planned)
 - **Deep Read** — AI-assisted analysis of large documents (planned)
 

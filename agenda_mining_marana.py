@@ -410,14 +410,20 @@ def main():
 
     for m in council_meetings:
         date_slug = m["date"].strftime("%Y-%m-%d")
+        base = f"marana-{date_slug}"
+
+        # Check if preview already exists
+        preview_path = os.path.join(OUTPUT_DIR, f"{base}-preview.md")
+        if os.path.exists(preview_path):
+            print(f"  Preview already exists for {m['date_str']}, skipping.")
+            continue
+
         print(f"\nProcessing: {m['date_str']} — {m['type']} (seq={m['seq']})")
 
         agenda_text = get_agenda_content(m["seq"])
         if not agenda_text:
             print("  No agenda content found.")
             continue
-
-        base = f"marana-{date_slug}"
 
         # Save full reference
         full_report = generate_full_report(m["date"], m["type"], agenda_text)
