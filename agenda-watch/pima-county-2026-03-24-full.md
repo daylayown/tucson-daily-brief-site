@@ -38,9 +38,10 @@ Attachments (2):
 P25RZ00002, WILMOT 8890, L.L.C. - S. WILMOT ROAD REZONING
 Wilmot 8890, L.L.C., represented by Solace Energy Center, L.L.C., request a rezoning of approximately 18.02 acres (Parcel Code 140-45-0340) from the SH (TDR-RA) (Suburban Homestead-Transfer of Development Rights - Urban Receiving Area) zone to the Cl-2 (TDR-RA) (General Industrial - Transfer of Development Rights - Urban Receiving Area) zone on property located on the west side of S. Wilmot Road, approximately one mile south of the intersection of S. Wilmot Road and E. Hermans Road. The proposed rezoning conforms to the Pima County Comprehensive Plan which designates the property for Industrial (I). On motion, the Planning and Zoning Commission voted 8-0 (Commissioners Lane and Truitt were absent) to recommend APPROVAL SUBJECT TO STANDARD AND SPECIAL CONDITIONS. Staff recommends APPROVAL SUBJECT TO STANDARD AND SPECIAL CONDITIONS. (District 2) _Public Hearing Item_
 
-Attachments (2):
+Attachments (3):
 - DSD_P25RZ00002
 - DSD_P25RZ00002_SiteAnalysis
+- DSD_P25RZ00002_Slides_3-20-26
 
 [View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21062&GUID=28807C5C-93B6-4A0D-AD30-12DBBC9660F5)
 
@@ -81,8 +82,9 @@ Attachments (1):
 ### **23.** Hearing - Adjusting Pima County's 1979-80 Base Expenditure Limit
 Pursuant to A.R.S. §41-563.01, discussion and public comment on adjusting Pima County's 1979-80 Base Expenditure Limit. _Public Hearing Item_
 
-Attachments (1):
+Attachments (2):
 - FN_AdjustPC1979-80BaseExpenLimit
+- FN_AdjustPC1979-80BaseExpenLimit_Slides_3-20-26
 
 [View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21073&GUID=7ABEFADE-510D-422F-8095-5A38B617204B)
 
@@ -90,8 +92,9 @@ Attachments (1):
 Appeal of Procurement Director’s Decision
 Pursuant to Pima County Code 11.20.010(H), Elite Waste, d.b.a. Dumpster Guys, appeals the decision by the Procurement Director regarding Solicitation No. IFB2500027838, Portable Restroom, Rentals and Services. _Public Hearing Item_
 
-Attachments (1):
+Attachments (2):
 - PO_Appeal_IFB2500027838
+- PO_CAMemo_Appeal_IFB2500027838_3-20-26
 
 [View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21102&GUID=78418329-3E04-4FA7-9D2C-675631ADCDC7)
 
@@ -215,8 +218,9 @@ Attachments (4):
 
 ### **33.** Update on County Initiatives to Address Homelessness and Public Safety _Agenda Item_
 
-Attachments (1):
+Attachments (2):
 - CA_CAMemo_2025AnnualReport
+- CA_TransitionCenterUpdates_Slides_3-20-26
 
 [View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21034&GUID=547BD456-160B-434B-BCA6-F34E229E3D37)
 
@@ -281,8 +285,9 @@ Attachments (2):
 ### **41.** Fiscal Year (FY) 2026/27 Capital Improvement Program Budget Development Overview
 Discussion/Direction/Action: Review of the Capital Improvement Program requests and overall budget development for the FY2026/27 Budget. _Agenda Item_
 
-Attachments (1):
+Attachments (2):
 - FN_FY26-27CapitalImprProgBudgetDevOverview
+- FN_FY26-27IIPCIPBudgetOverview_Slides_3-20-26
 
 [View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21069&GUID=3CA28795-01DF-424A-B2CE-BF1E745B70C1)
 
@@ -680,5 +685,5 @@ Attachments (2):
 [View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21005&GUID=A19DEBC3-C8DF-4F74-BC41-1DA1FB02A7AF)
 
 ---
-*Generated 2026-03-20 08:00 by Tucson Daily Brief agenda mining pipeline*
+*Generated 2026-03-21 08:00 by Tucson Daily Brief agenda mining pipeline*
 *Source: [Pima County Legistar](https://pima.legistar.com/Calendar.aspx)*
