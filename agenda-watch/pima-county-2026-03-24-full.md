@@ -685,5 +685,5 @@ Attachments (2):
 [View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21005&GUID=A19DEBC3-C8DF-4F74-BC41-1DA1FB02A7AF)
 
 ---
-*Generated 2026-03-22 08:00 by Tucson Daily Brief agenda mining pipeline*
+*Generated 2026-03-23 08:00 by Tucson Daily Brief agenda mining pipeline*
 *Source: [Pima County Legistar](https://pima.legistar.com/Calendar.aspx)*
