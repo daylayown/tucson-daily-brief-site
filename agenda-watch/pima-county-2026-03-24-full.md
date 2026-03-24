@@ -3,7 +3,7 @@
 
 Location: Board of Supervisors' Hearing Room
 
-**77 substantive items** (44 for discussion, 33 on consent calendar)
+**85 substantive items** (52 for discussion, 33 on consent calendar)
 
 ---
 ## Public Hearings
@@ -178,8 +178,10 @@ Attachments (1):
 ### **28.** Bridge Funding for St. Luke's Home
 Discussion/Direction/Action regarding bridge funding for St. Luke's Home. The request is for Pima County to partner with Catholic Community Services to provide bridge funding for the first year of transition in the amount of $100,000.00 from General Fund Contingency, to ensure that the 53 current residents of St. Luke’s Home do not lose housing. (District 1) _Agenda Item_
 
-Attachments (1):
+Attachments (3):
 - BOS_BridgeFundSt.LukesHome_Dist1Submittal
+- BOS_BridgeFundSt.LukesHome_CommLtrs_3-23-26_Redacted
+- BOS_BridgeFundSt.LukesHome_CommLtr_3-23-26_Redacted
 
 [View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21058&GUID=16E021BB-BAF5-47BA-B016-C1DA3CB6B933)
 
@@ -208,11 +210,13 @@ Attachments (1):
 Recommended Use of Project Blue Land Sale Proceeds
 Discussion/Direction/Action regarding the recommended use of Project Blue land sale proceeds. _Agenda Item_
 
-Attachments (4):
+Attachments (6):
 - CA_CAMemo_ProjectBlueLandSaleProceeds
 - CA_CAMemo_ProjectBlueLandSaleProceeds_2-27-26
 - CA_ProjectBlueLandSaleProceeds_CommLtr_3-2-26
 - CA_CAMemo_ProjectBlueLandSaleProceeds_3-18-26
+- CA_PBLandSaleProceeds_CommLtrs_3-23-26_Redacted
+- CA_PBLandSaleProceeds_CommLtr_3-23-26_Redacted
 
 [View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21001&GUID=206ECD04-67F9-4EAD-941D-77D359D4CA67)
 
@@ -285,9 +289,10 @@ Attachments (2):
 ### **41.** Fiscal Year (FY) 2026/27 Capital Improvement Program Budget Development Overview
 Discussion/Direction/Action: Review of the Capital Improvement Program requests and overall budget development for the FY2026/27 Budget. _Agenda Item_
 
-Attachments (2):
+Attachments (3):
 - FN_FY26-27CapitalImprProgBudgetDevOverview
 - FN_FY26-27IIPCIPBudgetOverview_Slides_3-20-26
+- FN_CAMemo_FY26-27CIPDetailList_3-23-26
 
 [View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21069&GUID=3CA28795-01DF-424A-B2CE-BF1E745B70C1)
 
@@ -387,6 +392,74 @@ Attachments (1):
 
 [View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21032&GUID=10D4968E-2C2A-425B-A02E-85C648BF1EF1)
 
+### **1.** Presentation of a proclamation to DeeDee Koenen, Shannon Riggs, and Jennifer Radler, Co-Founders, Pop Cycle, proclaiming the month of March, 2026 to be:  "POP CYCLE APPRECIATION MONTH" _Addendum _
+
+Attachments (1):
+- PROC_PopCycleAppreciationMonth
+
+[View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21097&GUID=5AC130DB-43F3-445E-9F36-AA027311A281)
+
+### **2.** Pursuant to A.R.S. §38-431.03(A)(3) and (4), for legal advice and direction regarding Womble Bond Dickinson (US), L.L.P.'s request for a conflict of interest waiver. _Addendum _
+
+Attachments (1):
+- PCA_ExecSession_WombleBondDickinsonLLP
+
+[View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21106&GUID=44FB2644-AFED-45C3-A951-5C6A55123BB9)
+
+### **3.** Renaming César Chávez Holiday and Potential Removal of Name/Image on County Assets
+Discussion/Direction/Action: Directing the County Administrator to identify all Administrative Procedures, Personnel and/or Board Policies to rename the County's floating César Chávez Holiday. Additionally, the County Administrator shall develop a plan with County Departments to identify all County assets (signage, public art, etc.) that bear Mr. Chávez's name or image for removal. (District 5) _Addendum _
+
+Attachments (1):
+- BOS_RenCesarChavezHolRemNameImage_Dist5Submittal
+
+[View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21108&GUID=0DCF076C-5F61-4494-A0A3-D8611A86669D)
+
+### **4.** Executive Session
+Pursuant to A.R.S. §38-431.03(A)(3), for legal advice and direction regarding recently reported issues concerning Sheriff Nanos’ work history and apparent related false statements, and related personnel, management, internal affairs investigative, or other issues in the department. (District 2) _Addendum _
+
+Attachments (4):
+- BOS_ExecSession-SheriffDeptIssues_Dist2Submittal
+- BOS_ExecSession-PCSDIssuesTranscripts_Dist2Submittal_3-20-26
+- BOS_ExecSession-PCSDIssues_LappinComplaint_Dist2Submittal_3-20-26
+- BOS_ExecSession-PCSDIssues_USATodayArticle_Dist2Submittal_3-20-26
+
+[View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21110&GUID=EA0D3755-3284-49DF-B9D4-C3D2D863043D)
+
+### **5.** Issues in the Pima County Sheriff’s Department
+Discussion/Direction/Action regarding recently reported issues concerning Sheriff Nanos’ work history and apparent related false statements, and related personnel, management, internal affairs investigative, or other issues in the department. (District 2) _Addendum _
+
+Attachments (4):
+- BOS_SheriffDeptIssues_Dist2Submittal
+- BOS_PCSDIssuesTranscripts_Dist2Submittal_3-20-26
+- BOS_PCSDIssues_LappinComplaint_Dist2Submittal_3-20-26
+- BOS_PCSDIssues_USATodayArticle_Dist2Submittal_3-20-26
+
+[View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21111&GUID=8746C21A-466B-493A-A1E9-04A065360F4D)
+
+### **6.** 2026 Regional Transportation Authority Special Election
+Discussion/Direction/Action regarding Pima County's first all-mail, countywide election with Pima County's Recorder and Elections Director, and/or designees, to include, but not limited to, the compilation of After-Action Reports by both offices for the 2026 RTA Special Election addressing the new voting system implemented, as well as the deployment of the "Votemobile" during the special election period. (District 4) _Addendum _
+
+Attachments (1):
+- BOS_2026RTASpecialElection_Dist4Submittal
+
+[View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21115&GUID=DB34231E-BCB6-4F03-AA80-C4461FC92A00)
+
+### **7.** Conflict of Interest Waiver
+Discussion/Direction/Action regarding Womble Bond Dickinson (US) L.L.P.’s request for a conflict of interest waiver. _Addendum _
+
+Attachments (1):
+- PCA_COIWaiver_WombleBondDickinsonLLP
+
+[View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21107&GUID=9DB58EDB-C23B-4DC9-A751-046E7007BE77)
+
+### **8.** Proposed Host Approval Pursuant to §147(f) of the IRS Code in Connection with the Senior Dreams Project
+RESOLUTION NO. 2026 - 18, of the Board of Supervisors, approving the issuance of Revenue Bonds (Senior Dreams Project) in one or more tax-exempt and/or taxable series or subseries in an aggregate principal amount not in excess of $275,000,000.00. _Addendum _
+
+Attachments (1):
+- IDA_ResoSeniorDreamsProject
+
+[View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21112&GUID=3E50068A-726C-4B3A-95E5-AFEDE30EDD6D)
+
 ---
 ## Consent Calendar
 *(Typically approved as a block without discussion. Any supervisor can pull an item for separate discussion.)*
@@ -402,8 +475,9 @@ Attachments (1):
 ### **2.** Compass Affordable Housing, Inc., Amendment No. 2, to provide for the Pima County Countywide Rapid Rehousing Program and amend contractual language, ADOH - State Housing Trust Fund Program, contract amount $225,000.00 (PO2400015971) _Contract and/or Award_
 *(Consent calendar — typically approved without discussion)*
 
-Attachments (1):
+Attachments (2):
 - PO2400015971
+- PO2400015971_CommLtr_3-23-26_Redacted
 
 [View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21086&GUID=D767CEE1-B7BB-4525-AB80-BD1FC5783C95)
 
@@ -494,8 +568,9 @@ Attachments (1):
 ### **13.** Bank of America N.A., Amendment No. 4, to provide for banking services, extend contract term to 6/30/27 and amend contractual language, no cost (SC2400001048) Administering Department: Treasurer’s Office _Contract and/or Award_
 *(Consent calendar — typically approved without discussion)*
 
-Attachments (1):
+Attachments (2):
 - SC2400001048
+- SC2400001048_CAMemo_3-23-26
 
 [View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21074&GUID=23390B72-5DE4-4157-A4E9-6BF5A7E27E91)
 
@@ -519,8 +594,9 @@ Attachments (1):
 City of Tucson, to provide for the Tucson House - Supportive Services - Workforce Development, $600,000.00 (G-CWD-90405) _Consent Item_
 *(Consent calendar — typically approved without discussion)*
 
-Attachments (1):
+Attachments (2):
 - G-CWD-90405
+- G-CWD-90405_CommLtr_3-23-26_Redacted
 
 [View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21022&GUID=13ED2392-F499-459F-A2D7-5AAB253C0F47)
 
@@ -685,5 +761,5 @@ Attachments (2):
 [View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21005&GUID=A19DEBC3-C8DF-4F74-BC41-1DA1FB02A7AF)
 
 ---
-*Generated 2026-03-23 08:00 by Tucson Daily Brief agenda mining pipeline*
+*Generated 2026-03-24 08:00 by Tucson Daily Brief agenda mining pipeline*
 *Source: [Pima County Legistar](https://pima.legistar.com/Calendar.aspx)*
