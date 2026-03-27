@@ -282,6 +282,7 @@ def render_index(posts: list[dict]) -> str:
 
 <nav class="section-nav">
 <a href="meeting-watch.html">Meeting Watch &rarr;</a>
+<a href="news-reports.html">News Reports &rarr;</a>
 </nav>
 
 <ul class="post-list">

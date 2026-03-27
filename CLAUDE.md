@@ -11,6 +11,12 @@ Static blog for GitHub Pages — minimal, text-first, Daring Fireball style. No 
 ├── posts/                       # Individual daily brief HTML files (named YYYY-MM-DD.html)
 ├── meeting-watch.html           # Auto-generated Meeting Watch index page
 ├── meeting-watch/               # Published meeting preview HTML files
+├── news-reports.html            # Auto-generated News Reports index page
+├── news-reports/                # Published news report HTML files (human-approved)
+├── ai_reporter.py               # Downstream pipeline: transcript JSON → Claude report → Telegram → publish
+├── ai_reporter_live.py          # Live input: streamlink → Deepgram WebSocket → transcript JSON
+├── run_live_reporter.sh         # Shell wrapper for live reporter (env loading, dep validation)
+├── transcripts/                 # Working directory: transcript JSON + drafts (gitignored)
 ├── agenda-watch/                # Working directory: markdown previews + full references (not published)
 ├── agenda_mining.py             # Pima County BOS pipeline (Legistar API)
 ├── agenda_mining_marana.py      # Marana Town Council pipeline (Destiny Hosted scraping)
@@ -20,7 +26,7 @@ Static blog for GitHub Pages — minimal, text-first, Daring Fireball style. No 
 ├── MEETING-WATCH-PIPELINE.md    # Full reference docs for the meeting watch system
 ├── CNAME                        # Custom domain: tucsondailybrief.com
 ├── .nojekyll                    # Tells GitHub Pages to skip Jekyll
-├── .gitignore                   # Excludes __pycache__/
+├── .gitignore                   # Excludes __pycache__/, transcripts/
 └── CLAUDE.md
 ```
 
@@ -120,7 +126,7 @@ The daily brief repackages existing journalism. The agenda mining pipeline (abov
 
 ### Planned content types
 
-- **Post-Meeting News Reports** — 🚧 **IN DEVELOPMENT (March 2026).** AI reporter that transcribes government meetings (live or from VOD) and generates AP-style news reports. Requires human editorial review before publishing. Two pipeline variants planned — see "AI Reporter Pipeline" section below.
+- **Post-Meeting News Reports** — 🚧 **LIVE PIPELINE BUILT, AWAITING DEEPGRAM SETUP (March 2026).** AI reporter that transcribes government meetings (live or from VOD) and generates AP-style news reports. Requires human editorial review before publishing. Live pipeline code complete (`ai_reporter.py` + `ai_reporter_live.py`), needs Deepgram API key to activate — see "AI Reporter Pipeline" section below.
 
 - **Agenda Mining** — ✅ **LIVE.** Before meetings happen, read every agenda and supporting document. Surface buried items that reporters would miss and publish "what to watch" previews. Auto-publishes for all four municipalities.
 
@@ -148,40 +154,136 @@ The daily brief repackages existing journalism. The agenda mining pipeline (abov
 3. **Tucson** — Download audio from YouTube via `yt-dlp`, transcribe with Deepgram
 4. **Pima County** (hardest) — Need to figure out Granicus video/audio download, then transcribe
 
-### AI Reporter Pipeline (in development)
+### AI Reporter Pipeline
 
-Two variants planned — VOD-first for production reliability, live for real-time capability and demo purposes.
+Live pipeline built March 2026. VOD pipeline planned but not yet implemented.
 
-**Architecture (shared by both variants):**
-1. **Audio capture** → 2. **Speech-to-text** (Deepgram) → 3. **Transcript** → 4. **Claude Sonnet 4.6 news report** (AP style) → 5. **Telegram for human review** → 6. **Approve & publish** to site
+**Architecture:**
+```
+Live input:  streamlink → ffmpeg (PCM 16kHz mono) → Deepgram WebSocket → transcript JSON
+                                                                              │
+Downstream:  transcript JSON → Claude Sonnet 4.6 news report → Telegram review → approve → publish HTML
+```
 
-**Variant 1: VOD pipeline (production workhorse)**
-- Wait for YouTube/Swagit VOD to appear after meeting ends
-- `yt-dlp` downloads audio → Deepgram batch API transcribes
-- Cost: ~$0.0043/min (~$0.78 for a 3-hour meeting)
-- Simple, robust, no streaming complexity
-- Can also use Marana/OV Swagit transcripts directly where available
+**Scripts:**
 
-**Variant 2: Live pipeline (real-time, demo-ready)**
-- Streamlink captures live YouTube audio stream → pipe to Deepgram WebSocket API
-- Real-time transcript with sub-300ms latency, interim results, speaker diarization
+| Script | Purpose |
+|---|---|
+| `ai_reporter.py` | Downstream pipeline: transcript JSON → Claude report → Telegram → approve/publish |
+| `ai_reporter_live.py` | Live input: streamlink → Deepgram WebSocket → real-time terminal display → transcript JSON |
+| `run_live_reporter.sh` | Shell wrapper: loads env vars, validates deps, passes args through |
+
+**Usage:**
+```bash
+# Capture a live stream and generate a news report
+./run_live_reporter.sh "https://youtube.com/watch?v=XXX" --slug pentagon-2026-03-26
+
+# Transcribe only (no news report)
+./run_live_reporter.sh "https://youtube.com/watch?v=XXX" --slug test-1 --transcribe-only
+
+# Generate a report from an existing transcript
+python3 ai_reporter.py transcripts/pentagon-2026-03-26.json
+
+# Re-generate with --force if draft already exists
+python3 ai_reporter.py transcripts/pentagon-2026-03-26.json --force
+
+# Approve and publish a draft
+python3 ai_reporter.py --approve transcripts/pentagon-2026-03-26-draft.md
+
+# Publish an already-approved file
+python3 ai_reporter.py --publish transcripts/pentagon-2026-03-26-approved.md
+```
+
+**File layout:**
+```
+transcripts/                              # Working directory (gitignored)
+  pentagon-2026-03-26.json                # Raw Deepgram transcript
+  pentagon-2026-03-26-partial.json        # Auto-saved during live capture (every 60s)
+  pentagon-2026-03-26-draft.md            # Claude news report draft
+  pentagon-2026-03-26-approved.md         # Human-approved version
+
+news-reports/                             # Published HTML (on GitHub Pages)
+  pentagon-2026-03-26.html
+
+news-reports.html                         # News Reports index page
+```
+
+**Transcript JSON schema:**
+```json
+{
+  "meta": {
+    "source_url": "https://youtube.com/...",
+    "slug": "pentagon-2026-03-26",
+    "title": "Pentagon Press Briefing",
+    "started_at": "2026-03-26T14:00:00Z",
+    "ended_at": "2026-03-26T14:45:00Z",
+    "duration_seconds": 2700,
+    "provider": "deepgram",
+    "model": "nova-2",
+    "diarization": true
+  },
+  "segments": [
+    {"start": 0.0, "end": 3.5, "speaker": 0, "text": "Good afternoon.", "confidence": 0.98}
+  ]
+}
+```
+
+**Live pipeline details:**
+- Audio pipeline: `streamlink --stdout URL audio_only` → `ffmpeg` (convert to PCM s16le, 16kHz, mono) → Python reads 4096-byte chunks (~128ms) → Deepgram WebSocket
+- Deepgram config: nova-2 model, smart_format, diarize, utterances, interim_results, 300ms endpointing
+- Terminal display: interim results shown in-place, final results with timestamps and speaker labels
+- Periodic save every 60 seconds to `{slug}-partial.json` (crash protection)
+- Graceful Ctrl+C: closes Deepgram (flushes finals), saves transcript, auto-runs downstream pipeline
 - Cost: ~$0.0077/min (~$1.38 for a 3-hour meeting)
-- More complex: needs reconnection logic, stream drop handling
-- Compelling for ASU lecture demo — "watch the AI reporter work live"
+- Idempotency: skips if transcript JSON already exists; skips draft generation if `-draft.md` exists (use `--force` to override)
 
-**Build order:**
-1. Build shared downstream pipeline first (transcript → Sonnet news report → Telegram review → publish)
-2. Wire up VOD input (yt-dlp + Deepgram batch) — this is the daily production path
-3. Layer live input (Streamlink + Deepgram WebSocket) on top — same downstream pipeline
+**Deepgram setup required (not yet done):**
+1. Sign up at https://deepgram.com and claim the $200 free credit (~430 hours of transcription)
+2. Create an API key
+3. Save it: `echo "DEEPGRAM_API_KEY=your_key_here" > ~/.config/environment.d/deepgram.conf`
 
-**Dry run plan:** Test live pipeline on Pentagon press briefings (Hegseth/Caine Iran war briefings, several per week, 30-60 min each, well-mic'd). DOW publishes official transcripts at war.gov/News/Transcripts/ for accuracy comparison. Schedule not fixed — check [DOW Live Events](https://www.war.gov/News/Live-events/) or [DVIDS](https://www.dvidshub.net/feature/PentagonPressBriefings) for upcoming streams.
+**Python dependencies required (not yet installed):**
+```bash
+pip install deepgram-sdk    # WebSocket API client
+pip install streamlink      # Live YouTube audio capture
+pip install yt-dlp          # Streamlink dependency for YouTube
+```
 
-**Key dependencies:**
-- Deepgram API key + $200 free credit to start
-- Streamlink (for live YouTube audio capture — better than yt-dlp for live streams)
-- `yt-dlp` (for VOD downloads, already in use)
-- Sonnet 4.6 via existing `ANTHROPIC_API_KEY`
-- New site section for published reports (human-approved only)
+**Dry run plan:** Test on Pentagon press briefings (Hegseth/Caine Iran war briefings, several per week, 30-60 min, well-mic'd). DOW publishes official transcripts at war.gov/News/Transcripts/ for accuracy comparison. Schedule not fixed — check [DOW Live Events](https://www.war.gov/News/Live-events/) or [DVIDS](https://www.dvidshub.net/feature/PentagonPressBriefings) for upcoming streams.
+
+**VOD pipeline (planned, not yet built):**
+- `ai_reporter_vod.py` — yt-dlp downloads audio → Deepgram batch API transcribes → same downstream pipeline
+- Cost: ~$0.0043/min (~$0.78 for a 3-hour meeting)
+- Can also use Marana/OV Swagit transcripts directly where available
+- Production workhorse once live pipeline is validated
+
+**STT provider research (March 2026):**
+
+OpenAI's Realtime API was evaluated as an alternative to Deepgram for live transcription. **Decision: stick with Deepgram.** Key findings:
+
+| | OpenAI Realtime | Deepgram WebSocket |
+|---|---|---|
+| 3-hr meeting cost | $0.54 (mini) / $1.08 (4o) | $1.39 |
+| Session limit | **60 min** (dealbreaker) | **None** |
+| Latency | 300-800ms | Sub-300ms |
+| Audio formats | PCM16 only (24kHz mono) | PCM, Opus, MP3, WAV, FLAC... |
+| Speaker diarization | No | Yes |
+| Free credits | None | $200 (~430 hrs) |
+
+OpenAI's 60-minute session cap requires 3-4 reconnections per meeting with potential audio gaps — unacceptable for production. Also: no speaker diarization (needed to attribute statements to council members), PCM16-only input (YouTube streams AAC/Opus, would need ffmpeg conversion), and the API is designed for interactive voice agents, not passive long-form monitoring. The ~$0.85/meeting savings doesn't justify the complexity. OpenAI's batch `gpt-4o-mini-transcribe` ($0.003/min) remains a viable VOD alternative if Deepgram batch pricing is unfavorable.
+
+Google's Gemini 3.1 Flash Live (launched March 2026) was also evaluated. **Decision: rejected, same fundamental problem as OpenAI.**
+
+| | Gemini 3.1 Flash Live | Deepgram WebSocket |
+|---|---|---|
+| 3-hr meeting cost | ~$0.90 (audio input) | $1.39 |
+| Session limit | **10-15 min** (dealbreaker) | **None** |
+| Latency | "Optimized for real-time" (no exact number) | Sub-300ms |
+| Audio formats | PCM, AAC, FLAC, MP3, OGG, WAV, WebM | PCM, Opus, MP3, WAV, FLAC... |
+| Speaker diarization | No | Yes |
+| Free credits | Free tier available | $200 (~430 hrs) |
+
+The 10-15 minute session cap is even worse than OpenAI's 60 minutes — would need 12-18 reconnections per 3-hour meeting, with no session resumption support. No speaker diarization either. Gemini Live API is designed for conversational voice agents, not passive long-form monitoring. Gemini's non-Live batch API could be worth evaluating for the VOD pipeline separately.
 
 **No municipality publishes verbatim transcripts as official records** — all four produce summary/action minutes only. For full meeting content, video/audio recordings + transcription is the only path.
 
@@ -211,7 +313,7 @@ The Tucson metro area broadly: City of Tucson, Pima County, Town of Marana, Town
 
 - **Daily Brief** (`index.html`, `posts/`) — daily news synthesis from local sources (live)
 - **Meeting Watch** (`meeting-watch.html`, `meeting-watch/`) — AI-generated agenda previews for 4 municipalities (live, auto-published)
-- **News Reports** — AI-drafted, human-reviewed post-meeting news reports (in development)
+- **News Reports** (`news-reports.html`, `news-reports/`) — AI-drafted, human-reviewed post-meeting news reports (pipeline built, awaiting Deepgram setup)
 - **Public Record** — flagged permits, filings, contracts (planned)
 - **Deep Read** — AI-assisted analysis of large documents (planned)
 
