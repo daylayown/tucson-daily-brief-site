@@ -43,8 +43,13 @@ if ! command -v ffmpeg &>/dev/null; then
     missing=1
 fi
 
-if ! python3 -c "import deepgram" 2>/dev/null; then
-    echo "ERROR: deepgram-sdk not installed. Run: pip install deepgram-sdk" >&2
+PYTHON="${SCRIPT_DIR}/.venv/bin/python3"
+if [ ! -x "$PYTHON" ]; then
+    echo "ERROR: venv not found at ${SCRIPT_DIR}/.venv" >&2
+    echo "  Run: python -m venv .venv && .venv/bin/pip install deepgram-sdk" >&2
+    missing=1
+elif ! "$PYTHON" -c "import deepgram" 2>/dev/null; then
+    echo "ERROR: deepgram-sdk not installed. Run: .venv/bin/pip install deepgram-sdk" >&2
     missing=1
 fi
 
@@ -54,4 +59,4 @@ fi
 
 # --- Run ---
 cd "$SCRIPT_DIR"
-exec python3 ai_reporter_live.py "$@"
+exec "$PYTHON" ai_reporter_live.py "$@"

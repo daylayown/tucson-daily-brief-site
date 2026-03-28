@@ -91,6 +91,41 @@ The podcast script is condensed from a full ~7,500-char read (~8 minutes) to a t
 
 **ElevenLabs budget:** Creator tier, 100K chars/month. Condensed podcast uses ~45K chars/month (with Turbo v2.5 at 0.5 credits/char, that's ~22.5K credits/month). Usage-based billing enabled at 25,000 credit threshold as safety net.
 
+### Voxtral TTS as ElevenLabs replacement (researched March 2026)
+
+Mistral released **Voxtral TTS** (4B params) on March 26, 2026 — an open-weights TTS model with a hosted API. It's a strong candidate to replace ElevenLabs for podcast generation.
+
+**Cost comparison:**
+
+| Provider | Cost per 1K chars | Monthly cost (45K chars) | Monthly cost (100K chars) |
+|---|---|---|---|
+| ElevenLabs Creator | $22/mo flat (overage $0.30/1K) | $22/mo | $22/mo |
+| Voxtral TTS API | $0.016/1K chars | **$0.72/mo** | **$1.60/mo** |
+
+**API details:**
+- Endpoint: `POST https://api.mistral.ai/v1/audio/speech`
+- Model ID: `voxtral-mini-tts-2603`
+- Auth: `Authorization: Bearer $MISTRAL_API_KEY`
+- Output formats: MP3, WAV, PCM, FLAC, Opus, AAC (MP3 supported directly — no conversion needed)
+- Response: JSON with `audio_data` field (base64-encoded), requires `base64.b64decode()`
+- Python SDK: `pip install mistralai` → `client.audio.speech.complete()`
+- Output sample rate: 24 kHz
+- Latency: ~70-90ms model processing, ~3s time-to-first-audio (MP3 streaming)
+
+**Voice cloning:** Adapts from as little as 3 seconds of reference audio. Two approaches:
+1. **One-off:** Pass base64-encoded audio clip as `ref_audio` in each request
+2. **Saved voice:** Create once via `POST /v1/audio/voices` with `sample_audio` (base64), then use returned `voice_id`
+
+**Quality:** Mistral claims 62.8% listener preference over ElevenLabs Flash v2.5 on naturalness, parity with ElevenLabs v3 on expressiveness. Current pipeline uses Turbo v2.5 (comparable to Flash), so Voxtral could be an upgrade. Not independently benchmarked for news podcast voices yet.
+
+**Limit to watch:** Max 2 minutes of audio per request. Condensed script (~1,400 chars / ~90 seconds) fits. Full script fallback (~7,500 chars / ~8 minutes) would NOT fit — would need chunking or truncation if condensation fails.
+
+**License:** Open weights on HuggingFace are CC BY-NC 4.0 (non-commercial for self-hosting). Hosted API has standard commercial terms — no restriction.
+
+**What the swap looks like:** ~15-line change in `generate_podcast.py`. Replace the ElevenLabs HTTP POST with Voxtral endpoint, swap auth header, change voice parameter, add base64 decode. `clean_for_tts()`, condensation, RSS, R2 upload, and YouTube pipeline are all untouched.
+
+**Status:** Research complete. Next step is a side-by-side audio quality test — generate a sample episode via Voxtral API and compare against current ElevenLabs output. Requires Mistral API key from `console.mistral.ai`.
+
 ## Meeting Watch (Agenda Mining Pipeline)
 
 Automated "What to Watch" previews for government meetings across four municipalities. Runs daily via cron, auto-publishes to the site with zero human intervention. See `MEETING-WATCH-PIPELINE.md` for full reference.
@@ -126,7 +161,7 @@ The daily brief repackages existing journalism. The agenda mining pipeline (abov
 
 ### Planned content types
 
-- **Post-Meeting News Reports** — 🚧 **LIVE PIPELINE BUILT, AWAITING DEEPGRAM SETUP (March 2026).** AI reporter that transcribes government meetings (live or from VOD) and generates AP-style news reports. Requires human editorial review before publishing. Live pipeline code complete (`ai_reporter.py` + `ai_reporter_live.py`), needs Deepgram API key to activate — see "AI Reporter Pipeline" section below.
+- **Post-Meeting News Reports** — 🚧 **LIVE PIPELINE TESTED, READY FOR FIRST REAL MEETING (March 2026).** AI reporter that transcribes government meetings (live or from VOD) and generates AP-style news reports. Requires human editorial review before publishing. Live pipeline tested on YouTube livestreams (`ai_reporter.py` + `ai_reporter_live.py`). Next step: record a real town hall or press briefing.
 
 - **Agenda Mining** — ✅ **LIVE.** Before meetings happen, read every agenda and supporting document. Surface buried items that reporters would miss and publish "what to watch" previews. Auto-publishes for all four municipalities.
 
@@ -230,26 +265,26 @@ news-reports.html                         # News Reports index page
 
 **Live pipeline details:**
 - Audio pipeline: `streamlink --stdout URL audio_only` → `ffmpeg` (convert to PCM s16le, 16kHz, mono) → Python reads 4096-byte chunks (~128ms) → Deepgram WebSocket
-- Deepgram config: nova-2 model, smart_format, diarize, utterances, interim_results, 300ms endpointing
+- Deepgram config: nova-2 model, smart_format, diarize, interim_results, 300ms endpointing
 - Terminal display: interim results shown in-place, final results with timestamps and speaker labels
 - Periodic save every 60 seconds to `{slug}-partial.json` (crash protection)
-- Graceful Ctrl+C: closes Deepgram (flushes finals), saves transcript, auto-runs downstream pipeline
+- Graceful shutdown: Ctrl+C, dead air timeout (5 min default), max duration (6 hr default), or stream end → flushes Deepgram finals, saves transcript, auto-runs downstream pipeline
 - Cost: ~$0.0077/min (~$1.38 for a 3-hour meeting)
 - Idempotency: skips if transcript JSON already exists; skips draft generation if `-draft.md` exists (use `--force` to override)
+- Runs unattended: designed for automated recording of town halls/briefings with no human monitoring
 
-**Deepgram setup required (not yet done):**
-1. Sign up at https://deepgram.com and claim the $200 free credit (~430 hours of transcription)
-2. Create an API key
-3. Save it: `echo "DEEPGRAM_API_KEY=your_key_here" > ~/.config/environment.d/deepgram.conf`
+**Deepgram setup:** ✅ Done (March 27, 2026). API key in `~/.config/environment.d/deepgram.conf`. $200 free credit claimed.
 
-**Python dependencies required (not yet installed):**
-```bash
-pip install deepgram-sdk    # WebSocket API client
-pip install streamlink      # Live YouTube audio capture
-pip install yt-dlp          # Streamlink dependency for YouTube
-```
+**Dependencies:** ✅ Installed. `streamlink` and `yt-dlp` via pacman, `deepgram-sdk` (v6.1.1) via pip in project venv (`.venv/`). The shell wrapper `run_live_reporter.sh` uses `.venv/bin/python3` automatically.
 
-**Dry run plan:** Test on Pentagon press briefings (Hegseth/Caine Iran war briefings, several per week, 30-60 min, well-mic'd). DOW publishes official transcripts at war.gov/News/Transcripts/ for accuracy comparison. Schedule not fixed — check [DOW Live Events](https://www.war.gov/News/Live-events/) or [DVIDS](https://www.dvidshub.net/feature/PentagonPressBriefings) for upcoming streams.
+**Deepgram SDK v6 notes:** The script was updated from the v3/v4 API to v6.1.1. Key differences: context manager pattern (`with client.listen.v1.connect(...) as connection`), `EventType.MESSAGE` replaces `LiveTranscriptionEvents.Transcript`, `send_media()` replaces `send()`, `send_close_stream()` replaces `finish()`, boolean params must be passed as strings (`"true"` not `True`) due to SDK query string encoding bug.
+
+**Auto-stop behavior:** The live pipeline runs unattended with three auto-stop triggers:
+- **Dead air timeout** (default 5 min) — no speech detected → graceful stop. Configurable via `--dead-air-timeout N` (seconds).
+- **Max duration** (default 6 hours) — safety cap to prevent runaway costs. Configurable via `--max-duration N` (seconds).
+- **Stream end** — streamlink/ffmpeg exit when the broadcast ends.
+
+**Tested:** March 27, 2026. Verified on live YouTube streams (WWE, Al Jazeera). Broadcast-quality audio produces near-perfect transcripts (confidence 0.999-1.0). Speaker diarization working.
 
 **VOD pipeline (planned, not yet built):**
 - `ai_reporter_vod.py` — yt-dlp downloads audio → Deepgram batch API transcribes → same downstream pipeline

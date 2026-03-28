@@ -27,9 +27,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 try:
-    from deepgram import DeepgramClient, LiveTranscriptionEvents, LiveOptions
+    from deepgram import DeepgramClient
+    from deepgram.core.events import EventType
+    from deepgram.listen.v1.types import ListenV1Results
 except ImportError:
-    print("ERROR: deepgram-sdk not installed. Run: pip install deepgram-sdk", file=sys.stderr)
+    print("ERROR: deepgram-sdk not installed. Run: .venv/bin/pip install deepgram-sdk", file=sys.stderr)
     sys.exit(1)
 
 # --- Config ---
@@ -37,14 +39,19 @@ SITE_DIR = Path(__file__).resolve().parent
 TRANSCRIPTS_DIR = SITE_DIR / "transcripts"
 AUDIO_CHUNK_SIZE = 4096  # ~128ms at 16kHz/16bit/mono
 PERIODIC_SAVE_INTERVAL = 60  # seconds
+DEAD_AIR_TIMEOUT = 300  # 5 minutes of no speech → auto-stop
+MAX_DURATION = 6 * 3600  # 6 hour safety cap
 
 
 class LiveTranscriber:
     """Manages the live transcription pipeline: streamlink → ffmpeg → Deepgram."""
 
-    def __init__(self, url: str, slug: str):
+    def __init__(self, url: str, slug: str, max_duration: int = None,
+                 dead_air_timeout: int = None):
         self.url = url
         self.slug = slug
+        self.max_duration = max_duration or MAX_DURATION
+        self.dead_air_timeout = dead_air_timeout or DEAD_AIR_TIMEOUT
         self.segments: list[dict] = []
         self.started_at: str = ""
         self.ended_at: str = ""
@@ -53,6 +60,8 @@ class LiveTranscriber:
         self.dg_connection = None
         self.shutting_down = False
         self.last_save_time = 0
+        self.last_speech_time = 0  # Updated on each final transcript segment
+        self.pipeline_start_time = 0
         self.current_interim = ""  # For terminal display
 
     def start(self) -> Path:
@@ -108,7 +117,7 @@ class LiveTranscriber:
         # Close Deepgram connection to flush final results
         if self.dg_connection:
             try:
-                self.dg_connection.finish()
+                self.dg_connection.send_close_stream()
             except Exception:
                 pass
 
@@ -162,35 +171,43 @@ class LiveTranscriber:
             print("ERROR: DEEPGRAM_API_KEY not set", file=sys.stderr)
             return
 
-        deepgram = DeepgramClient(api_key)
-        self.dg_connection = deepgram.listen.live.v("1")
+        deepgram = DeepgramClient(api_key=api_key)
 
-        # Set up event handlers
-        self.dg_connection.on(LiveTranscriptionEvents.Transcript, self._on_transcript)
-        self.dg_connection.on(LiveTranscriptionEvents.Error, self._on_error)
-        self.dg_connection.on(LiveTranscriptionEvents.Close, self._on_close)
-
-        options = LiveOptions(
+        with deepgram.listen.v1.connect(
             model="nova-2",
             language="en-US",
-            smart_format=True,
-            diarize=True,
-            utterances=True,
-            interim_results=True,
-            endpointing=300,
+            smart_format="true",
+            diarize="true",
+            interim_results="true",
+            endpointing="300",
             encoding="linear16",
-            sample_rate=16000,
-            channels=1,
-        )
+            sample_rate="16000",
+            channels="1",
+        ) as connection:
+            self.dg_connection = connection
 
-        if not self.dg_connection.start(options):
-            print("ERROR: Failed to connect to Deepgram", file=sys.stderr)
-            return
+            # Set up event handlers
+            connection.on(EventType.MESSAGE, self._on_message)
+            connection.on(EventType.ERROR, self._on_error)
+            connection.on(EventType.CLOSE, self._on_close)
 
-        print("Connected. Listening...\n")
+            # Start listener thread (processes incoming events)
+            listener_thread = threading.Thread(
+                target=connection.start_listening, daemon=True
+            )
+            listener_thread.start()
 
-        # 4. Read audio chunks and send to Deepgram
-        self._stream_audio()
+            now = time.time()
+            self.last_speech_time = now
+            self.pipeline_start_time = now
+
+            print("Connected. Listening...\n")
+
+            # 4. Read audio chunks and send to Deepgram
+            self._stream_audio()
+
+            # Wait for listener to finish processing
+            listener_thread.join(timeout=5)
 
     def _stream_audio(self):
         """Read PCM chunks from ffmpeg and send to Deepgram."""
@@ -208,14 +225,31 @@ class LiveTranscriber:
                 if not chunk:
                     print("\nStream ended (no more audio data).")
                     break
-                self.dg_connection.send(chunk)
+                self.dg_connection.send_media(chunk)
             except Exception as e:
                 if not self.shutting_down:
                     print(f"\nERROR reading/sending audio: {e}", file=sys.stderr)
                 break
 
-            # Periodic save
             now = time.time()
+
+            # Dead air timeout: no speech → auto-stop
+            silence_duration = now - self.last_speech_time
+            if silence_duration >= self.dead_air_timeout:
+                minutes = int(silence_duration // 60)
+                seconds = int(silence_duration % 60)
+                print(f"\nAuto-stopping: no speech for {minutes}m{seconds}s.")
+                break
+
+            # Max duration safety cap
+            elapsed = now - self.pipeline_start_time
+            if elapsed >= self.max_duration:
+                hours = int(elapsed // 3600)
+                minutes = int((elapsed % 3600) // 60)
+                print(f"\nAuto-stopping: max duration reached ({hours}h{minutes}m).")
+                break
+
+            # Periodic save
             if now - self.last_save_time >= PERIODIC_SAVE_INTERVAL and self.segments:
                 self._save_transcript(final=False)
                 self.last_save_time = now
@@ -223,25 +257,29 @@ class LiveTranscriber:
         # Signal Deepgram we're done
         if self.dg_connection:
             try:
-                self.dg_connection.finish()
+                self.dg_connection.send_close_stream()
             except Exception:
                 pass
 
         # Wait briefly for final results to arrive
         time.sleep(2)
 
-    def _on_transcript(self, _self, result, **kwargs):
-        """Handle incoming transcript results from Deepgram."""
+    def _on_message(self, message, **kwargs):
+        """Handle incoming messages from Deepgram."""
+        if not isinstance(message, ListenV1Results):
+            return
         try:
-            channel = result.channel
+            channel = message.channel
             alt = channel.alternatives[0] if channel.alternatives else None
             if not alt or not alt.transcript.strip():
                 return
 
             text = alt.transcript.strip()
-            is_final = result.is_final
+            is_final = message.is_final
 
             if is_final:
+                self.last_speech_time = time.time()
+
                 # Extract speaker and timing from words
                 speaker = None
                 start_time = 0
@@ -277,11 +315,11 @@ class LiveTranscriber:
         except Exception as e:
             print(f"\nWARNING: Error processing transcript result: {e}", file=sys.stderr)
 
-    def _on_error(self, _self, error, **kwargs):
+    def _on_error(self, error, **kwargs):
         """Handle Deepgram errors."""
         print(f"\nDeepgram error: {error}", file=sys.stderr)
 
-    def _on_close(self, _self, close, **kwargs):
+    def _on_close(self, close, **kwargs):
         """Handle Deepgram connection close."""
         if not self.shutting_down:
             print("\nDeepgram connection closed.")
@@ -351,16 +389,22 @@ def main():
                         help="Identifier for this transcript (e.g., pentagon-2026-03-26)")
     parser.add_argument("--transcribe-only", action="store_true",
                         help="Only transcribe — don't generate a news report")
+    parser.add_argument("--max-duration", type=int, default=None,
+                        help="Max recording duration in seconds (default: 6 hours)")
+    parser.add_argument("--dead-air-timeout", type=int, default=None,
+                        help="Stop after N seconds of no speech (default: 300)")
 
     args = parser.parse_args()
 
-    transcriber = LiveTranscriber(args.url, args.slug)
+    transcriber = LiveTranscriber(args.url, args.slug,
+                                  max_duration=args.max_duration,
+                                  dead_air_timeout=args.dead_air_timeout)
     transcript_path = transcriber.start()
 
     if transcript_path and transcript_path.exists() and not args.transcribe_only:
         print(f"\nGenerating news report...")
         result = subprocess.run(
-            ["python3", str(SITE_DIR / "ai_reporter.py"), str(transcript_path)],
+            [sys.executable, str(SITE_DIR / "ai_reporter.py"), str(transcript_path)],
             cwd=str(SITE_DIR),
         )
         if result.returncode != 0:
