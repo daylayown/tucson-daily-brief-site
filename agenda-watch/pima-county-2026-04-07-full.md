@@ -158,6 +158,9 @@ Attachments (1):
 ### **27.** Monthly Financial Update
 Discussion/Direction/Action regarding a monthly financial update on the County's financial performance. _Agenda Item_
 
+Attachments (1):
+- FN_CAMemo_FinancialForecast-MarPeriod8_4-1-26
+
 [View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21053&GUID=593FB080-1C6A-4D58-B499-228B1B723208)
 
 ---
@@ -334,5 +337,5 @@ Attachments (1):
 [View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21136&GUID=7F8EEDCD-43F7-4226-942E-63008D68450F)
 
 ---
-*Generated 2026-04-02 08:00 by Tucson Daily Brief agenda mining pipeline*
+*Generated 2026-04-03 08:00 by Tucson Daily Brief agenda mining pipeline*
 *Source: [Pima County Legistar](https://pima.legistar.com/Calendar.aspx)*
