@@ -57,6 +57,34 @@ if [ "$missing" -eq 1 ]; then
     exit 1
 fi
 
+# --- Wait for stream to go live (if not already) ---
+# Extracts the URL (first positional arg) and polls with yt-dlp until the
+# stream is available, retrying every 60 seconds for up to 30 minutes.
+WAIT_INTERVAL=60
+WAIT_MAX=1800  # 30 minutes
+
+url=""
+for arg in "$@"; do
+    if [[ "$arg" == http* ]]; then
+        url="$arg"
+        break
+    fi
+done
+
+if [ -n "$url" ]; then
+    elapsed=0
+    while ! yt-dlp --simulate "$url" &>/dev/null; do
+        if [ "$elapsed" -ge "$WAIT_MAX" ]; then
+            echo "ERROR: Stream not live after ${WAIT_MAX}s, giving up: $url" >&2
+            exit 1
+        fi
+        echo "$(date): Stream not live yet, retrying in ${WAIT_INTERVAL}s... ($url)"
+        sleep "$WAIT_INTERVAL"
+        elapsed=$((elapsed + WAIT_INTERVAL))
+    done
+    echo "$(date): Stream is live, starting reporter: $url"
+fi
+
 # --- Run ---
 cd "$SCRIPT_DIR"
 exec "$PYTHON" ai_reporter_live.py "$@"
