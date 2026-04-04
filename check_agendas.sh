@@ -76,14 +76,17 @@ while IFS= read -r preview_path; do
         # Extract the meeting date from the filename
         meeting_date=$(echo "$preview_path" | grep -oP '\d{4}-\d{2}-\d{2}')
 
-        # Determine which municipality from the filename
-        if echo "$preview_path" | grep -q "marana"; then
+        # Determine which municipality from the filename (basename only,
+        # not full path — full path contains "tucson-daily-brief-site" which
+        # would falsely match every preview against the tucson check)
+        preview_basename="$(basename "$preview_path")"
+        if echo "$preview_basename" | grep -q "marana"; then
             body_name="Marana Town Council"
             publish_cmd="python3 agenda_mining_marana.py --publish $preview_path"
-        elif echo "$preview_path" | grep -q "orovalley"; then
+        elif echo "$preview_basename" | grep -q "orovalley"; then
             body_name="Oro Valley Town Council"
             publish_cmd="python3 agenda_mining_orovalley.py --publish $preview_path"
-        elif echo "$preview_path" | grep -q "tucson"; then
+        elif echo "$preview_basename" | grep -q "tucson"; then
             body_name="Tucson Mayor & Council"
             publish_cmd="python3 agenda_mining_tucson.py --publish $preview_path"
         else

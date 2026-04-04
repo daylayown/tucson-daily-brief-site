@@ -712,6 +712,12 @@ def main():
             suffix = f"-{comment.lower().replace(' ', '-')}"
         base = f"pima-county-{event_date}{suffix}"
 
+        # Check if preview already exists (idempotency guard)
+        preview_path = os.path.join(OUTPUT_DIR, f"{base}-preview.md")
+        if os.path.exists(preview_path):
+            print(f"  Preview already exists: {preview_path}")
+            continue
+
         # Always save the full reference report
         full_report = generate_full_report(event, items)
         full_path = os.path.join(OUTPUT_DIR, f"{base}-full.md")
@@ -726,7 +732,6 @@ def main():
             if analysis:
                 print("  Editorial analysis complete")
                 preview = generate_preview(event, items, analysis)
-                preview_path = os.path.join(OUTPUT_DIR, f"{base}-preview.md")
                 with open(preview_path, "w") as f:
                     f.write(preview)
                 print(f"  Saved publishable preview: {preview_path}")
