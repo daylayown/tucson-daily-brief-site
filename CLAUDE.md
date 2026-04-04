@@ -149,9 +149,12 @@ Previews are only generated once per meeting (idempotent). Each script checks fo
 
 Each script has a `--publish` flag that converts a markdown preview to HTML using shared functions from `agenda_mining.py` (`preview_md_to_html`, `render_meeting_post`, `render_meeting_index`). Publishing also rebuilds the `meeting-watch.html` index page. The cron wrapper calls `--publish` automatically and then does a single `git add -A && git commit && git push` at the end. After publishing, a Telegram notification is sent linking to `https://tucsondailybrief.com/meeting-watch.html` (note: `.html`, not `/meeting-watch/` — GitHub Pages does not serve directory index files).
 
+**Slug routing in `check_agendas.sh`:** The cron wrapper determines which publish script to use by matching the preview filename against municipality keywords (`marana`, `orovalley`, `tucson`, else Pima County). **Critical:** this matching is done on `basename` only, not the full path — the repo directory name (`tucson-daily-brief-site`) contains "tucson" and would falsely match every preview against the Tucson check. This was a bug fixed April 2026 that caused Pima County previews to be published with `tucson-council-` slugs.
+
 ### Key dependencies
 
 - `pdftotext` (poppler-utils) — required for Tucson PDF extraction
+- `at` + `atd` daemon — required for scheduled live recordings
 - `ANTHROPIC_API_KEY` in `~/.config/environment.d/anthropic.conf`
 - Telegram credentials for notifications
 
@@ -161,7 +164,7 @@ The daily brief repackages existing journalism. The agenda mining pipeline (abov
 
 ### Planned content types
 
-- **Post-Meeting News Reports** — 🚧 **LIVE PIPELINE TESTED, READY FOR FIRST REAL MEETING (March 2026).** AI reporter that transcribes government meetings (live or from VOD) and generates AP-style news reports. Requires human editorial review before publishing. Live pipeline tested on YouTube livestreams (`ai_reporter.py` + `ai_reporter_live.py`). Next step: record a real town hall or press briefing.
+- **Post-Meeting News Reports** — 🚧 **FIRST REAL RECORDINGS SCHEDULED (April 7, 2026).** AI reporter that transcribes government meetings (live or from VOD) and generates AP-style news reports. Requires human editorial review before publishing. Live pipeline tested on YouTube livestreams (`ai_reporter.py` + `ai_reporter_live.py`). Pima County BOS (9 AM) and Tucson Mayor & Council (5:30 PM) scheduled via `at` for April 7. `run_live_reporter.sh` now includes a wait-for-stream retry loop (polls every 60s for up to 30 min).
 
 - **Agenda Mining** — ✅ **LIVE.** Before meetings happen, read every agenda and supporting document. Surface buried items that reporters would miss and publish "what to watch" previews. Auto-publishes for all four municipalities.
 
@@ -206,7 +209,7 @@ Downstream:  transcript JSON → Claude Sonnet 4.6 news report → Telegram revi
 |---|---|
 | `ai_reporter.py` | Downstream pipeline: transcript JSON → Claude report → Telegram → approve/publish |
 | `ai_reporter_live.py` | Live input: streamlink → Deepgram WebSocket → real-time terminal display → transcript JSON |
-| `run_live_reporter.sh` | Shell wrapper: loads env vars, validates deps, passes args through |
+| `run_live_reporter.sh` | Shell wrapper: loads env vars, validates deps, waits for stream to go live, passes args through |
 
 **Usage:**
 ```bash
@@ -262,6 +265,39 @@ news-reports.html                         # News Reports index page
   ]
 }
 ```
+
+**Wait-for-stream:** `run_live_reporter.sh` polls with `yt-dlp --simulate` every 60 seconds for up to 30 minutes before giving up. This allows scheduling recordings before a stream goes live (e.g., 5 minutes before a meeting's start time). YouTube's `/live` URL for a channel (e.g., `https://www.youtube.com/@PimaCountyArizona/live`) always redirects to the current livestream if one exists, but returns nothing if the channel isn't streaming yet.
+
+**Scheduling live recordings with `at`:**
+
+Recordings can be pre-scheduled using the `at` command (package: `at`, daemon: `atd`). `at` captures the current working directory and environment at scheduling time.
+
+```bash
+# Schedule a recording — start 5 min before meeting, retry loop handles the gap
+echo "./run_live_reporter.sh 'https://www.youtube.com/@PimaCountyArizona/live' --slug pima-bos-2026-04-07 >> /tmp/live-reporter.log 2>&1" | at 8:55 AM 2026-04-07
+
+# List scheduled jobs
+atq
+
+# Inspect a job
+at -c <job_number>
+
+# Remove a job
+atrm <job_number>
+```
+
+**YouTube channel URLs for live recording:**
+
+| Municipality | YouTube Channel | Live URL |
+|---|---|---|
+| Pima County BOS | `@PimaCountyArizona` | `https://www.youtube.com/@PimaCountyArizona/live` |
+| City of Tucson | `CityofTucson` | `https://www.youtube.com/user/CityofTucson/live` |
+| Marana | Swagit (not YouTube) | N/A — use VOD pipeline |
+| Oro Valley | Swagit (not YouTube) | N/A — use VOD pipeline |
+
+Only Pima County and Tucson stream on YouTube. Marana and Oro Valley use Swagit, which is not supported by streamlink — those municipalities require the VOD pipeline (fetch recording after posting).
+
+**Future automation:** The agenda mining pipeline already knows meeting dates and times. A natural next step is to have `check_agendas.sh` auto-schedule `at` jobs for YouTube-streaming municipalities when it discovers new meetings.
 
 **Live pipeline details:**
 - Audio pipeline: `streamlink --stdout URL audio_only` → `ffmpeg` (convert to PCM s16le, 16kHz, mono) → Python reads 4096-byte chunks (~128ms) → Deepgram WebSocket
@@ -348,7 +384,7 @@ The Tucson metro area broadly: City of Tucson, Pima County, Town of Marana, Town
 
 - **Daily Brief** (`index.html`, `posts/`) — daily news synthesis from local sources (live)
 - **Meeting Watch** (`meeting-watch.html`, `meeting-watch/`) — AI-generated agenda previews for 4 municipalities (live, auto-published)
-- **News Reports** (`news-reports.html`, `news-reports/`) — AI-drafted, human-reviewed post-meeting news reports (pipeline built, awaiting Deepgram setup)
+- **News Reports** (`news-reports.html`, `news-reports/`) — AI-drafted, human-reviewed post-meeting news reports (pipeline built, first real recordings scheduled April 7, 2026)
 - **Public Record** — flagged permits, filings, contracts (planned)
 - **Deep Read** — AI-assisted analysis of large documents (planned)
 
@@ -373,3 +409,6 @@ The hardest part is sourcing data, not the AI pipeline. Start with what Tucson/P
 | 6:00 AM | OpenClaw briefing agent | (OpenClaw internal) |
 | 6:10 AM | `run_podcast.sh` — Telegram, blog, podcast, YouTube | `/tmp/podcast-gen.log` |
 | 8:00 AM | `check_agendas.sh` — all 4 agenda pipelines | `/tmp/agenda-check.log` |
+| (scheduled) | `at` jobs — live reporter for YouTube-streaming meetings | `/tmp/live-reporter*.log` |
+
+**`atd` daemon** must be enabled (`systemctl enable --now atd`) for scheduled live recordings. Jobs are one-off — each meeting needs its own `at` job (see "Scheduling live recordings with `at`" under AI Reporter Pipeline).
