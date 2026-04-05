@@ -2,17 +2,22 @@
 """
 AI Reporter — Live Input Pipeline
 
-Captures a live YouTube audio stream via Streamlink, transcribes in real-time
-using Deepgram's WebSocket API, and saves the transcript as JSON. On completion,
-hands off to ai_reporter.py for news report generation.
+Captures a live audio stream, transcribes in real-time using Deepgram's WebSocket
+API, and saves the transcript as JSON. On completion, hands off to ai_reporter.py
+for news report generation.
+
+Supports two input modes:
+  - Default: streamlink → ffmpeg → Deepgram (for YouTube and other streamlink-supported sites)
+  - Direct:  ffmpeg reads URL directly → Deepgram (for HLS/RTMP/etc. URLs not supported by streamlink)
 
 Usage:
     python3 ai_reporter_live.py "https://youtube.com/watch?v=XXX" --slug pentagon-2026-03-26
+    python3 ai_reporter_live.py "https://stream.swagit.com/.../playlist.m3u8" --slug ov-2026-04-08 --direct
     python3 ai_reporter_live.py "https://youtube.com/watch?v=XXX" --transcribe-only
 
 Requires:
     DEEPGRAM_API_KEY environment variable.
-    streamlink, ffmpeg, deepgram-sdk installed.
+    ffmpeg, deepgram-sdk installed. streamlink required unless --direct is used.
 """
 
 import argparse
@@ -44,14 +49,15 @@ MAX_DURATION = 6 * 3600  # 6 hour safety cap
 
 
 class LiveTranscriber:
-    """Manages the live transcription pipeline: streamlink → ffmpeg → Deepgram."""
+    """Manages the live transcription pipeline: [streamlink →] ffmpeg → Deepgram."""
 
     def __init__(self, url: str, slug: str, max_duration: int = None,
-                 dead_air_timeout: int = None):
+                 dead_air_timeout: int = None, direct: bool = False):
         self.url = url
         self.slug = slug
         self.max_duration = max_duration or MAX_DURATION
         self.dead_air_timeout = dead_air_timeout or DEAD_AIR_TIMEOUT
+        self.direct = direct  # Skip streamlink, feed URL directly to ffmpeg
         self.segments: list[dict] = []
         self.started_at: str = ""
         self.ended_at: str = ""
@@ -122,33 +128,63 @@ class LiveTranscriber:
                 pass
 
     def _run_pipeline(self):
-        """Set up and run streamlink → ffmpeg → Deepgram."""
-        # 1. Start streamlink
-        print("Starting streamlink...")
-        try:
-            self.streamlink_proc = subprocess.Popen(
-                ["streamlink", "--stdout", self.url, "audio_only,audio,worst"],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
-        except FileNotFoundError:
-            print("ERROR: streamlink not found. Run: pip install streamlink", file=sys.stderr)
-            return
+        """Set up and run [streamlink →] ffmpeg → Deepgram."""
+        ffmpeg_input_args = []
+        ffmpeg_stdin = None
 
-        # Give streamlink a moment to connect
-        time.sleep(2)
-        if self.streamlink_proc.poll() is not None:
-            stderr = self.streamlink_proc.stderr.read().decode().strip()
-            print(f"ERROR: streamlink failed to connect: {stderr}", file=sys.stderr)
-            return
+        if self.direct:
+            # Direct mode: ffmpeg reads URL directly (HLS, RTMP, etc.)
+            # If stream isn't live yet, ffmpeg fails fast — retry until it works
+            print(f"Direct mode: connecting to {self.url}")
+            ffmpeg_input_args = ["-i", self.url]
+            ffmpeg_stdin = None
 
-        # 2. Start ffmpeg to convert to PCM
+            wait_interval = 60
+            wait_max = 1800  # 30 minutes
+            elapsed = 0
+            while True:
+                probe = subprocess.run(
+                    ["ffmpeg", "-i", self.url, "-t", "1", "-f", "null", "-"],
+                    capture_output=True, timeout=30,
+                )
+                if probe.returncode == 0:
+                    break
+                if elapsed >= wait_max:
+                    print(f"ERROR: Stream not available after {wait_max}s, giving up.", file=sys.stderr)
+                    return
+                print(f"Stream not live yet, retrying in {wait_interval}s... ({elapsed}s elapsed)")
+                time.sleep(wait_interval)
+                elapsed += wait_interval
+        else:
+            # Streamlink mode: streamlink pipes audio to ffmpeg
+            print("Starting streamlink...")
+            try:
+                self.streamlink_proc = subprocess.Popen(
+                    ["streamlink", "--stdout", self.url, "audio_only,audio,worst"],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                )
+            except FileNotFoundError:
+                print("ERROR: streamlink not found. Run: pip install streamlink", file=sys.stderr)
+                return
+
+            # Give streamlink a moment to connect
+            time.sleep(2)
+            if self.streamlink_proc.poll() is not None:
+                stderr = self.streamlink_proc.stderr.read().decode().strip()
+                print(f"ERROR: streamlink failed to connect: {stderr}", file=sys.stderr)
+                return
+
+            ffmpeg_input_args = ["-i", "pipe:0"]
+            ffmpeg_stdin = self.streamlink_proc.stdout
+
+        # Start ffmpeg to convert to PCM
         print("Starting ffmpeg (converting to PCM 16kHz mono)...")
         try:
             self.ffmpeg_proc = subprocess.Popen(
                 [
                     "ffmpeg",
-                    "-i", "pipe:0",
+                    *ffmpeg_input_args,
                     "-f", "s16le",
                     "-acodec", "pcm_s16le",
                     "-ar", "16000",
@@ -156,7 +192,7 @@ class LiveTranscriber:
                     "-loglevel", "quiet",
                     "pipe:1",
                 ],
-                stdin=self.streamlink_proc.stdout,
+                stdin=ffmpeg_stdin,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
             )
@@ -216,7 +252,7 @@ class LiveTranscriber:
             if self.ffmpeg_proc.poll() is not None:
                 print("\nStream ended (ffmpeg process exited).")
                 break
-            if self.streamlink_proc.poll() is not None:
+            if self.streamlink_proc and self.streamlink_proc.poll() is not None:
                 print("\nStream ended (streamlink process exited).")
                 break
 
@@ -382,11 +418,13 @@ class LiveTranscriber:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="AI Reporter — capture and transcribe live YouTube streams"
+        description="AI Reporter — capture and transcribe live streams"
     )
-    parser.add_argument("url", help="YouTube live stream URL")
+    parser.add_argument("url", help="Live stream URL (YouTube, HLS .m3u8, RTMP, etc.)")
     parser.add_argument("--slug", required=True,
                         help="Identifier for this transcript (e.g., pentagon-2026-03-26)")
+    parser.add_argument("--direct", action="store_true",
+                        help="Skip streamlink — feed URL directly to ffmpeg (for HLS, RTMP, etc.)")
     parser.add_argument("--transcribe-only", action="store_true",
                         help="Only transcribe — don't generate a news report")
     parser.add_argument("--max-duration", type=int, default=None,
@@ -398,7 +436,8 @@ def main():
 
     transcriber = LiveTranscriber(args.url, args.slug,
                                   max_duration=args.max_duration,
-                                  dead_air_timeout=args.dead_air_timeout)
+                                  dead_air_timeout=args.dead_air_timeout,
+                                  direct=args.direct)
     transcript_path = transcriber.start()
 
     if transcript_path and transcript_path.exists() and not args.transcribe_only:

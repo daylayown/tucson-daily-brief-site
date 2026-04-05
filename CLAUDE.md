@@ -14,7 +14,7 @@ Static blog for GitHub Pages — minimal, text-first, Daring Fireball style. No 
 ├── news-reports.html            # Auto-generated News Reports index page
 ├── news-reports/                # Published news report HTML files (human-approved)
 ├── ai_reporter.py               # Downstream pipeline: transcript JSON → Claude report → Telegram → publish
-├── ai_reporter_live.py          # Live input: streamlink → Deepgram WebSocket → transcript JSON
+├── ai_reporter_live.py          # Live input: streamlink/direct HLS → Deepgram WebSocket → transcript JSON
 ├── run_live_reporter.sh         # Shell wrapper for live reporter (env loading, dep validation)
 ├── transcripts/                 # Working directory: transcript JSON + drafts (gitignored)
 ├── agenda-watch/                # Working directory: markdown previews + full references (not published)
@@ -76,6 +76,16 @@ Briefing files come from the Tucson Daily Brief podcast project at `~/.openclaw/
 The upstream briefing agent (`~/.openclaw/workspace/TUCSON-BRIEF.md`) is instructed to include direct article URLs in markdown link format. If it can't determine the URL for a story, plain text is acceptable and the homepage fallback kicks in.
 
 ## Automation
+
+### OpenClaw and Anthropic API billing
+
+**All AI calls in this pipeline use the Anthropic API via API key** (`"mode": "api_key"` in `openclaw.json`), not a Claude Pro/Max subscription. This was a deliberate architectural decision from day one (February 2026). The Claude Max subscription is used only for interactive sessions (Claude Code, claude.ai).
+
+**Why this matters:** On April 4, 2026, Anthropic officially cut off Claude subscribers from using Pro/Max subscription OAuth tokens with third-party tools like OpenClaw, citing unsustainable infrastructure strain. Users running agents through flat-rate subscriptions were burning $1,000–5,000/day in equivalent API costs. This crackdown does not affect API key users — only subscription-based auth.
+
+**This pipeline is unaffected.** OpenClaw's role here is as a cron scheduler and skills platform (see below), authenticated via API key. All downstream scripts (`agenda_mining*.py`, `ai_reporter.py`, `generate_podcast.py`) also make direct API calls with the API key from `~/.config/environment.d/anthropic.conf`.
+
+**Monthly API cost:** ~$3–4/month total. Daily briefing (Sonnet) ~$0.09/day, podcast condensation (Haiku) ~$0.01/day, agenda mining (Sonnet) ~$0.50–0.80/month across all four municipalities.
 
 This site is part of a daily pipeline with two stages:
 
@@ -164,7 +174,7 @@ The daily brief repackages existing journalism. The agenda mining pipeline (abov
 
 ### Planned content types
 
-- **Post-Meeting News Reports** — 🚧 **FIRST REAL RECORDINGS SCHEDULED (April 7, 2026).** AI reporter that transcribes government meetings (live or from VOD) and generates AP-style news reports. Requires human editorial review before publishing. Live pipeline tested on YouTube livestreams (`ai_reporter.py` + `ai_reporter_live.py`). Pima County BOS (9 AM) and Tucson Mayor & Council (5:30 PM) scheduled via `at` for April 7. `run_live_reporter.sh` now includes a wait-for-stream retry loop (polls every 60s for up to 30 min).
+- **Post-Meeting News Reports** — 🚧 **FIRST REAL RECORDINGS SCHEDULED (April 7-8, 2026).** AI reporter that transcribes government meetings (live or from VOD) and generates AP-style news reports. Requires human editorial review before publishing. Live pipeline tested on YouTube livestreams (`ai_reporter.py` + `ai_reporter_live.py`). Pima County BOS (9 AM) and Tucson Mayor & Council (5:30 PM) scheduled via `at` for April 7. Oro Valley Town Council (5 PM) scheduled for April 8 — first Swagit live capture using `--direct` mode. `run_live_reporter.sh` includes a wait-for-stream retry loop (polls every 60s for up to 30 min).
 
 - **Agenda Mining** — ✅ **LIVE.** Before meetings happen, read every agenda and supporting document. Surface buried items that reporters would miss and publish "what to watch" previews. Auto-publishes for all four municipalities.
 
@@ -198,9 +208,10 @@ Live pipeline built March 2026. VOD pipeline planned but not yet implemented.
 
 **Architecture:**
 ```
-Live input:  streamlink → ffmpeg (PCM 16kHz mono) → Deepgram WebSocket → transcript JSON
-                                                                              │
-Downstream:  transcript JSON → Claude Sonnet 4.6 news report → Telegram review → approve → publish HTML
+Live input (YouTube):  streamlink → ffmpeg (PCM 16kHz mono) → Deepgram WebSocket → transcript JSON
+Live input (Swagit):   ffmpeg reads HLS .m3u8 directly (--direct mode) → Deepgram WebSocket → transcript JSON
+                                                                                    │
+Downstream:            transcript JSON → Claude Sonnet 4.6 news report → Telegram review → approve → publish HTML
 ```
 
 **Scripts:**
@@ -208,13 +219,16 @@ Downstream:  transcript JSON → Claude Sonnet 4.6 news report → Telegram revi
 | Script | Purpose |
 |---|---|
 | `ai_reporter.py` | Downstream pipeline: transcript JSON → Claude report → Telegram → approve/publish |
-| `ai_reporter_live.py` | Live input: streamlink → Deepgram WebSocket → real-time terminal display → transcript JSON |
-| `run_live_reporter.sh` | Shell wrapper: loads env vars, validates deps, waits for stream to go live, passes args through |
+| `ai_reporter_live.py` | Live input: streamlink or direct HLS → Deepgram WebSocket → real-time terminal display → transcript JSON |
+| `run_live_reporter.sh` | Shell wrapper: loads env vars, validates deps, waits for stream to go live, passes args through. Skips streamlink/yt-dlp checks in `--direct` mode |
 
 **Usage:**
 ```bash
-# Capture a live stream and generate a news report
+# Capture a YouTube live stream and generate a news report
 ./run_live_reporter.sh "https://youtube.com/watch?v=XXX" --slug pentagon-2026-03-26
+
+# Capture a Swagit/HLS live stream (direct mode — no streamlink needed)
+./run_live_reporter.sh "https://stream.swagit.com/live-edge/orovalleyaz/smil:hd-16x9-1-a/playlist.m3u8" --slug orovalley-council-2026-04-08 --direct
 
 # Transcribe only (no news report)
 ./run_live_reporter.sh "https://youtube.com/watch?v=XXX" --slug test-1 --transcribe-only
@@ -266,15 +280,20 @@ news-reports.html                         # News Reports index page
 }
 ```
 
-**Wait-for-stream:** `run_live_reporter.sh` polls with `yt-dlp --simulate` every 60 seconds for up to 30 minutes before giving up. This allows scheduling recordings before a stream goes live (e.g., 5 minutes before a meeting's start time). YouTube's `/live` URL for a channel (e.g., `https://www.youtube.com/@PimaCountyArizona/live`) always redirects to the current livestream if one exists, but returns nothing if the channel isn't streaming yet.
+**Wait-for-stream:** Two modes depending on input type:
+- **Streamlink mode** (default): `run_live_reporter.sh` polls with `yt-dlp --simulate` every 60 seconds for up to 30 minutes. YouTube's `/live` URL for a channel always redirects to the current livestream if one exists, but returns nothing if the channel isn't streaming yet.
+- **Direct mode** (`--direct`): The shell wrapper skips yt-dlp polling. Instead, `ai_reporter_live.py` probes the URL with a quick `ffmpeg` read attempt, retrying every 60 seconds for up to 30 minutes. This is needed for HLS URLs (Swagit, etc.) that yt-dlp doesn't understand.
 
 **Scheduling live recordings with `at`:**
 
 Recordings can be pre-scheduled using the `at` command (package: `at`, daemon: `atd`). `at` captures the current working directory and environment at scheduling time.
 
 ```bash
-# Schedule a recording — start 5 min before meeting, retry loop handles the gap
+# Schedule a YouTube recording — start 5 min before meeting, retry loop handles the gap
 echo "./run_live_reporter.sh 'https://www.youtube.com/@PimaCountyArizona/live' --slug pima-bos-2026-04-07 >> /tmp/live-reporter.log 2>&1" | at 8:55 AM 2026-04-07
+
+# Schedule a Swagit/HLS recording (direct mode)
+echo "./run_live_reporter.sh 'https://stream.swagit.com/live-edge/orovalleyaz/smil:hd-16x9-1-a/playlist.m3u8' --slug orovalley-council-2026-04-08 --direct >> /tmp/live-reporter-ov.log 2>&1" | at 4:55 PM 2026-04-08
 
 # List scheduled jobs
 atq
@@ -286,21 +305,22 @@ at -c <job_number>
 atrm <job_number>
 ```
 
-**YouTube channel URLs for live recording:**
+**Live stream URLs by municipality:**
 
-| Municipality | YouTube Channel | Live URL |
-|---|---|---|
-| Pima County BOS | `@PimaCountyArizona` | `https://www.youtube.com/@PimaCountyArizona/live` |
-| City of Tucson | `CityofTucson` | `https://www.youtube.com/user/CityofTucson/live` |
-| Marana | Swagit (not YouTube) | N/A — use VOD pipeline |
-| Oro Valley | Swagit (not YouTube) | N/A — use VOD pipeline |
+| Municipality | Platform | Live URL | Mode |
+|---|---|---|---|
+| Pima County BOS | YouTube | `https://www.youtube.com/@PimaCountyArizona/live` | streamlink (default) |
+| City of Tucson | YouTube | `https://www.youtube.com/user/CityofTucson/live` | streamlink (default) |
+| Oro Valley | Swagit (HLS) | `https://stream.swagit.com/live-edge/orovalleyaz/smil:hd-16x9-1-a/playlist.m3u8` | `--direct` |
+| Marana | Swagit (HLS) | TBD — likely `https://stream.swagit.com/live-edge/maranaaz/smil:hd-16x9-1-a/playlist.m3u8` | `--direct` |
 
-Only Pima County and Tucson stream on YouTube. Marana and Oro Valley use Swagit, which is not supported by streamlink — those municipalities require the VOD pipeline (fetch recording after posting).
+Pima County and Tucson stream on YouTube (use default streamlink mode). Oro Valley and Marana stream on Swagit, which serves HLS `.m3u8` streams — use `--direct` mode to have ffmpeg read the URL directly, bypassing streamlink. Swagit's streaming infrastructure uses Video.js + HLS.js on the frontend, backed by `stream.swagit.com` CDN.
 
-**Future automation:** The agenda mining pipeline already knows meeting dates and times. A natural next step is to have `check_agendas.sh` auto-schedule `at` jobs for YouTube-streaming municipalities when it discovers new meetings.
+**Future automation:** The agenda mining pipeline already knows meeting dates and times. A natural next step is to have `check_agendas.sh` auto-schedule `at` jobs when it discovers new meetings — for all four municipalities now that `--direct` mode supports Swagit.
 
 **Live pipeline details:**
-- Audio pipeline: `streamlink --stdout URL audio_only` → `ffmpeg` (convert to PCM s16le, 16kHz, mono) → Python reads 4096-byte chunks (~128ms) → Deepgram WebSocket
+- Audio pipeline (default): `streamlink --stdout URL audio_only` → `ffmpeg` (convert to PCM s16le, 16kHz, mono) → Python reads 4096-byte chunks (~128ms) → Deepgram WebSocket
+- Audio pipeline (direct): `ffmpeg -i URL` reads HLS/RTMP directly → same PCM conversion → same Deepgram path
 - Deepgram config: nova-2 model, smart_format, diarize, interim_results, 300ms endpointing
 - Terminal display: interim results shown in-place, final results with timestamps and speaker labels
 - Periodic save every 60 seconds to `{slug}-partial.json` (crash protection)
@@ -409,6 +429,6 @@ The hardest part is sourcing data, not the AI pipeline. Start with what Tucson/P
 | 6:00 AM | OpenClaw briefing agent | (OpenClaw internal) |
 | 6:10 AM | `run_podcast.sh` — Telegram, blog, podcast, YouTube | `/tmp/podcast-gen.log` |
 | 8:00 AM | `check_agendas.sh` — all 4 agenda pipelines | `/tmp/agenda-check.log` |
-| (scheduled) | `at` jobs — live reporter for YouTube-streaming meetings | `/tmp/live-reporter*.log` |
+| (scheduled) | `at` jobs — live reporter for YouTube + Swagit meetings | `/tmp/live-reporter*.log` |
 
 **`atd` daemon** must be enabled (`systemctl enable --now atd`) for scheduled live recordings. Jobs are one-off — each meeting needs its own `at` job (see "Scheduling live recordings with `at`" under AI Reporter Pipeline).

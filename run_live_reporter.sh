@@ -5,6 +5,7 @@
 #
 # Usage:
 #   ./run_live_reporter.sh "https://youtube.com/watch?v=XXX" --slug pentagon-2026-03-26
+#   ./run_live_reporter.sh "https://stream.swagit.com/.../playlist.m3u8" --slug ov-2026-04-08 --direct
 #   ./run_live_reporter.sh "https://youtube.com/watch?v=XXX" --slug test-1 --transcribe-only
 
 set -euo pipefail
@@ -18,6 +19,15 @@ set +a
 
 # --- Config ---
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# --- Check for --direct flag ---
+DIRECT_MODE=0
+for arg in "$@"; do
+    if [[ "$arg" == "--direct" ]]; then
+        DIRECT_MODE=1
+        break
+    fi
+done
 
 # --- Validate dependencies ---
 missing=0
@@ -33,7 +43,7 @@ if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
     missing=1
 fi
 
-if ! command -v streamlink &>/dev/null; then
+if [ "$DIRECT_MODE" -eq 0 ] && ! command -v streamlink &>/dev/null; then
     echo "ERROR: streamlink not found. Run: pip install streamlink" >&2
     missing=1
 fi
@@ -58,31 +68,35 @@ if [ "$missing" -eq 1 ]; then
 fi
 
 # --- Wait for stream to go live (if not already) ---
-# Extracts the URL (first positional arg) and polls with yt-dlp until the
-# stream is available, retrying every 60 seconds for up to 30 minutes.
-WAIT_INTERVAL=60
-WAIT_MAX=1800  # 30 minutes
+# In direct mode, skip yt-dlp polling — ffmpeg will connect to the URL directly
+# and block/retry on its own. For streamlink mode, poll with yt-dlp.
+if [ "$DIRECT_MODE" -eq 0 ]; then
+    WAIT_INTERVAL=60
+    WAIT_MAX=1800  # 30 minutes
 
-url=""
-for arg in "$@"; do
-    if [[ "$arg" == http* ]]; then
-        url="$arg"
-        break
-    fi
-done
-
-if [ -n "$url" ]; then
-    elapsed=0
-    while ! yt-dlp --simulate "$url" &>/dev/null; do
-        if [ "$elapsed" -ge "$WAIT_MAX" ]; then
-            echo "ERROR: Stream not live after ${WAIT_MAX}s, giving up: $url" >&2
-            exit 1
+    url=""
+    for arg in "$@"; do
+        if [[ "$arg" == http* ]]; then
+            url="$arg"
+            break
         fi
-        echo "$(date): Stream not live yet, retrying in ${WAIT_INTERVAL}s... ($url)"
-        sleep "$WAIT_INTERVAL"
-        elapsed=$((elapsed + WAIT_INTERVAL))
     done
-    echo "$(date): Stream is live, starting reporter: $url"
+
+    if [ -n "$url" ]; then
+        elapsed=0
+        while ! yt-dlp --simulate "$url" &>/dev/null; do
+            if [ "$elapsed" -ge "$WAIT_MAX" ]; then
+                echo "ERROR: Stream not live after ${WAIT_MAX}s, giving up: $url" >&2
+                exit 1
+            fi
+            echo "$(date): Stream not live yet, retrying in ${WAIT_INTERVAL}s... ($url)"
+            sleep "$WAIT_INTERVAL"
+            elapsed=$((elapsed + WAIT_INTERVAL))
+        done
+        echo "$(date): Stream is live, starting reporter: $url"
+    fi
+else
+    echo "$(date): Direct mode — skipping stream polling, ffmpeg will connect directly"
 fi
 
 # --- Run ---
