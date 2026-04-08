@@ -324,7 +324,7 @@ Pima County and Tucson stream on YouTube (use default streamlink mode). Oro Vall
 - Deepgram config: nova-2 model, smart_format, diarize, interim_results, 300ms endpointing
 - Terminal display: interim results shown in-place, final results with timestamps and speaker labels
 - Periodic save every 60 seconds to `{slug}-partial.json` (crash protection)
-- Graceful shutdown: Ctrl+C, dead air timeout (5 min default), max duration (6 hr default), or stream end → flushes Deepgram finals, saves transcript, auto-runs downstream pipeline
+- Graceful shutdown: Ctrl+C, dead air timeout (15 min default, only after first speech), max duration (6 hr default), or stream end → flushes Deepgram finals, saves transcript, auto-runs downstream pipeline
 - Cost: ~$0.0077/min (~$1.38 for a 3-hour meeting)
 - Idempotency: skips if transcript JSON already exists; skips draft generation if `-draft.md` exists (use `--force` to override)
 - Runs unattended: designed for automated recording of town halls/briefings with no human monitoring
@@ -336,7 +336,7 @@ Pima County and Tucson stream on YouTube (use default streamlink mode). Oro Vall
 **Deepgram SDK v6 notes:** The script was updated from the v3/v4 API to v6.1.1. Key differences: context manager pattern (`with client.listen.v1.connect(...) as connection`), `EventType.MESSAGE` replaces `LiveTranscriptionEvents.Transcript`, `send_media()` replaces `send()`, `send_close_stream()` replaces `finish()`, boolean params must be passed as strings (`"true"` not `True`) due to SDK query string encoding bug.
 
 **Auto-stop behavior:** The live pipeline runs unattended with three auto-stop triggers:
-- **Dead air timeout** (default 5 min) — no speech detected → graceful stop. Configurable via `--dead-air-timeout N` (seconds).
+- **Dead air timeout** (default 15 min) — no speech detected → graceful stop. Configurable via `--dead-air-timeout N` (seconds). **Only activates after first speech is detected** — pre-meeting silence is ignored so the recorder can wait through late starts and always-on streams (e.g., Tucson's 24/7 YouTube stream). This was added April 7, 2026 after both Pima County BOS and Tucson Mayor & Council recordings failed due to meetings starting late.
 - **Max duration** (default 6 hours) — safety cap to prevent runaway costs. Configurable via `--max-duration N` (seconds).
 - **Stream end** — streamlink/ffmpeg exit when the broadcast ends.
 

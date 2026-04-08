@@ -44,7 +44,7 @@ SITE_DIR = Path(__file__).resolve().parent
 TRANSCRIPTS_DIR = SITE_DIR / "transcripts"
 AUDIO_CHUNK_SIZE = 4096  # ~128ms at 16kHz/16bit/mono
 PERIODIC_SAVE_INTERVAL = 60  # seconds
-DEAD_AIR_TIMEOUT = 300  # 5 minutes of no speech → auto-stop
+DEAD_AIR_TIMEOUT = 900  # 15 minutes of no speech → auto-stop
 MAX_DURATION = 6 * 3600  # 6 hour safety cap
 
 
@@ -67,6 +67,7 @@ class LiveTranscriber:
         self.shutting_down = False
         self.last_save_time = 0
         self.last_speech_time = 0  # Updated on each final transcript segment
+        self.speech_detected = False  # Dead air timeout only activates after first speech
         self.pipeline_start_time = 0
         self.current_interim = ""  # For terminal display
 
@@ -269,13 +270,14 @@ class LiveTranscriber:
 
             now = time.time()
 
-            # Dead air timeout: no speech → auto-stop
-            silence_duration = now - self.last_speech_time
-            if silence_duration >= self.dead_air_timeout:
-                minutes = int(silence_duration // 60)
-                seconds = int(silence_duration % 60)
-                print(f"\nAuto-stopping: no speech for {minutes}m{seconds}s.")
-                break
+            # Dead air timeout: only activates after first speech detected
+            if self.speech_detected:
+                silence_duration = now - self.last_speech_time
+                if silence_duration >= self.dead_air_timeout:
+                    minutes = int(silence_duration // 60)
+                    seconds = int(silence_duration % 60)
+                    print(f"\nAuto-stopping: no speech for {minutes}m{seconds}s.")
+                    break
 
             # Max duration safety cap
             elapsed = now - self.pipeline_start_time
@@ -315,6 +317,9 @@ class LiveTranscriber:
 
             if is_final:
                 self.last_speech_time = time.time()
+                if not self.speech_detected:
+                    self.speech_detected = True
+                    print("  [Speech detected — dead air timeout now active]")
 
                 # Extract speaker and timing from words
                 speaker = None
@@ -430,7 +435,7 @@ def main():
     parser.add_argument("--max-duration", type=int, default=None,
                         help="Max recording duration in seconds (default: 6 hours)")
     parser.add_argument("--dead-air-timeout", type=int, default=None,
-                        help="Stop after N seconds of no speech (default: 300)")
+                        help="Stop after N seconds of no speech (default: 900)")
 
     args = parser.parse_args()
 
