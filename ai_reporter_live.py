@@ -52,11 +52,13 @@ class LiveTranscriber:
     """Manages the live transcription pipeline: [streamlink →] ffmpeg → Deepgram."""
 
     def __init__(self, url: str, slug: str, max_duration: int = None,
-                 dead_air_timeout: int = None, direct: bool = False):
+                 dead_air_timeout: int = None, direct: bool = False,
+                 min_recording_time: int = 0):
         self.url = url
         self.slug = slug
         self.max_duration = max_duration or MAX_DURATION
         self.dead_air_timeout = dead_air_timeout or DEAD_AIR_TIMEOUT
+        self.min_recording_time = min_recording_time
         self.direct = direct  # Skip streamlink, feed URL directly to ffmpeg
         self.segments: list[dict] = []
         self.started_at: str = ""
@@ -239,6 +241,13 @@ class LiveTranscriber:
             self.pipeline_start_time = now
 
             print("Connected. Listening...\n")
+            if self.min_recording_time > 0:
+                hours = self.min_recording_time // 3600
+                minutes = (self.min_recording_time % 3600) // 60
+                if hours:
+                    print(f"  [Dead air timeout suppressed for first {hours}h{minutes}m]")
+                else:
+                    print(f"  [Dead air timeout suppressed for first {minutes}m]")
 
             # 4. Read audio chunks and send to Deepgram
             self._stream_audio()
@@ -271,7 +280,9 @@ class LiveTranscriber:
             now = time.time()
 
             # Dead air timeout: only activates after first speech detected
-            if self.speech_detected:
+            # AND after min_recording_time has elapsed
+            elapsed = now - self.pipeline_start_time
+            if self.speech_detected and elapsed >= self.min_recording_time:
                 silence_duration = now - self.last_speech_time
                 if silence_duration >= self.dead_air_timeout:
                     minutes = int(silence_duration // 60)
@@ -280,7 +291,6 @@ class LiveTranscriber:
                     break
 
             # Max duration safety cap
-            elapsed = now - self.pipeline_start_time
             if elapsed >= self.max_duration:
                 hours = int(elapsed // 3600)
                 minutes = int((elapsed % 3600) // 60)
@@ -436,13 +446,16 @@ def main():
                         help="Max recording duration in seconds (default: 6 hours)")
     parser.add_argument("--dead-air-timeout", type=int, default=None,
                         help="Stop after N seconds of no speech (default: 900)")
+    parser.add_argument("--min-recording-time", type=int, default=0,
+                        help="Don't activate dead air timeout until this many seconds have elapsed (default: 0)")
 
     args = parser.parse_args()
 
     transcriber = LiveTranscriber(args.url, args.slug,
                                   max_duration=args.max_duration,
                                   dead_air_timeout=args.dead_air_timeout,
-                                  direct=args.direct)
+                                  direct=args.direct,
+                                  min_recording_time=args.min_recording_time)
     transcript_path = transcriber.start()
 
     if transcript_path and transcript_path.exists() and not args.transcribe_only:
