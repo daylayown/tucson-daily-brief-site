@@ -140,7 +140,14 @@ class LiveTranscriber:
             # Direct mode: ffmpeg reads URL directly (HLS, RTMP, etc.)
             # If stream isn't live yet, ffmpeg fails fast — retry until it works
             print(f"Direct mode: connecting to {self.url}")
-            ffmpeg_input_args = ["-i", self.url]
+            ffmpeg_input_args = [
+                "-reconnect", "1",
+                "-reconnect_streamed", "1",
+                "-reconnect_delay_max", "30",
+                "-err_detect", "ignore_err",
+                "-fflags", "+discardcorrupt",
+                "-i", self.url,
+            ]
             ffmpeg_stdin = None
 
             wait_interval = 60
@@ -257,7 +264,17 @@ class LiveTranscriber:
             listener_thread.join(timeout=5)
 
     def _stream_audio(self):
-        """Read PCM chunks from ffmpeg and send to Deepgram."""
+        """Read PCM chunks from ffmpeg and send to Deepgram.
+
+        Uses non-blocking reads with select() so that if ffmpeg stalls
+        (e.g., corrupt HLS packets), we send silence to Deepgram to keep
+        the WebSocket alive and avoid 1011 timeout errors.
+        """
+        import select
+        SILENCE_CHUNK = b'\x00' * AUDIO_CHUNK_SIZE
+        FFMPEG_READ_TIMEOUT = 5  # seconds before sending silence
+        ffmpeg_fd = self.ffmpeg_proc.stdout.fileno()
+
         while not self.shutting_down:
             # Check if ffmpeg/streamlink died
             if self.ffmpeg_proc.poll() is not None:
@@ -268,11 +285,16 @@ class LiveTranscriber:
                 break
 
             try:
-                chunk = self.ffmpeg_proc.stdout.read(AUDIO_CHUNK_SIZE)
-                if not chunk:
-                    print("\nStream ended (no more audio data).")
-                    break
-                self.dg_connection.send_media(chunk)
+                ready, _, _ = select.select([ffmpeg_fd], [], [], FFMPEG_READ_TIMEOUT)
+                if ready:
+                    chunk = os.read(ffmpeg_fd, AUDIO_CHUNK_SIZE)
+                    if not chunk:
+                        print("\nStream ended (no more audio data).")
+                        break
+                    self.dg_connection.send_media(chunk)
+                else:
+                    # ffmpeg stalled — send silence to keep Deepgram alive
+                    self.dg_connection.send_media(SILENCE_CHUNK)
             except Exception as e:
                 if not self.shutting_down:
                     print(f"\nERROR reading/sending audio: {e}", file=sys.stderr)
