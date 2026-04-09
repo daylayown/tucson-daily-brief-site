@@ -46,6 +46,7 @@ AUDIO_CHUNK_SIZE = 4096  # ~128ms at 16kHz/16bit/mono
 PERIODIC_SAVE_INTERVAL = 60  # seconds
 DEAD_AIR_TIMEOUT = 900  # 15 minutes of no speech → auto-stop
 MAX_DURATION = 6 * 3600  # 6 hour safety cap
+MIN_RECORDING_TIME = 4 * 3600  # 4 hours before dead air timeout activates
 
 
 class LiveTranscriber:
@@ -53,12 +54,12 @@ class LiveTranscriber:
 
     def __init__(self, url: str, slug: str, max_duration: int = None,
                  dead_air_timeout: int = None, direct: bool = False,
-                 min_recording_time: int = 0):
+                 min_recording_time: int = None):
         self.url = url
         self.slug = slug
         self.max_duration = max_duration or MAX_DURATION
         self.dead_air_timeout = dead_air_timeout or DEAD_AIR_TIMEOUT
-        self.min_recording_time = min_recording_time
+        self.min_recording_time = min_recording_time if min_recording_time is not None else MIN_RECORDING_TIME
         self.direct = direct  # Skip streamlink, feed URL directly to ffmpeg
         self.segments: list[dict] = []
         self.started_at: str = ""
@@ -446,8 +447,8 @@ def main():
                         help="Max recording duration in seconds (default: 6 hours)")
     parser.add_argument("--dead-air-timeout", type=int, default=None,
                         help="Stop after N seconds of no speech (default: 900)")
-    parser.add_argument("--min-recording-time", type=int, default=0,
-                        help="Don't activate dead air timeout until this many seconds have elapsed (default: 0)")
+    parser.add_argument("--min-recording-time", type=int, default=None,
+                        help="Don't activate dead air timeout until this many seconds have elapsed (default: 4 hours)")
 
     args = parser.parse_args()
 
