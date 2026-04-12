@@ -123,11 +123,37 @@ View it at: https://tucsondailybrief.com/meeting-watch.html"
     fi
 done <<< "$PREVIEWS"
 
+# --- Public Record liquor license filings (post-process) ---
+# Scans agenda-watch/*-full.md files produced by the four pipelines above,
+# extracts liquor license items via Claude, and publishes them as filings
+# under public-record/. Idempotent: each source file is processed once.
+echo "Scanning for liquor license filings..."
+PR_OUTPUT=$(python3 public_record_liquor.py 2>&1) || true
+echo "$PR_OUTPUT"
+PR_COUNT=$(echo "$PR_OUTPUT" | grep -oP 'published \K\d+(?= new filing)' | tail -1)
+PR_COUNT=${PR_COUNT:-0}
+
+if [ "$PR_COUNT" -gt 0 ]; then
+    NOTIFY_MSG="🥂 $PR_COUNT new public record filing(s) published
+
+New liquor license filings have been surfaced from this week's government meeting agendas and auto-published to Tucson Daily Brief.
+
+View at: https://tucsondailybrief.com/public-record.html"
+
+    TMPFILE=$(mktemp /tmp/pr-notify-XXXXX.md)
+    echo "$NOTIFY_MSG" > "$TMPFILE"
+    if [ -f "$SEND_TELEGRAM" ]; then
+        python3 "$SEND_TELEGRAM" "$TMPFILE" || echo "WARNING: Public Record Telegram notification failed (non-fatal)"
+    fi
+    rm -f "$TMPFILE"
+    PUBLISHED=$((PUBLISHED + PR_COUNT))
+fi
+
 # Git commit and push if anything was published
 if [ "$PUBLISHED" -gt 0 ]; then
-    echo "Committing and pushing $PUBLISHED new preview(s)..."
+    echo "Committing and pushing $PUBLISHED new item(s)..."
     git add -A
-    git commit -m "Auto-publish meeting preview(s) for $(date +%Y-%m-%d)"
+    git commit -m "Auto-publish meeting preview(s) and public record filing(s) for $(date +%Y-%m-%d)"
     git push
     echo "Pushed to GitHub Pages."
 fi

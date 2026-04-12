@@ -22,7 +22,10 @@ Static blog for GitHub Pages — minimal, text-first, Daring Fireball style. No 
 ├── agenda_mining_marana.py      # Marana Town Council pipeline (Destiny Hosted scraping)
 ├── agenda_mining_orovalley.py   # Oro Valley Town Council pipeline (Destiny Hosted scraping)
 ├── agenda_mining_tucson.py      # City of Tucson pipeline (Hyland OnBase PDF + pdftotext)
-├── check_agendas.sh             # Daily cron wrapper: runs all 4 pipelines, auto-publishes, pushes
+├── check_agendas.sh             # Daily cron wrapper: runs all 4 pipelines + public record, auto-publishes, pushes
+├── public_record_liquor.py      # Public Record pipeline: extracts liquor license filings from agenda-watch reference files
+├── public-record.html           # Auto-generated Public Record section index
+├── public-record/               # Published HTML files for individual filings
 ├── MEETING-WATCH-PIPELINE.md    # Full reference docs for the meeting watch system
 ├── CNAME                        # Custom domain: tucsondailybrief.com
 ├── .nojekyll                    # Tells GitHub Pages to skip Jekyll
@@ -177,6 +180,8 @@ The daily brief repackages existing journalism. The agenda mining pipeline (abov
 - **Post-Meeting News Reports** — 🚧 **FIRST REAL RECORDINGS SCHEDULED (April 7-8, 2026).** AI reporter that transcribes government meetings (live or from VOD) and generates AP-style news reports. Requires human editorial review before publishing. Live pipeline tested on YouTube livestreams (`ai_reporter.py` + `ai_reporter_live.py`). Pima County BOS (9 AM) and Tucson Mayor & Council (5:30 PM) scheduled via `at` for April 7. Oro Valley Town Council (5 PM) scheduled for April 8 — first Swagit live capture using `--direct` mode. `run_live_reporter.sh` includes a wait-for-stream retry loop (polls every 60s for up to 30 min).
 
 - **Agenda Mining** — ✅ **LIVE.** Before meetings happen, read every agenda and supporting document. Surface buried items that reporters would miss and publish "what to watch" previews. Auto-publishes for all four municipalities.
+
+- **Public Record** — ✅ **LIVE (April 11, 2026).** Surfaces public filings buried in government meeting agendas — starting with liquor license applications. Most never get reported on. The pipeline (`public_record_liquor.py`) is a post-process that runs after the four agenda miners finish: it scans the `agenda-watch/*-full.md` reference files, identifies liquor license items via keyword + line clustering, and uses Claude Sonnet to extract structured data (business name, address, series, license type, action type, applicant, ward) plus a 2-sentence newspaper-style summary. Each filing publishes as its own HTML page under `public-record/` with the existing site styling. Coverage: Pima County BOS, City of Tucson, Oro Valley Town Council. **Marana intentionally not supported** — Marana handles liquor licenses administratively through the Town Clerk and does not agendize them for council vote. Future expansion: scrape the Marana clerk page directly. Each cron run sends one consolidated Telegram notification if any new filings were published. Idempotent via `public-record/.processed.txt` (gitignored) plus per-filing output-file existence check. Cost: ~$0.005 per source file processed (one Sonnet call per liquor block, typically 1-3 filings extracted per call). The "Roadmap: Original Journalism" thesis in action — these filings are the basis for both automated coverage and optional human follow-up (the user can chase a filing for a quote/photo, promoting it from a Tier 1 filing to a Tier 2 feature; Tier 2 workflow is not yet built but is the natural next iteration).
 
 ### Post-meeting data sources (researched March 2026)
 
@@ -405,7 +410,7 @@ The Tucson metro area broadly: City of Tucson, Pima County, Town of Marana, Town
 - **Daily Brief** (`index.html`, `posts/`) — daily news synthesis from local sources (live)
 - **Meeting Watch** (`meeting-watch.html`, `meeting-watch/`) — AI-generated agenda previews for 4 municipalities (live, auto-published)
 - **News Reports** (`news-reports.html`, `news-reports/`) — AI-drafted, human-reviewed post-meeting news reports (pipeline built, first real recordings scheduled April 7, 2026)
-- **Public Record** — flagged permits, filings, contracts (planned)
+- **Public Record** (`public-record.html`, `public-record/`) — flagged filings surfaced from agendas; v1 covers liquor license applications across Pima County BOS, City of Tucson, Oro Valley (live as of April 11, 2026)
 - **Deep Read** — AI-assisted analysis of large documents (planned)
 
 ### Story ideas
@@ -415,6 +420,55 @@ The Tucson metro area broadly: City of Tucson, Pima County, Town of Marana, Town
 ### Constraints
 
 The hardest part is sourcing data, not the AI pipeline. Start with what Tucson/Pima County already publishes in machine-readable formats. Some data requires FOIA/public records requests or lives in terrible PDFs and legacy systems.
+
+## Roadmap: Distribution (Weekly Newsletter + Podcast)
+
+Planned distribution channel for after the Public Record pipeline is live and humming. The strategic logic: a daily site is great for the people who already know about TDB, but it's a terrible discovery surface — daily readers are a tiny minority of any audience. Layering a weekly curation on top of the daily firehose is how regional outlets actually grow (Axios Local, most successful Substack locals). Cost is essentially zero: a Sonnet pass over the previous seven days of content is ~$0.05/week, and the existing TTS pipeline (ElevenLabs or Voxtral) handles the audio version with no new infrastructure.
+
+### Format
+
+Roughly 800-1200 words / 6-8 minutes of audio, structured as:
+
+- **One lead story** — the most consequential thing of the week
+- **4-5 short hits** — each with a one-sentence "why this matters" explainer
+- **One Public Record callout** — "Coming soon to your neighborhood" (new restaurants, businesses, permits, etc. — this is the unique hook other regional newsletters can't match)
+- **One Meeting Watch lookahead** — "Here's what's on the agenda next week"
+- **A closing note** — voice, personality, neighborhood color
+
+Generated by Claude Sonnet from the past 7 days of site content. The same pass picks the lead and adjusts prose register for the kitchen-table-on-Sunday-morning reader (warmer, more opinionated than the daily brief).
+
+### Platform: Substack
+
+Default to Substack rather than self-hosted, despite the 10% revenue cut. Reasons:
+- **Built-in network effects.** Substack's recommendation engine has become a real distribution channel for regional/independent journalism — other Substacks recommending each other is how new audiences are found.
+- **Zero infrastructure.** Native email, native podcast hosting, decent analytics, no SMTP/RSS plumbing to maintain.
+- **Brand association.** Substack is where independent journalism lives in the public mind right now.
+- **Portability.** Export the subscriber list periodically. The audience comes with you if you ever migrate.
+
+The 10% rev share is acceptable as the cost of the discovery flywheel. Self-hosted has better unit economics but no growth engine — for a side project trying to grow, network effects beat margins.
+
+### Audio version
+
+Reuse the existing TTS pipeline (`generate_podcast.py` flow). Weekly episode is just a different input text — clean for TTS, send to ElevenLabs or Voxtral, upload to R2 / Substack's native podcast hosting. Substack's app plays inline audio for paid posts, and the episode also distributes via RSS to Apple/Spotify if desired. Probably fits inside the existing podcast feed as a separate weekly long-form episode rather than a second feed.
+
+### Critical principle: do not duplicate the website
+
+The Substack must not be a copy of the daily site. If both surfaces show the same content, neither has a reason to exist.
+
+- **Website** = daily archive, canonical source, searchable, linkable, comprehensive.
+- **Substack** = weekly editorial product. Opinionated, curated, written *to* a specific person reading at the kitchen table on Sunday morning. Different voice, different selection logic, different value proposition.
+
+Same Sonnet pass that picks the week's best stories also rewrites them in newsletter voice — not just a digest of headlines.
+
+### Sequence and timing
+
+**Do not launch the newsletter until the Public Record pipeline has been live and producing content for 2-3 weeks.** Reason: without Public Record, the weekly newsletter is "7 daily briefs + 4-8 meeting previews" — competent but not differentiated. With Public Record running, the weekly has a unique recurring story type ("here's what's opening, closing, and changing in your neighborhood") that nobody else produces for Tucson. That's the forwarding hook — the thing that makes a reader send it to a friend, which is the only marketing channel that actually compounds.
+
+Build order:
+1. Public Record liquor license pipeline (in progress)
+2. Watch it run for 2-3 weeks, learn what volume and editorial gotchas look like
+3. Launch Substack with weekly written newsletter
+4. Add audio version once written newsletter is stable
 
 ## Deployment
 
