@@ -472,6 +472,25 @@ Build order:
 3. Launch Substack with weekly written newsletter
 4. Add audio version once written newsletter is stable
 
+## Roadmap: Repo Consolidation
+
+Pipeline config files (`sources.json`, `TUCSON-BRIEF.md`, openclaw skill references) currently live under `~/.openclaw/` and are not version controlled. Plan is to consolidate them into this repo so everything is in one git history.
+
+**Preferred approach:** Single repo. The site and pipeline are tightly coupled — `sources.json` feeds the agent that produces the markdown that `generate_post.py` turns into HTML. One repo means one `git log` tells the full story.
+
+**Work involved:**
+- Move/symlink relevant files from `~/.openclaw/skills/tucson-daily-brief/` and `~/.openclaw/workspace/TUCSON-BRIEF.md` into this repo (e.g. under `config/` or `pipeline/`)
+- Update hardcoded `~/.openclaw/` paths in: `TUCSON-BRIEF.md`, `check_agendas.sh`, `run_podcast.sh`, openclaw cron config (`~/.openclaw/cron/jobs.json`), and the skill's `references/` pointer
+- Verify `.gitignore` covers sensitive files (API keys are already in `environment.d`, not in the repo)
+- Test that the 6:00 AM and 8:00 AM cron pipelines still run end-to-end
+
+**Key files to bring in:**
+- `~/.openclaw/skills/tucson-daily-brief/references/sources.json` — news source config
+- `~/.openclaw/workspace/TUCSON-BRIEF.md` — editorial instructions for the briefing agent
+- Any other skill references that have accumulated
+
+Estimated effort: ~30-60 minutes. The path updates across scripts are the fiddliest part.
+
 ## Deployment
 
 - **Live URL:** `https://tucsondailybrief.com` (custom domain via CNAME)
