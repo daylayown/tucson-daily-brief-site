@@ -82,15 +82,19 @@ while IFS= read -r preview_path; do
         preview_basename="$(basename "$preview_path")"
         if echo "$preview_basename" | grep -q "marana"; then
             body_name="Marana Town Council"
+            municipality="marana"
             publish_cmd="python3 agenda_mining_marana.py --publish $preview_path"
         elif echo "$preview_basename" | grep -q "orovalley"; then
             body_name="Oro Valley Town Council"
+            municipality="orovalley"
             publish_cmd="python3 agenda_mining_orovalley.py --publish $preview_path"
         elif echo "$preview_basename" | grep -q "tucson"; then
             body_name="Tucson Mayor & Council"
+            municipality="tucson"
             publish_cmd="python3 agenda_mining_tucson.py --publish $preview_path"
         else
             body_name="Pima County BOS"
+            municipality="pima-county"
             publish_cmd="python3 agenda_mining.py --publish $preview_path"
         fi
 
@@ -117,6 +121,22 @@ View it at: https://tucsondailybrief.com/meeting-watch.html"
             fi
 
             rm -f "$TMPFILE"
+
+            # --- Auto-schedule live AI reporter recording ---
+            # Gated by ENABLE_AUTO_SCHEDULE=1 while soak-testing. When enabled,
+            # extracts public_session_start via Claude, queues an `at` job to
+            # run run_live_reporter.sh shortly before the meeting, and sends a
+            # Telegram notification. Non-fatal on failure.
+            if [ "${ENABLE_AUTO_SCHEDULE:-0}" = "1" ]; then
+                full_ref_path="${preview_path/-preview.md/-full.md}"
+                if [ -f "$full_ref_path" ]; then
+                    echo "Auto-scheduling live recording for $body_name ($municipality)..."
+                    python3 schedule_recording.py "$preview_path" "$full_ref_path" "$municipality" \
+                        || echo "WARNING: auto-scheduling failed for $preview_path (non-fatal)"
+                else
+                    echo "WARNING: full reference not found at $full_ref_path; skipping auto-schedule"
+                fi
+            fi
         else
             echo "ERROR: Failed to publish $preview_path"
         fi

@@ -2,3 +2,4 @@ __pycache__/
 transcripts/
 public-record/.processed.txt
 linkedin-post-*.md
+agenda-watch/.scheduled.json

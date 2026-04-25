@@ -23,6 +23,7 @@ Static blog for GitHub Pages — minimal, text-first, Daring Fireball style. No 
 ├── agenda_mining_orovalley.py   # Oro Valley Town Council pipeline (Destiny Hosted scraping)
 ├── agenda_mining_tucson.py      # City of Tucson pipeline (Hyland OnBase PDF + pdftotext)
 ├── check_agendas.sh             # Daily cron wrapper: runs all 4 pipelines + public record, auto-publishes, pushes
+├── schedule_recording.py        # Auto-schedules live AI reporter `at` jobs for discovered meetings
 ├── public_record_liquor.py      # Public Record pipeline: extracts liquor license filings from agenda-watch reference files
 ├── public-record.html           # Auto-generated Public Record section index
 ├── public-record/               # Published HTML files for individual filings
@@ -321,7 +322,36 @@ atrm <job_number>
 
 Pima County and Tucson stream on YouTube (use default streamlink mode). Oro Valley and Marana stream on Swagit, which serves HLS `.m3u8` streams — use `--direct` mode to have ffmpeg read the URL directly, bypassing streamlink. Swagit's streaming infrastructure uses Video.js + HLS.js on the frontend, backed by `stream.swagit.com` CDN.
 
-**Future automation:** The agenda mining pipeline already knows meeting dates and times. A natural next step is to have `check_agendas.sh` auto-schedule `at` jobs when it discovers new meetings — for all four municipalities now that `--direct` mode supports Swagit.
+**Auto-scheduling from agenda mining (built April 2026):** `check_agendas.sh` calls `schedule_recording.py` after each new preview is published. The scheduler:
+
+1. Reads the `{slug}-full.md` reference file produced by the miner.
+2. Asks Claude Sonnet for a structured JSON extraction of `public_session_start` — deliberately distinguishing it from any executive session that might precede it (e.g., Oro Valley's "Regular Session at or after 5:00 PM" [executive] vs "Resume Regular Session at or after 6:00 PM" [public]). Returns `confidence: high|medium|low` with one-sentence reasoning.
+3. Looks up the stream URL + mode from a hardcoded `STREAM_SOURCES` dict (YouTube/streamlink for Pima + Tucson, Swagit/`--direct` for Oro Valley + Marana).
+4. Schedules an `at` job for `max(now+2min, public_session_start - 5min)` — 5-min lead absorbs minor meeting slop, the `now+2min` floor handles same-day discovery (e.g., agenda posted at 8 AM for a 9 AM BOS meeting).
+5. Persists state to `agenda-watch/.scheduled.json` (gitignored) keyed by slug. On the next run, matching public-session times are no-ops; different times trigger `atrm` + re-schedule.
+6. Sends a Telegram notification with the meeting time, `at` job id, confidence level, and the LLM's reasoning notes. Low-confidence extractions are tagged "please verify".
+
+**Enable flag:** The scheduling call in `check_agendas.sh` is gated by `ENABLE_AUTO_SCHEDULE=1`. **This is enabled in the 8 AM cron line as of April 24, 2026** — the crontab prefixes the command with `ENABLE_AUTO_SCHEDULE=1`. To temporarily disable, either `crontab -e` and remove the prefix, or unset the env var in an ad-hoc run. Backup of the pre-change crontab lives at `~/.cache/crontab/crontab.bak`.
+
+**Marana stream URL is unverified** — the `STREAM_SOURCES` entry for Marana is inferred from Oro Valley's Swagit pattern. Verify it during a live Marana broadcast (browser devtools → Network → `.m3u8`) before trusting it in production.
+
+**Backtest and audit commands:**
+```bash
+# Dry-run extraction against every existing preview (no `at`, no state write, no Telegram)
+python3 schedule_recording.py --all-dry-run
+
+# List currently-scheduled recordings
+python3 schedule_recording.py --list
+
+# Manual schedule for a single preview
+python3 schedule_recording.py agenda-watch/pima-county-2026-04-29-preview.md \
+    agenda-watch/pima-county-2026-04-29-full.md pima-county
+
+# Force re-schedule even if state matches
+python3 schedule_recording.py --force <preview> <full_ref> <municipality>
+```
+
+**Reschedule/cancellation limits:** The scheduler handles same-slug rescheduling (e.g., the same meeting gets a new time in a re-posted agenda). It does **not** handle date-level moves or cancellations — if a meeting is moved to a different day, the old `at` job remains scheduled and must be manually removed via `atrm`. Future improvement: nightly cleanup pass that prunes stale entries from `.scheduled.json`.
 
 **Live pipeline details:**
 - Audio pipeline (default): `streamlink --stdout URL audio_only` → `ffmpeg` (convert to PCM s16le, 16kHz, mono) → Python reads 4096-byte chunks (~128ms) → Deepgram WebSocket
@@ -503,7 +533,7 @@ Estimated effort: ~30-60 minutes. The path updates across scripts are the fiddli
 |---|---|---|
 | 6:00 AM | OpenClaw briefing agent | (OpenClaw internal) |
 | 6:10 AM | `run_podcast.sh` — Telegram, blog, podcast, YouTube | `/tmp/podcast-gen.log` |
-| 8:00 AM | `check_agendas.sh` — all 4 agenda pipelines | `/tmp/agenda-check.log` |
+| 8:00 AM | `check_agendas.sh` — all 4 agenda pipelines + auto-schedule live recordings (`ENABLE_AUTO_SCHEDULE=1`) | `/tmp/agenda-check.log` |
 | (scheduled) | `at` jobs — live reporter for YouTube + Swagit meetings | `/tmp/live-reporter*.log` |
 
 **`atd` daemon** must be enabled (`systemctl enable --now atd`) for scheduled live recordings. Jobs are one-off — each meeting needs its own `at` job (see "Scheduling live recordings with `at`" under AI Reporter Pipeline).
