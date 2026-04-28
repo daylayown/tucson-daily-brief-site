@@ -377,6 +377,13 @@ def schedule_one(
         f"at job: {job_id} | confidence: {confidence}\n\n"
         f"Extraction notes: {notes}"
     )
+    if source.get("unverified"):
+        msg += (
+            f"\n\n⚠️ ACTION: {body_name}'s stream URL has never been confirmed on a live broadcast. "
+            f"Before showtime, open the live page in a browser, inspect Network → `.m3u8`, "
+            f"and update STREAM_SOURCES[\"{municipality}\"] in schedule_recording.py if it differs. "
+            f"Remove \"unverified\": True once confirmed to silence this reminder."
+        )
     send_telegram(msg)
     print(msg)
     return 0
