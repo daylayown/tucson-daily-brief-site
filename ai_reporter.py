@@ -476,7 +476,11 @@ def render_report_index(posts: list[dict]) -> str:
 <p class="tagline">News Reports &mdash; AI-drafted, human-reviewed coverage</p>
 </header>
 
-<p><a class="back-link" href="./">&larr; Daily briefings</a></p>
+<nav class="section-nav">
+<a href="./">&larr; Daily briefings</a>
+<a href="meeting-watch.html">Meeting Watch &rarr;</a>
+<a href="public-record.html">Public Record &rarr;</a>
+</nav>
 
 <ul class="post-list">
 {post_list}

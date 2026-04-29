@@ -571,7 +571,11 @@ def render_meeting_index(posts: list[dict]) -> str:
 <p class="tagline">Meeting Watch &mdash; AI-assisted agenda previews</p>
 </header>
 
-<p><a class="back-link" href="./">&larr; Daily briefings</a></p>
+<nav class="section-nav">
+<a href="./">&larr; Daily briefings</a>
+<a href="news-reports.html">News Reports &rarr;</a>
+<a href="public-record.html">Public Record &rarr;</a>
+</nav>
 
 <ul class="post-list">
 {post_list}

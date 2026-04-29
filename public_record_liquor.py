@@ -391,7 +391,11 @@ def render_index_html(filings: list[dict]) -> str:
 <p class="tagline">Public Record &mdash; new businesses, permits, and filings surfaced from public meetings</p>
 </header>
 
-<p><a class="back-link" href="./">&larr; Daily briefings</a></p>
+<nav class="section-nav">
+<a href="./">&larr; Daily briefings</a>
+<a href="meeting-watch.html">Meeting Watch &rarr;</a>
+<a href="news-reports.html">News Reports &rarr;</a>
+</nav>
 
 <p class="section-intro">New restaurants, bars, and businesses go through public meetings before they open. Most never get reported on. Tucson Daily Brief surfaces them automatically from the agendas of the Pima County Board of Supervisors, Tucson Mayor &amp; Council, and Oro Valley Town Council. If you spot a place opening near you, <a href="mailto:nicholas@daylayown.org">tell us about it</a>.</p>
 
