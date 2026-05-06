@@ -1,0 +1,128 @@
+{
+  "date": "2026-05-10",
+  "size": 5,
+  "grid": [
+    [
+      "W",
+      "I",
+      "N",
+      "S",
+      "#"
+    ],
+    [
+      "A",
+      "D",
+      "I",
+      "O",
+      "S"
+    ],
+    [
+      "L",
+      "I",
+      "N",
+      "D",
+      "A"
+    ],
+    [
+      "K",
+      "O",
+      "J",
+      "A",
+      "K"
+    ],
+    [
+      "#",
+      "M",
+      "A",
+      "S",
+      "S"
+    ]
+  ],
+  "clues": {
+    "across": [
+      {
+        "number": 1,
+        "clue": "What Wildcat fans tally at McKale Center",
+        "answer": "WINS",
+        "row": 0,
+        "col": 0,
+        "length": 4
+      },
+      {
+        "number": 5,
+        "clue": "Farewell, en espa\u00f1ol \u2014 heard at any Tucson taqueria",
+        "answer": "ADIOS",
+        "row": 1,
+        "col": 0,
+        "length": 5
+      },
+      {
+        "number": 7,
+        "clue": "Tucson-born Ronstadt of 'Blue Bayou' fame",
+        "answer": "LINDA",
+        "row": 2,
+        "col": 0,
+        "length": 5
+      },
+      {
+        "number": 8,
+        "clue": "Telly Savalas's lollipop-loving TV detective",
+        "answer": "KOJAK",
+        "row": 3,
+        "col": 0,
+        "length": 5
+      },
+      {
+        "number": 9,
+        "clue": "Big church service, or a large quantity",
+        "answer": "MASS",
+        "row": 4,
+        "col": 1,
+        "length": 4
+      }
+    ],
+    "down": [
+      {
+        "number": 1,
+        "clue": "What Tumamoc Hill regulars do at sunrise",
+        "answer": "WALK",
+        "row": 0,
+        "col": 0,
+        "length": 4
+      },
+      {
+        "number": 2,
+        "clue": "\"Break a leg\" is one, figuratively speaking",
+        "answer": "IDIOM",
+        "row": 0,
+        "col": 1,
+        "length": 5
+      },
+      {
+        "number": 3,
+        "clue": "Stealthy warrior of feudal Japan",
+        "answer": "NINJA",
+        "row": 0,
+        "col": 2,
+        "length": 5
+      },
+      {
+        "number": 4,
+        "clue": "Fountain drinks, informally",
+        "answer": "SODAS",
+        "row": 0,
+        "col": 3,
+        "length": 5
+      },
+      {
+        "number": 6,
+        "clue": "Fifth Avenue luxury department store",
+        "answer": "SAKS",
+        "row": 1,
+        "col": 4,
+        "length": 4
+      }
+    ]
+  },
+  "slug": "2026-05-10-7c7f61"
+}

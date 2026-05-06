@@ -1,0 +1,128 @@
+{
+  "date": "2026-05-10",
+  "size": 5,
+  "grid": [
+    [
+      "I",
+      "R",
+      "O",
+      "N",
+      "#"
+    ],
+    [
+      "O",
+      "A",
+      "S",
+      "I",
+      "S"
+    ],
+    [
+      "U",
+      "G",
+      "A",
+      "L",
+      "I"
+    ],
+    [
+      "S",
+      "A",
+      "G",
+      "E",
+      "T"
+    ],
+    [
+      "#",
+      "S",
+      "E",
+      "S",
+      "H"
+    ]
+  ],
+  "clues": {
+    "across": [
+      {
+        "number": 1,
+        "clue": "Iron Horse neighborhood's namesake metal",
+        "answer": "IRON",
+        "row": 0,
+        "col": 0,
+        "length": 4
+      },
+      {
+        "number": 5,
+        "clue": "Desert spring-fed refuge \u2014 Agua Caliente Park, for one",
+        "answer": "OASIS",
+        "row": 1,
+        "col": 0,
+        "length": 5
+      },
+      {
+        "number": 7,
+        "clue": "East African cornmeal staple",
+        "answer": "UGALI",
+        "row": 2,
+        "col": 0,
+        "length": 5
+      },
+      {
+        "number": 8,
+        "clue": "Bob of 'Full House' fame",
+        "answer": "SAGET",
+        "row": 3,
+        "col": 0,
+        "length": 5
+      },
+      {
+        "number": 9,
+        "clue": "Hang, in slang",
+        "answer": "SESH",
+        "row": 4,
+        "col": 1,
+        "length": 4
+      }
+    ],
+    "down": [
+      {
+        "number": 1,
+        "clue": "Informal debt slips",
+        "answer": "IOUS",
+        "row": 0,
+        "col": 0,
+        "length": 4
+      },
+      {
+        "number": 2,
+        "clue": "Classical Indian musical frameworks",
+        "answer": "RAGAS",
+        "row": 0,
+        "col": 1,
+        "length": 5
+      },
+      {
+        "number": 3,
+        "clue": "Native people of the Arkansas River valley",
+        "answer": "OSAGE",
+        "row": 0,
+        "col": 2,
+        "length": 5
+      },
+      {
+        "number": 4,
+        "clue": "Frasier's fussy brother",
+        "answer": "NILES",
+        "row": 0,
+        "col": 3,
+        "length": 5
+      },
+      {
+        "number": 6,
+        "clue": "Darth Vader's order, in Star Wars lore",
+        "answer": "SITH",
+        "row": 1,
+        "col": 4,
+        "length": 4
+      }
+    ]
+  },
+  "slug": "2026-05-10-af51b7"
+}

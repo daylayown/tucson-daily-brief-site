@@ -1,0 +1,128 @@
+{
+  "date": "2026-05-10",
+  "size": 5,
+  "grid": [
+    [
+      "Z",
+      "O",
+      "R",
+      "A",
+      "#"
+    ],
+    [
+      "A",
+      "R",
+      "O",
+      "A",
+      "R"
+    ],
+    [
+      "G",
+      "A",
+      "M",
+      "M",
+      "A"
+    ],
+    [
+      "S",
+      "T",
+      "A",
+      "C",
+      "Y"
+    ],
+    [
+      "#",
+      "E",
+      "S",
+      "O",
+      "S"
+    ]
+  ],
+  "clues": {
+    "across": [
+      {
+        "number": 1,
+        "clue": "Neale Hurston, author of 'Their Eyes Were Watching God'",
+        "answer": "ZORA",
+        "row": 0,
+        "col": 0,
+        "length": 4
+      },
+      {
+        "number": 5,
+        "clue": "Roaring with crowd noise",
+        "answer": "AROAR",
+        "row": 1,
+        "col": 0,
+        "length": 5
+      },
+      {
+        "number": 7,
+        "clue": "Third Greek letter",
+        "answer": "GAMMA",
+        "row": 2,
+        "col": 0,
+        "length": 5
+      },
+      {
+        "number": 8,
+        "clue": "Abrams of 'Star Trek' fame, or a common Tucson dog-park name",
+        "answer": "STACY",
+        "row": 3,
+        "col": 0,
+        "length": 5
+      },
+      {
+        "number": 9,
+        "clue": "Those, in Spanish \u2014 as in 'those javelinas in the arroyo'",
+        "answer": "ESOS",
+        "row": 4,
+        "col": 1,
+        "length": 4
+      }
+    ],
+    "down": [
+      {
+        "number": 1,
+        "clue": "Makes sharp turns, as a roadrunner dodging cholla",
+        "answer": "ZAGS",
+        "row": 0,
+        "col": 0,
+        "length": 4
+      },
+      {
+        "number": 2,
+        "clue": "Hold forth at the podium",
+        "answer": "ORATE",
+        "row": 0,
+        "col": 1,
+        "length": 5
+      },
+      {
+        "number": 3,
+        "clue": "Plum tomato varieties, popular in Sonoran-style cooking",
+        "answer": "ROMAS",
+        "row": 0,
+        "col": 2,
+        "length": 5
+      },
+      {
+        "number": 4,
+        "clue": "Transmission repair chain, seen on Speedway",
+        "answer": "AAMCO",
+        "row": 0,
+        "col": 3,
+        "length": 5
+      },
+      {
+        "number": 6,
+        "clue": "Sun's streams of light \u2014 plentiful in the Old Pueblo",
+        "answer": "RAYS",
+        "row": 1,
+        "col": 4,
+        "length": 4
+      }
+    ]
+  },
+  "slug": "2026-05-10-776879"
+}
