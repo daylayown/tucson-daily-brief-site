@@ -3,79 +3,79 @@
   "size": 5,
   "grid": [
     [
-      "Z",
+      "M",
       "O",
-      "R",
-      "A",
+      "L",
+      "E",
       "#"
     ],
     [
-      "A",
+      "W",
       "R",
-      "O",
+      "E",
+      "N",
+      "S"
+    ],
+    [
       "A",
+      "B",
+      "A",
+      "T",
+      "E"
+    ],
+    [
+      "H",
+      "I",
+      "K",
+      "E",
       "R"
     ],
     [
-      "G",
-      "A",
-      "M",
-      "M",
-      "A"
-    ],
-    [
-      "S",
-      "T",
-      "A",
-      "C",
-      "Y"
-    ],
-    [
       "#",
-      "E",
-      "S",
-      "O",
-      "S"
+      "T",
+      "Y",
+      "R",
+      "A"
     ]
   ],
   "clues": {
     "across": [
       {
         "number": 1,
-        "clue": "Neale Hurston, author of 'Their Eyes Were Watching God'",
-        "answer": "ZORA",
+        "clue": "Rich sauce of chile and chocolate \u2014 a staple at Tucson's best Mexican kitchens",
+        "answer": "MOLE",
         "row": 0,
         "col": 0,
         "length": 4
       },
       {
         "number": 5,
-        "clue": "Roaring with crowd noise",
-        "answer": "AROAR",
+        "clue": "Cholla-nesting songbirds \u2014 Arizona's state bird, plural",
+        "answer": "WRENS",
         "row": 1,
         "col": 0,
         "length": 5
       },
       {
         "number": 7,
-        "clue": "Third Greek letter",
-        "answer": "GAMMA",
+        "clue": "Die down, as a haboob finally does",
+        "answer": "ABATE",
         "row": 2,
         "col": 0,
         "length": 5
       },
       {
         "number": 8,
-        "clue": "Abrams of 'Star Trek' fame, or a common Tucson dog-park name",
-        "answer": "STACY",
+        "clue": "Tumamoc Hill regular",
+        "answer": "HIKER",
         "row": 3,
         "col": 0,
         "length": 5
       },
       {
         "number": 9,
-        "clue": "Those, in Spanish \u2014 as in 'those javelinas in the arroyo'",
-        "answer": "ESOS",
+        "clue": "Banks of 'America's Next Top Model'",
+        "answer": "TYRA",
         "row": 4,
         "col": 1,
         "length": 4
@@ -84,45 +84,45 @@
     "down": [
       {
         "number": 1,
-        "clue": "Makes sharp turns, as a roadrunner dodging cholla",
-        "answer": "ZAGS",
+        "clue": "Smooch sound",
+        "answer": "MWAH",
         "row": 0,
         "col": 0,
         "length": 4
       },
       {
         "number": 2,
-        "clue": "Hold forth at the podium",
-        "answer": "ORATE",
+        "clue": "Path of OSIRIS-REx, the U of A-led NASA asteroid mission",
+        "answer": "ORBIT",
         "row": 0,
         "col": 1,
         "length": 5
       },
       {
         "number": 3,
-        "clue": "Plum tomato varieties, popular in Sonoran-style cooking",
-        "answer": "ROMAS",
+        "clue": "Like a faucet in need of a plumber",
+        "answer": "LEAKY",
         "row": 0,
         "col": 2,
         "length": 5
       },
       {
         "number": 4,
-        "clue": "Transmission repair chain, seen on Speedway",
-        "answer": "AAMCO",
+        "clue": "Type a password and press this",
+        "answer": "ENTER",
         "row": 0,
         "col": 3,
         "length": 5
       },
       {
         "number": 6,
-        "clue": "Sun's streams of light \u2014 plentiful in the Old Pueblo",
-        "answer": "RAYS",
+        "clue": "___ que ser\u00e1 \u2014 whatever will be",
+        "answer": "SERA",
         "row": 1,
         "col": 4,
         "length": 4
       }
     ]
   },
-  "slug": "2026-05-10-776879"
+  "slug": "2026-05-10-49c6f1"
 }

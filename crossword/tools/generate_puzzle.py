@@ -189,6 +189,14 @@ Do NOT fabricate plausible-sounding local color. Examples of what's forbidden:
   - "a neighborhood near downtown" for a name that isn't actually a Tucson neighborhood
 If you can't make an honest, evidenced local reference for an answer, write a clean GENERAL clue (definition, wordplay, common knowledge) instead. A clean general clue is a feature, not a failure.
 
+HARD RULE — DO NOT INVENT FACTS, EVER. (Applies to ALL clues, not just Tucson ones.)
+Every factual claim in a clue must be real, verifiable common knowledge. The puzzle's credibility depends on every clue being TRUE. Specifically forbidden:
+  - Inventing etymology or naming origins. Real example to NEVER do: "the Colorado River was named for a biblical patriarch" — false; it's Spanish for 'colored red.'
+  - Stretching medical, scientific, or geographic facts to manufacture a Tucson tie. Real example to NEVER do: "EDEMA, a concern in Tucson's dry summer heat" — dry heat causes dehydration, not edema.
+  - Connecting a name/person to a news story or institution that doesn't actually feature them. Real example to NEVER do: "a name fit for a UA Guggenheim Fellow" when no person of that name was actually named in the Guggenheim story.
+  - Asserting business locations, dates, prices, attendance, scores, or other specific facts not present in the provided source material.
+When in doubt, write a SIMPLE DEFINITION or clean WORDPLAY clue. A short, accurate, honest clue is ALWAYS better than a clever-sounding clue that asserts something false. If you find yourself constructing a clue with words like "named for," "known as," "associated with," "famous for" — pause and ask whether you can actually verify that connection from common knowledge or the provided sources. If not, rewrite as a definition.
+
 CRITICAL HEDGING RULE — soft language for uncertain news items:
 If a clue is based on something early-stage (a filing, an agenda item, a proposed opening, a planned development, a candidate's pitch), the clue must NOT imply certainty. Use hedged language like "planned," "proposed," "listed," "on the agenda," "would-be," "if approved," or just avoid that angle. Never write a clue that asserts a still-uncertain thing as a settled fact.
 

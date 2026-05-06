@@ -1,5 +1,7 @@
 __pycache__/
+.venv/
 transcripts/
 public-record/.processed.txt
 linkedin-post-*.md
 agenda-watch/.scheduled.json
+crossword/puzzles/.latest.txt

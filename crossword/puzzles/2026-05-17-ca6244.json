@@ -1,81 +1,81 @@
 {
-  "date": "2026-05-10",
+  "date": "2026-05-17",
   "size": 5,
   "grid": [
     [
-      "W",
-      "I",
-      "N",
+      "C",
+      "A",
       "S",
+      "A",
       "#"
     ],
     [
       "A",
-      "D",
-      "I",
-      "O",
-      "S"
-    ],
-    [
-      "L",
-      "I",
-      "N",
+      "S",
+      "A",
       "D",
       "A"
     ],
     [
-      "K",
-      "O",
-      "J",
+      "V",
+      "E",
+      "R",
+      "D",
+      "E"
+    ],
+    [
+      "E",
       "A",
-      "K"
+      "G",
+      "E",
+      "R"
     ],
     [
       "#",
-      "M",
-      "A",
-      "S",
-      "S"
+      "N",
+      "E",
+      "R",
+      "O"
     ]
   ],
   "clues": {
     "across": [
       {
         "number": 1,
-        "clue": "What Wildcat fans tally at McKale Center",
-        "answer": "WINS",
+        "clue": "Home, in a Tucson barrio",
+        "answer": "CASA",
         "row": 0,
         "col": 0,
         "length": 4
       },
       {
         "number": 5,
-        "clue": "Farewell, en espa\u00f1ol \u2014 heard at any Tucson taqueria",
-        "answer": "ADIOS",
+        "clue": "Carne ___ \u2014 grilled-meat staple of any Sonoran taqueria",
+        "answer": "ASADA",
         "row": 1,
         "col": 0,
         "length": 5
       },
       {
         "number": 7,
-        "clue": "Tucson-born Ronstadt of 'Blue Bayou' fame",
-        "answer": "LINDA",
+        "clue": "Word in 'Tanque ___' \u2014 eastside Tucson road and neighborhood",
+        "answer": "VERDE",
         "row": 2,
         "col": 0,
         "length": 5
       },
       {
         "number": 8,
-        "clue": "Telly Savalas's lollipop-loving TV detective",
-        "answer": "KOJAK",
+        "clue": "Keen and ready, like a Wildcat fan on game day",
+        "answer": "EAGER",
         "row": 3,
         "col": 0,
         "length": 5
       },
       {
         "number": 9,
-        "clue": "Big church service, or a large quantity",
-        "answer": "MASS",
+        "clue": "Fiddling emperor of ancient Rome",
+        "answer": "NERO",
         "row": 4,
         "col": 1,
         "length": 4
@@ -84,45 +84,45 @@
     "down": [
       {
         "number": 1,
-        "clue": "What Tumamoc Hill regulars do at sunrise",
-        "answer": "WALK",
+        "clue": "Colossal ___ Mountain Park, southeast of Tucson",
+        "answer": "CAVE",
         "row": 0,
         "col": 0,
         "length": 4
       },
       {
         "number": 2,
-        "clue": "\"Break a leg\" is one, figuratively speaking",
-        "answer": "IDIOM",
+        "clue": "Southeast Asian nations' alliance, for short",
+        "answer": "ASEAN",
         "row": 0,
         "col": 1,
         "length": 5
       },
       {
         "number": 3,
-        "clue": "Stealthy warrior of feudal Japan",
-        "answer": "NINJA",
+        "clue": "Title for a platoon's senior NCO, informally",
+        "answer": "SARGE",
         "row": 0,
         "col": 2,
         "length": 5
       },
       {
         "number": 4,
-        "clue": "Fountain drinks, informally",
-        "answer": "SODAS",
+        "clue": "Snake in the grass \u2014 or a simple adding machine",
+        "answer": "ADDER",
         "row": 0,
         "col": 3,
         "length": 5
       },
       {
         "number": 6,
-        "clue": "Fifth Avenue luxury department store",
-        "answer": "SAKS",
+        "clue": "Prefix meaning 'of the air,' as in aerobics",
+        "answer": "AERO",
         "row": 1,
         "col": 4,
         "length": 4
       }
     ]
   },
-  "slug": "2026-05-10-7c7f61"
+  "slug": "2026-05-17-ca6244"
 }
