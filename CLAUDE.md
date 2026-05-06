@@ -27,10 +27,15 @@ Static blog for GitHub Pages — minimal, text-first, Daring Fireball style. No 
 ├── public_record_liquor.py      # Public Record pipeline: extracts liquor license filings from agenda-watch reference files
 ├── public-record.html           # Auto-generated Public Record section index
 ├── public-record/               # Published HTML files for individual filings
+├── crossword/                   # The Tucson Mini — weekly subscriber crossword (see section below)
+│   ├── play.html                # Playable shell, reads ?p=slug query param, has noindex meta
+│   ├── crossword.js, style.css  # Vendored game engine (from CtS) + desert-palette restyle
+│   ├── tools/                   # generate_puzzle.py, generate_grid.py, read_tdb_posts.py, filter_wordlist.py + wordlists
+│   └── puzzles/                 # Generated YYYY-MM-DD-XXXXXX.json (unguessable slugs)
 ├── MEETING-WATCH-PIPELINE.md    # Full reference docs for the meeting watch system
 ├── CNAME                        # Custom domain: tucsondailybrief.com
 ├── .nojekyll                    # Tells GitHub Pages to skip Jekyll
-├── .gitignore                   # Excludes __pycache__/, transcripts/
+├── .gitignore                   # Excludes __pycache__/, .venv/, transcripts/, etc.
 └── CLAUDE.md
 ```
 
@@ -443,6 +448,7 @@ The Tucson metro area broadly: City of Tucson, Pima County, Town of Marana, Town
 - **Meeting Watch** (`meeting-watch.html`, `meeting-watch/`) — AI-generated agenda previews for 4 municipalities (live, auto-published)
 - **News Reports** (`news-reports.html`, `news-reports/`) — AI-drafted, human-reviewed post-meeting news reports (pipeline built, first real recordings scheduled April 7, 2026)
 - **Public Record** (`public-record.html`, `public-record/`) — flagged filings surfaced from agendas; v1 covers liquor license applications across Pima County BOS, City of Tucson, Oro Valley (live as of April 11, 2026)
+- **The Tucson Mini** (`crossword/`) — weekly Tucson-themed 5×5 mini crossword; subscriber perk for the forthcoming Sunday in Tucson newsletter; unlisted (noindex, no public links) (v0.4 live as of May 6, 2026; see "The Tucson Mini" section below)
 - **Deep Read** — AI-assisted analysis of large documents (planned)
 
 ### Story ideas
@@ -453,54 +459,159 @@ The Tucson metro area broadly: City of Tucson, Pima County, Town of Marana, Town
 
 The hardest part is sourcing data, not the AI pipeline. Start with what Tucson/Pima County already publishes in machine-readable formats. Some data requires FOIA/public records requests or lives in terrible PDFs and legacy systems.
 
-## Roadmap: Distribution (Weekly Newsletter + Podcast)
+## The Tucson Mini (Weekly Subscriber Crossword)
 
-Planned distribution channel for after the Public Record pipeline is live and humming. The strategic logic: a daily site is great for the people who already know about TDB, but it's a terrible discovery surface — daily readers are a tiny minority of any audience. Layering a weekly curation on top of the daily firehose is how regional outlets actually grow (Axios Local, most successful Substack locals). Cost is essentially zero: a Sonnet pass over the previous seven days of content is ~$0.05/week, and the existing TTS pipeline (ElevenLabs or Voxtral) handles the audio version with no new infrastructure.
+Weekly Tucson-themed 5×5 mini crossword. Subscriber perk for the forthcoming Sunday in Tucson newsletter (see "Roadmap: Distribution" below). Adapted from the upstream "Crosswording the Situation" project at `~/claude-code-projects/crossword-puzzle` — same scaffolding (grid generator, Claude API plumbing, validation, JS engine, mobile UX), retuned for a weekly local audience.
+
+### Differentiator from CtS
+
+CtS is **news-first**: every clue must tie to a real news story. The Tucson Mini is **Tucson-vocabulary-first**: the puzzle's identity is local flavor (saguaros, monsoons, U of A, Sonoran food, Tucson place names), with past-week TDB stories as a small accent rather than the spine. This was a deliberate editorial decision the user articulated explicitly during the May 6 build: "Tucson is a small city; not much news happens. Don't twist ourselves into knots trying to match news events to the puzzle."
+
+### Editorial posture (encoded in the LLM prompt)
+
+- **NORTH STAR**: Tucson vocabulary leads. Wordbank entries surface first; news is reached for only when natural (typically 1-3 of 10 clues).
+- **HARD RULE — DO NOT INVENT TUCSON REFERENCES**: prompt enforced, with concrete examples of past failures ("a common Tucson dog-park name" — invented). Every Tucson reference must come from the wordbank `context`, the thematic_lexicon, or the past-week TDB stories.
+- **HARD RULE — DO NOT INVENT FACTS, EVER**: applies to all clues. Real fabrications caught and prompt-fixed: "the Colorado River was named for a biblical patriarch" (false — Spanish for 'colored red'), "EDEMA, a concern in Tucson's dry summer heat" (medically wrong). When in doubt, write a simple definition or wordplay clue.
+- **Soft-hedging on uncertain news items**: filings/agendas/proposed openings must use "planned," "proposed," "listed" — never assert as fact.
+- **Tucson and southern Arizona only — no Phoenix-area landmarks.** This is an explicit user constraint.
+
+### Pipeline
+
+```
+Past 7 days of TDB posts (read_tdb_posts.py)
+    ↓
+Tucson wordbank + thematic lexicon (wordbank-tucson.json)
+    ↓
+Filtered wordlist (STWL → Zipf ≥ 2.5 → filter_wordlist.py → wordlist.json)
+    ↓
+Grid generation (generate_grid.py: backtracking with wordbank preference)
+    ↓
+Clue generation (generate_puzzle.py: Sonnet 4.6, prompt with wordbank context first)
+    ↓
+Validate + cross-clue dedup pass
+    ↓
+Output: puzzles/YYYY-MM-DD-XXXXXX.json with unguessable hex slug
+```
+
+### Word filtering: frequency floor + blocklist + wordbank whitelist
+
+The grid solver pulls from STWL (12.7K words, 3-5 letters, score 50+). Three filters layered on top:
+
+1. **Frequency floor (Zipf ≥ 2.5)** — built once via `filter_wordlist.py`, output committed as `wordlist.json`. Auto-excludes obscure fill (UGALI 1.43, BOPIT 0, AROAR 0, RAGAS 1.86, SAGET 2.24, SESH 2.45) without hand-tagging. Tunable.
+2. **Editorial blocklist** (`wordlist-blocklist.json`) — small hand-maintained list for words that pass the frequency filter but still feel wrong (currently includes BRET, ESSO, AAMCO).
+3. **Wordbank whitelist** (`wordbank-tucson.json`) — Tucson-specific words always pass through, even if their Zipf is low (NOPAL 1.67, ELOTE 1.40, MARANA 1.97). Without the whitelist, half the local vocabulary would be filtered.
+
+`wordfreq` is a Python library used at *build time* only, not at runtime. Install in `.venv` if regenerating:
+```
+.venv/bin/pip install wordfreq
+.venv/bin/python3 crossword/tools/filter_wordlist.py
+```
+
+Re-run after editing the wordbank or blocklist, then commit the new `wordlist.json`.
+
+### Wordbank as the editorial north star
+
+`wordbank-tucson.json` holds 163 curated 3-5 letter Tucson/southern Arizona answers plus a 45-term thematic lexicon (longer words like SAGUARO, MONSOON, JAVELINA biased into clue *text* rather than answers). Each entry has:
+
+- `tucson_strength` (high/medium/low) — how unmistakably Tucson it is
+- `clue_styles` — sample warm clue angles
+- `context` — the *why* (used by the LLM for evidenced clues)
+
+The grid generator biases toward wordbank entries via `preferred_words` in `solve_grid()`. Currently only ACROSS slots are biased; DOWN slots emerge from intersections. Typical run: 3-5 of 10 answers come from the wordbank.
+
+### URLs and unlisted publishing
+
+Each puzzle gets an unguessable hex slug: `puzzles/YYYY-MM-DD-XXXXXX.json`. The play page reads `?p={slug}` from the URL:
+
+- `tucsondailybrief.com/crossword/play.html?p=2026-05-10-49c6f1` — solvable puzzle
+- `tucsondailybrief.com/crossword/play.html` — empty state ("no puzzle, you'll find the link in the newsletter")
+
+`play.html` has `<meta name="robots" content="noindex,nofollow">`. No public link to the crossword from anywhere on the site. Subscribers get URLs only via the newsletter.
+
+### Running it
+
+```
+.venv/bin/python3 crossword/tools/generate_puzzle.py [YYYY-MM-DD]
+.venv/bin/python3 crossword/tools/generate_puzzle.py --force  # re-run for the same date
+```
+
+Outputs to `crossword/puzzles/{date}-{6char}.json` plus updates `.latest.txt` (gitignored, build-state pointer for the newsletter generator).
+
+### Cost
+
+~$0.02-0.03 per puzzle (Sonnet 4.6, two API calls: clue generation + dedup-references check). Negligible at weekly cadence.
+
+### Deferred work (as of 2026-05-06)
+
+- **Cron wiring** — currently manual. Once the newsletter generator exists, both should run Saturday afternoon so Sunday's email has a fresh puzzle.
+- **DOWN-slot bias** — only ACROSS is preferred toward the wordbank; DOWN words emerge from intersections.
+- **Newsletter integration** — the newsletter draft generator should read `crossword/puzzles/.latest.txt` and embed the play URL.
+- **More wordbank growth** — 163 entries is enough for years of weekly puzzles, but additions are welcome. Phoenix-area references explicitly excluded.
+
+## Roadmap: Distribution — Sunday in Tucson via Buttondown
+
+Planned distribution channel for after the Public Record pipeline is live and humming (it has been since 2026-04-11). The strategic logic: a daily site is great for the people who already know about TDB, but it's a terrible discovery surface — daily readers are a tiny minority of any audience. Layering a weekly curation on top of the daily firehose is how regional outlets actually grow (Axios Local, most successful local newsletters). Cost is essentially zero: a Sonnet pass over the previous seven days of content is ~$0.05/week, and the existing TTS pipeline (ElevenLabs or Voxtral) handles the audio version with no new infrastructure.
+
+**Working name: Sunday in Tucson.** Reader-facing promise: "Feel more caught up on Tucson every Sunday."
 
 ### Format
 
-Roughly 800-1200 words / 6-8 minutes of audio, structured as:
+Roughly 800-1200 words, structured as warm-not-civic:
 
-- **One lead story** — the most consequential thing of the week
-- **4-5 short hits** — each with a one-sentence "why this matters" explainer
-- **One Public Record callout** — "Coming soon to your neighborhood" (new restaurants, businesses, permits, etc. — this is the unique hook other regional newsletters can't match)
-- **One Meeting Watch lookahead** — "Here's what's on the agenda next week"
-- **A closing note** — voice, personality, neighborhood color
+- **Warm opening**
+- **What's worth knowing** — top local stories from the past week
+- **What changed around town** — local decisions, neighborhood changes, development, city/county items
+- **What's opening** — restaurants, bars, coffee shops, retail (Public Record callout — the unique forwarding hook)
+- **One thing to watch** — upcoming local item for the next week
+- **The Tucson Mini** — link to this week's subscriber-only puzzle
+- **Closing note + share/subscribe CTA**
 
-Generated by Claude Sonnet from the past 7 days of site content. The same pass picks the lead and adjusts prose register for the kitchen-table-on-Sunday-morning reader (warmer, more opinionated than the daily brief).
+Generated by Claude Sonnet from the past 7 days of site content. Same pass picks the lead and adjusts prose register for the kitchen-table-on-Sunday-morning reader (warmer, more opinionated than the daily brief). Rendered as markdown, saved as a draft, **human edits before sending**.
 
-### Platform: Substack
+**Tone constraints:** warm, friendly, lightly conversational. Avoid jargon like "public records," "agenda mining," "local intelligence," "monitoring the situation." The reader doesn't see the civic-tech scaffolding behind it — just the warm wrapping.
 
-Default to Substack rather than self-hosted, despite the 10% revenue cut. Reasons:
-- **Built-in network effects.** Substack's recommendation engine has become a real distribution channel for regional/independent journalism — other Substacks recommending each other is how new audiences are found.
-- **Zero infrastructure.** Native email, native podcast hosting, decent analytics, no SMTP/RSS plumbing to maintain.
-- **Brand association.** Substack is where independent journalism lives in the public mind right now.
-- **Portability.** Export the subscriber list periodically. The audience comes with you if you ever migrate.
+### Platform: Buttondown (pivoted from Substack May 2026)
 
-The 10% rev share is acceptable as the cost of the discovery flywheel. Self-hosted has better unit economics but no growth engine — for a side project trying to grow, network effects beat margins.
+Originally planned around Substack for the recommendation flywheel. Pivoted to **Buttondown** during the May 6 session for the Sunday in Tucson launch:
 
-### Audio version
+- **Real REST API.** Buttondown supports creating drafts, scheduling sends, and managing subscribers via API. Substack has no posting API (read-only stats; unofficial reverse-engineered libraries are fragile and unsafe for cron).
+- **Markdown-native.** Buttondown stores posts as markdown, which fits the rest of the TDB pipeline naturally. No "render to HTML and paste manually" workflow.
+- **No revenue cut.** Substack takes 10% on paid subscriptions; Buttondown is a flat-fee SaaS.
+- **Single-developer-friendly.** Buttondown is tooling, not a media platform.
 
-Reuse the existing TTS pipeline (`generate_podcast.py` flow). Weekly episode is just a different input text — clean for TTS, send to ElevenLabs or Voxtral, upload to R2 / Substack's native podcast hosting. Substack's app plays inline audio for paid posts, and the episode also distributes via RSS to Apple/Spotify if desired. Probably fits inside the existing podcast feed as a separate weekly long-form episode rather than a second feed.
+**The trade-off:** Substack's recommendation engine is a real distribution channel for independent writers. Buttondown gives that up — TDB would build distribution itself through word-of-mouth, the Tucson Mini referral hook, and partnerships with existing Tucson outlets. Acceptable trade for build velocity and editorial control on a single-developer side project.
+
+### Tucson Mini as the subscriber perk + funnel
+
+The Mini (see section above) is the subscriber-exclusive perk and the growth hook. Architecture:
+
+- Each Sunday newsletter contains a fresh Tucson Mini link
+- The play page is unlisted (noindex, no public links) — subscribers get the URL only via the newsletter
+- Static play page on the TDB site, JSON puzzle data behind unguessable slugs
+- The newsletter generator reads `crossword/puzzles/.latest.txt` to embed that week's play URL
+
+NYT Mini is the dominant retention pattern for newsletters with games. The Tucson Mini is the local version: 5×5, charming, takes 1-3 minutes, has a forwardable share grid.
+
+### Audio version (deferred)
+
+Reuse the existing TTS pipeline (`generate_podcast.py` flow). Weekly episode is just a different input text — clean for TTS, send to ElevenLabs or Voxtral, upload to R2 or Buttondown's native podcast hosting. Add this once the written newsletter is stable.
 
 ### Critical principle: do not duplicate the website
 
-The Substack must not be a copy of the daily site. If both surfaces show the same content, neither has a reason to exist.
+The newsletter must not be a copy of the daily site. If both surfaces show the same content, neither has a reason to exist.
 
 - **Website** = daily archive, canonical source, searchable, linkable, comprehensive.
-- **Substack** = weekly editorial product. Opinionated, curated, written *to* a specific person reading at the kitchen table on Sunday morning. Different voice, different selection logic, different value proposition.
+- **Newsletter** = weekly editorial product. Opinionated, curated, written *to* a specific person reading at the kitchen table on Sunday morning. Different voice, different selection logic, different value proposition.
 
 Same Sonnet pass that picks the week's best stories also rewrites them in newsletter voice — not just a digest of headlines.
 
-### Sequence and timing
+### Updated build order (as of 2026-05-06)
 
-**Do not launch the newsletter until the Public Record pipeline has been live and producing content for 2-3 weeks.** Reason: without Public Record, the weekly newsletter is "7 daily briefs + 4-8 meeting previews" — competent but not differentiated. With Public Record running, the weekly has a unique recurring story type ("here's what's opening, closing, and changing in your neighborhood") that nobody else produces for Tucson. That's the forwarding hook — the thing that makes a reader send it to a friend, which is the only marketing channel that actually compounds.
-
-Build order:
-1. Public Record liquor license pipeline (in progress)
-2. Watch it run for 2-3 weeks, learn what volume and editorial gotchas look like
-3. Launch Substack with weekly written newsletter
-4. Add audio version once written newsletter is stable
+1. Public Record liquor license pipeline ✅ live (2026-04-11)
+2. Tucson Mini crossword ✅ live (2026-05-06, v0.4)
+3. **Sunday in Tucson newsletter — NEXT**
+4. Marana coverage in Public Record — runs in parallel; doesn't block newsletter launch
+5. Audio version of newsletter — after written newsletter is stable
 
 ## Roadmap: Repo Consolidation
 
