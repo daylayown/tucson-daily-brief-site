@@ -32,6 +32,9 @@ Static blog for GitHub Pages — minimal, text-first, Daring Fireball style. No 
 │   ├── crossword.js, style.css  # Vendored game engine (from CtS) + desert-palette restyle
 │   ├── tools/                   # generate_puzzle.py, generate_grid.py, read_tdb_posts.py, filter_wordlist.py + wordlists
 │   └── puzzles/                 # Generated YYYY-MM-DD-XXXXXX.json (unguessable slugs)
+├── generate_newsletter.py       # TDB Weekly newsletter draft generator (Sonnet 4.6, see section below)
+├── newsletter/                  # TDB Weekly working directory
+│   └── drafts/                  # Generated markdown drafts (gitignored, human-reviewed before send)
 ├── MEETING-WATCH-PIPELINE.md    # Full reference docs for the meeting watch system
 ├── CNAME                        # Custom domain: tucsondailybrief.com
 ├── .nojekyll                    # Tells GitHub Pages to skip Jekyll
@@ -448,7 +451,7 @@ The Tucson metro area broadly: City of Tucson, Pima County, Town of Marana, Town
 - **Meeting Watch** (`meeting-watch.html`, `meeting-watch/`) — AI-generated agenda previews for 4 municipalities (live, auto-published)
 - **News Reports** (`news-reports.html`, `news-reports/`) — AI-drafted, human-reviewed post-meeting news reports (pipeline built, first real recordings scheduled April 7, 2026)
 - **Public Record** (`public-record.html`, `public-record/`) — flagged filings surfaced from agendas; v1 covers liquor license applications across Pima County BOS, City of Tucson, Oro Valley (live as of April 11, 2026)
-- **The Tucson Mini** (`crossword/`) — weekly Tucson-themed 5×5 mini crossword; subscriber perk for the forthcoming Sunday in Tucson newsletter; unlisted (noindex, no public links) (v0.4 live as of May 6, 2026; see "The Tucson Mini" section below)
+- **The Tucson Mini** (`crossword/`) — weekly Tucson-themed 5×5 mini crossword; subscriber perk for the forthcoming TDB Weekly newsletter; unlisted (noindex, no public links) (v0.4 live as of May 6, 2026; see "The Tucson Mini" section below)
 - **Deep Read** — AI-assisted analysis of large documents (planned)
 
 ### Story ideas
@@ -461,7 +464,7 @@ The hardest part is sourcing data, not the AI pipeline. Start with what Tucson/P
 
 ## The Tucson Mini (Weekly Subscriber Crossword)
 
-Weekly Tucson-themed 5×5 mini crossword. Subscriber perk for the forthcoming Sunday in Tucson newsletter (see "Roadmap: Distribution" below). Adapted from the upstream "Crosswording the Situation" project at `~/claude-code-projects/crossword-puzzle` — same scaffolding (grid generator, Claude API plumbing, validation, JS engine, mobile UX), retuned for a weekly local audience.
+Weekly Tucson-themed 5×5 mini crossword. Subscriber perk for the forthcoming TDB Weekly newsletter (see "TDB Weekly Newsletter" section below). Adapted from the upstream "Crosswording the Situation" project at `~/claude-code-projects/crossword-puzzle` — same scaffolding (grid generator, Claude API plumbing, validation, JS engine, mobile UX), retuned for a weekly local audience.
 
 ### Differentiator from CtS
 
@@ -548,53 +551,65 @@ Outputs to `crossword/puzzles/{date}-{6char}.json` plus updates `.latest.txt` (g
 - **Newsletter integration** — the newsletter draft generator should read `crossword/puzzles/.latest.txt` and embed the play URL.
 - **More wordbank growth** — 163 entries is enough for years of weekly puzzles, but additions are welcome. Phoenix-area references explicitly excluded.
 
-## Roadmap: Distribution — Sunday in Tucson via Buttondown
+## TDB Weekly Newsletter
 
-Planned distribution channel for after the Public Record pipeline is live and humming (it has been since 2026-04-11). The strategic logic: a daily site is great for the people who already know about TDB, but it's a terrible discovery surface — daily readers are a tiny minority of any audience. Layering a weekly curation on top of the daily firehose is how regional outlets actually grow (Axios Local, most successful local newsletters). Cost is essentially zero: a Sonnet pass over the previous seven days of content is ~$0.05/week, and the existing TTS pipeline (ElevenLabs or Voxtral) handles the audio version with no new infrastructure.
+Weekly editorial newsletter delivered via Buttondown. Reader-facing promise: "Feel more caught up on Tucson every Sunday." Generated from the past 7 days of TDB content (daily briefs + news reports + public-record filings + upcoming meeting previews) by Claude Sonnet 4.6, written as a markdown draft, **human-reviewed before sending**.
 
-**Working name: Sunday in Tucson.** Reader-facing promise: "Feel more caught up on Tucson every Sunday."
+**Status:** draft generator live as of 2026-05-07. Buttondown API wiring and cron schedule still pending.
 
-### Format
+**Name:** TDB Weekly. Boring on purpose — initialism-forward, instantly legible, doesn't lock the day. (Working name "Sunday in Tucson" was rejected 2026-05-07; the user's gut was that boring + initialism-forward branding fits the product better.)
 
-Roughly 800-1200 words, structured as warm-not-civic:
+### Strategic logic
 
-- **Warm opening**
-- **What's worth knowing** — top local stories from the past week
-- **What changed around town** — local decisions, neighborhood changes, development, city/county items
-- **What's opening** — restaurants, bars, coffee shops, retail (Public Record callout — the unique forwarding hook)
-- **One thing to watch** — upcoming local item for the next week
-- **The Tucson Mini** — link to this week's subscriber-only puzzle
-- **Closing note + share/subscribe CTA**
+A daily site is great for the people who already know about TDB, but it's a terrible discovery surface — daily readers are a tiny minority of any audience. Layering a weekly curation on top of the daily firehose is how regional outlets actually grow (Axios Local, most successful local newsletters). Cost is essentially zero: a Sonnet pass over the previous seven days is ~$0.07/run, and the existing TTS pipeline (ElevenLabs or Voxtral) handles the audio version when we get there with no new infrastructure.
 
-Generated by Claude Sonnet from the past 7 days of site content. Same pass picks the lead and adjusts prose register for the kitchen-table-on-Sunday-morning reader (warmer, more opinionated than the daily brief). Rendered as markdown, saved as a draft, **human edits before sending**.
+### Format (encoded in the prompt)
 
-**Tone constraints:** warm, friendly, lightly conversational. Avoid jargon like "public records," "agenda mining," "local intelligence," "monitoring the situation." The reader doesn't see the civic-tech scaffolding behind it — just the warm wrapping.
+~800–1200 words, structured warm-not-civic. No H1 title — the email subject line is the title. The body opens directly with the warm paragraph.
 
-### Platform: Buttondown (pivoted from Substack May 2026)
+- **Warm opening** (no heading) — 2-4 sentences setting the mood, often referencing weather/season
+- **## What's worth knowing** — 3-4 most important Tucson-area stories of the week, narrative paragraphs, not a list
+- **## What changed around town** — local government decisions, neighborhood changes, development items
+- **## What's opening** — new businesses across food/drink/retail/fitness; liquor filings are ONE input among several
+- **## One thing to watch** — specific upcoming meeting or event in the next ~2 weeks
+- **## The Tucson Mini** — single short paragraph + crossword link
+- **Closing note** (no heading) — ~2 sentences, warm beat
 
-Originally planned around Substack for the recommendation flywheel. Pivoted to **Buttondown** during the May 6 session for the Sunday in Tucson launch:
+### Editorial voice
 
-- **Real REST API.** Buttondown supports creating drafts, scheduling sends, and managing subscribers via API. Substack has no posting API (read-only stats; unofficial reverse-engineered libraries are fragile and unsafe for cron).
-- **Markdown-native.** Buttondown stores posts as markdown, which fits the rest of the TDB pipeline naturally. No "render to HTML and paste manually" workflow.
-- **No revenue cut.** Substack takes 10% on paid subscriptions; Buttondown is a flat-fee SaaS.
-- **Single-developer-friendly.** Buttondown is tooling, not a media platform.
+Warm, friendly, kitchen-table-Sunday-morning. NOT civic-tech or insider — the reader doesn't see the AI pipelines, the agenda mining, the public-records work behind it. Different voice from the daily brief: the daily is fast and headline-y; the weekly is slower, more opinionated, more story-shaped.
 
-**The trade-off:** Substack's recommendation engine is a real distribution channel for independent writers. Buttondown gives that up — TDB would build distribution itself through word-of-mouth, the Tucson Mini referral hook, and partnerships with existing Tucson outlets. Acceptable trade for build velocity and editorial control on a single-developer side project.
+The same Sonnet pass that picks the week's best stories also rewrites them in newsletter voice. Not a digest of headlines.
 
-### Tucson Mini as the subscriber perk + funnel
+The prompt explicitly bans civic-tech phrasings ("public records," "agenda mining," "local intelligence," "monitoring the situation," "our review," "flagged by," "surfaced from," "according to filings") because the model leaks them by default in v1. Concrete banned-phrase examples in the prompt land better than abstract rules.
 
-The Mini (see section above) is the subscriber-exclusive perk and the growth hook. Architecture:
+### Recency-claim guardrail
 
-- Each Sunday newsletter contains a fresh Tucson Mini link
-- The play page is unlisted (noindex, no public links) — subscribers get the URL only via the newsletter
-- Static play page on the TDB site, JSON puzzle data behind unguessable slugs
-- The newsletter generator reads `crossword/puzzles/.latest.txt` to embed that week's play URL
+Encoded in the prompt: a business is only "newly opened" if the source content has an explicit recent date ("opened April 24," "grand opening Saturday"). News *coverage* of a business this week is not the same as the business *opening* this week — many places get their first press long after they open. Default to attribution-style hedging: "Bloom Tea Wellness was profiled in Inside Tucson Business this week." Reserve "newly opened" / "just opened" for items with an explicit date.
 
-NYT Mini is the dominant retention pattern for newsletters with games. The Tucson Mini is the local version: 5×5, charming, takes 1-3 minutes, has a forwardable share grid.
+This was identified during the first draft review on 2026-05-07. Bloom Tea actually opened in January, but the May 3 daily brief said "Bloom Tea Wellness has opened in Oro Valley" because of an Inside Tucson Business profile, and the model dutifully repeated it. The newsletter-layer fix is defensive; the long-term fix is upstream — tighten `TUCSON-BRIEF.md` to require explicit dates for any "X has opened" claim. Deferred until we have more weeks of data on how often this recurs.
 
-### Audio version (deferred)
+### How it works
 
-Reuse the existing TTS pipeline (`generate_podcast.py` flow). Weekly episode is just a different input text — clean for TTS, send to ElevenLabs or Voxtral, upload to R2 or Buttondown's native podcast hosting. Add this once the written newsletter is stable.
+`generate_newsletter.py` at the project root:
+
+1. Calculates send date (next Sunday by default; overridable via `--send-date`).
+2. Scans the past 7 days of `posts/`, `news-reports/`, `public-record/` (mtime-based for the last) and the next 14 days of `meeting-watch/`.
+3. Strips HTML chrome (head/script/header/footer/nav) and tags from each file before passing to the model.
+4. Picks the puzzle for the send date from `crossword/puzzles/` (exact-date match, else earliest puzzle dated after) and embeds `https://tucsondailybrief.com/crossword/play.html?p={slug}` in the prompt.
+5. Sends ~17K tokens of context to Sonnet 4.6 with the editorial prompt (voice rules, format spec, recency guardrail, hard rules).
+6. Writes the draft to `newsletter/drafts/tdb-weekly-YYYY-MM-DD.md` (gitignored — drafts are working state).
+
+Cost: ~$0.07/run. Output: ~950 words drafted directly in markdown.
+
+Usage:
+
+```bash
+.venv/bin/python3 generate_newsletter.py
+.venv/bin/python3 generate_newsletter.py --send-date 2026-05-10
+.venv/bin/python3 generate_newsletter.py --force      # overwrite existing draft
+.venv/bin/python3 generate_newsletter.py --dry-run    # print prompt, skip API call
+```
 
 ### Critical principle: do not duplicate the website
 
@@ -603,13 +618,40 @@ The newsletter must not be a copy of the daily site. If both surfaces show the s
 - **Website** = daily archive, canonical source, searchable, linkable, comprehensive.
 - **Newsletter** = weekly editorial product. Opinionated, curated, written *to* a specific person reading at the kitchen table on Sunday morning. Different voice, different selection logic, different value proposition.
 
-Same Sonnet pass that picks the week's best stories also rewrites them in newsletter voice — not just a digest of headlines.
+### Platform: Buttondown (decided 2026-05-06, not yet wired)
 
-### Updated build order (as of 2026-05-06)
+Originally planned around Substack for the recommendation flywheel. Pivoted to **Buttondown**:
+
+- **Real REST API.** Buttondown supports creating drafts, scheduling sends, and managing subscribers via API. Substack has no posting API (read-only stats; unofficial reverse-engineered libraries are fragile and unsafe for cron).
+- **Markdown-native.** Buttondown stores posts as markdown, which fits the rest of the TDB pipeline naturally. No "render to HTML and paste manually" workflow.
+- **No revenue cut.** Substack takes 10% on paid subscriptions; Buttondown is flat-fee SaaS.
+- **Single-developer-friendly.** Buttondown is tooling, not a media platform.
+
+**The trade-off:** Substack's recommendation engine is a real distribution channel for independent writers. Buttondown gives that up — TDB would build distribution itself through word-of-mouth, the Tucson Mini referral hook, and partnerships with existing Tucson outlets. Acceptable for build velocity and editorial control on a single-developer side project.
+
+### Tucson Mini as the subscriber perk + funnel
+
+The Mini (see section above) is the subscriber-exclusive perk and the growth hook. Architecture:
+
+- Each weekly newsletter contains a fresh Tucson Mini link.
+- The play page is unlisted (noindex, no public links) — subscribers get the URL only via the newsletter.
+- Static play page on the TDB site, JSON puzzle data behind unguessable slugs.
+- The newsletter generator reads from `crossword/puzzles/` and auto-embeds the play URL for the send date.
+
+NYT Mini is the dominant retention pattern for newsletters with games. The Tucson Mini is the local version: 5×5, charming, takes 1-3 minutes, has a forwardable share grid.
+
+### Audio version (deferred)
+
+Reuse the existing TTS pipeline (`generate_podcast.py` flow). Weekly episode is just a different input text — clean for TTS, send to ElevenLabs or Voxtral, upload to R2 or Buttondown's native podcast hosting. Add this once the written newsletter is stable.
+
+### Build order (updated 2026-05-07)
 
 1. Public Record liquor license pipeline ✅ live (2026-04-11)
 2. Tucson Mini crossword ✅ live (2026-05-06, v0.4)
-3. **Sunday in Tucson newsletter — NEXT**
+3. **TDB Weekly newsletter — IN PROGRESS**
+   - Draft generator ✅ built 2026-05-07 (v1, prompt iterated to v4)
+   - Buttondown API wiring — next session
+   - Cron schedule for Saturday afternoon — after Buttondown wiring
 4. Marana coverage in Public Record — runs in parallel; doesn't block newsletter launch
 5. Audio version of newsletter — after written newsletter is stable
 
