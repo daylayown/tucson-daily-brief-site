@@ -33,6 +33,8 @@ Static blog for GitHub Pages — minimal, text-first, Daring Fireball style. No 
 │   ├── tools/                   # generate_puzzle.py, generate_grid.py, read_tdb_posts.py, filter_wordlist.py + wordlists
 │   └── puzzles/                 # Generated YYYY-MM-DD-XXXXXX.json (unguessable slugs)
 ├── generate_newsletter.py       # TDB Weekly newsletter draft generator (Sonnet 4.6, see section below)
+├── upload_to_buttondown.py      # Push a markdown draft to Buttondown via API as an editable draft
+├── run_newsletter.sh            # Friday 6pm cron wrapper: env loading + generate + upload
 ├── newsletter/                  # TDB Weekly working directory
 │   └── drafts/                  # Generated markdown drafts (gitignored, human-reviewed before send)
 ├── MEETING-WATCH-PIPELINE.md    # Full reference docs for the meeting watch system
@@ -555,7 +557,7 @@ Outputs to `crossword/puzzles/{date}-{6char}.json` plus updates `.latest.txt` (g
 
 Weekly editorial newsletter delivered via Buttondown. Reader-facing promise: "Feel more caught up on Tucson every Sunday." Generated from the past 7 days of TDB content (daily briefs + news reports + public-record filings + upcoming meeting previews) by Claude Sonnet 4.6, written as a markdown draft, **human-reviewed before sending**.
 
-**Status:** draft generator live as of 2026-05-07. Buttondown API wiring and cron schedule still pending.
+**Status:** Full pipeline live as of 2026-05-08. Cron generates a draft every Friday at 6pm MST and uploads it to Buttondown. The user does an editorial pass over the weekend and manually clicks "Schedule send" in Buttondown for Sunday 5am MST. First real issue scheduled to send 2026-05-10.
 
 **Name:** TDB Weekly. Boring on purpose — initialism-forward, instantly legible, doesn't lock the day. (Working name "Sunday in Tucson" was rejected 2026-05-07; the user's gut was that boring + initialism-forward branding fits the product better.)
 
@@ -589,9 +591,11 @@ Encoded in the prompt: a business is only "newly opened" if the source content h
 
 This was identified during the first draft review on 2026-05-07. Bloom Tea actually opened in January, but the May 3 daily brief said "Bloom Tea Wellness has opened in Oro Valley" because of an Inside Tucson Business profile, and the model dutifully repeated it. The newsletter-layer fix is defensive; the long-term fix is upstream — tighten `TUCSON-BRIEF.md` to require explicit dates for any "X has opened" claim. Deferred until we have more weeks of data on how often this recurs.
 
-### How it works
+### Pipeline
 
-`generate_newsletter.py` at the project root:
+Three components chain together via `run_newsletter.sh`:
+
+**1. `generate_newsletter.py` — markdown draft from past-week content**
 
 1. Calculates send date (next Sunday by default; overridable via `--send-date`).
 2. Scans the past 7 days of `posts/`, `news-reports/`, `public-record/` (mtime-based for the last) and the next 14 days of `meeting-watch/`.
@@ -602,13 +606,34 @@ This was identified during the first draft review on 2026-05-07. Bloom Tea actua
 
 Cost: ~$0.07/run. Output: ~950 words drafted directly in markdown.
 
+**2. `upload_to_buttondown.py` — push draft to Buttondown via API**
+
+1. Strips the `*Draft generated...*` metadata header that the generator prepends.
+2. Derives a subject line from the filename (e.g., `TDB Weekly — May 10, 2026`); overridable via `--subject`.
+3. POSTs to `https://api.buttondown.email/v1/emails` with `status: "draft"`, `email_type: "public"`. Buttondown stores the markdown natively; no HTML conversion needed.
+4. Prints the edit URL (`https://buttondown.com/tucsondailybrief/archive/<slug>/`) so the user can open and edit.
+
+Auth: `BUTTONDOWN_API_KEY` from `~/.config/environment.d/buttondown.conf`.
+
+**3. `run_newsletter.sh` — cron wrapper**
+
+Loads env vars from `~/.config/environment.d/`, runs the generator with `--force`, finds the latest draft, and uploads it. Logs to `/tmp/newsletter-gen.log`. Single `--dry-run` flag for manual testing.
+
+**Cron entry:**
+```
+0 18 * * 5 ~/claude-code-projects/tucson-daily-brief-site/run_newsletter.sh >> /tmp/newsletter-gen.log 2>&1
+```
+
+(Friday 6pm MST. The draft sits in Buttondown for ~36 hours of human editorial review; user manually schedules the send for Sunday 5am MST after editing.)
+
 Usage:
 
 ```bash
-.venv/bin/python3 generate_newsletter.py
-.venv/bin/python3 generate_newsletter.py --send-date 2026-05-10
-.venv/bin/python3 generate_newsletter.py --force      # overwrite existing draft
-.venv/bin/python3 generate_newsletter.py --dry-run    # print prompt, skip API call
+.venv/bin/python3 generate_newsletter.py                  # generate draft only
+.venv/bin/python3 generate_newsletter.py --dry-run        # print prompt, no API call
+.venv/bin/python3 upload_to_buttondown.py <draft.md>      # upload existing draft
+./run_newsletter.sh                                        # full chain (cron uses this)
+./run_newsletter.sh --dry-run                              # full chain dry run
 ```
 
 ### Critical principle: do not duplicate the website
@@ -618,7 +643,7 @@ The newsletter must not be a copy of the daily site. If both surfaces show the s
 - **Website** = daily archive, canonical source, searchable, linkable, comprehensive.
 - **Newsletter** = weekly editorial product. Opinionated, curated, written *to* a specific person reading at the kitchen table on Sunday morning. Different voice, different selection logic, different value proposition.
 
-### Platform: Buttondown (decided 2026-05-06, not yet wired)
+### Platform: Buttondown (decided 2026-05-06, wired 2026-05-08)
 
 Originally planned around Substack for the recommendation flywheel. Pivoted to **Buttondown**:
 
@@ -628,6 +653,17 @@ Originally planned around Substack for the recommendation flywheel. Pivoted to *
 - **Single-developer-friendly.** Buttondown is tooling, not a media platform.
 
 **The trade-off:** Substack's recommendation engine is a real distribution channel for independent writers. Buttondown gives that up — TDB would build distribution itself through word-of-mouth, the Tucson Mini referral hook, and partnerships with existing Tucson outlets. Acceptable for build velocity and editorial control on a single-developer side project.
+
+### Sender architecture
+
+- **From:** `Nicholas De Leon <tdb@mail.tucsondailybrief.com>` (subdomain).
+- **Reply-To:** Buttondown-managed (`replies+UUID@replies.buttondown.email`). Replies land as wrapped notifications in user's Gmail; user replies back as themselves. The "view replies in Buttondown dashboard" feature is preserved.
+- **DNS for `mail.tucsondailybrief.com`:** delegated to Buttondown's nameservers (`ns1.onbuttondown.com`, `ns2.onbuttondown.com`) via 2 NS records on the apex. Buttondown manages all DKIM/SPF/MX/DMARC at the subdomain in perpetuity — no manual record management.
+- **DNS for apex (`tucsondailybrief.com`):** still owned by user. Cloudflare Email Routing forwards `tdb@tucsondailybrief.com` → `nicholas@daylayown.org`. Used for direct emails to the apex address (website inquiries, business contacts) — not load-bearing for newsletter replies anymore but keeps the apex address functional.
+
+**Why the subdomain split:** Cloudflare Email Routing takes exclusive ownership of MX records at the apex by design. Postmark (Buttondown's underlying ESP) wanted an MX too. Couldn't coexist. Subdomain delegation cleanly avoids the conflict.
+
+**Account:** username `tucsondailybrief`, login `nicholas@daylayown.org`. API key in `~/.config/environment.d/buttondown.conf`.
 
 ### Tucson Mini as the subscriber perk + funnel
 
@@ -644,15 +680,16 @@ NYT Mini is the dominant retention pattern for newsletters with games. The Tucso
 
 Reuse the existing TTS pipeline (`generate_podcast.py` flow). Weekly episode is just a different input text — clean for TTS, send to ElevenLabs or Voxtral, upload to R2 or Buttondown's native podcast hosting. Add this once the written newsletter is stable.
 
-### Build order (updated 2026-05-07)
+### Build order (updated 2026-05-08)
 
 1. Public Record liquor license pipeline ✅ live (2026-04-11)
 2. Tucson Mini crossword ✅ live (2026-05-06, v0.4)
-3. **TDB Weekly newsletter — IN PROGRESS**
-   - Draft generator ✅ built 2026-05-07 (v1, prompt iterated to v4)
-   - Buttondown API wiring — next session
-   - Cron schedule for Saturday afternoon — after Buttondown wiring
-4. Marana coverage in Public Record — runs in parallel; doesn't block newsletter launch
+3. **TDB Weekly newsletter ✅ LIVE (2026-05-08)**
+   - Draft generator ✅ built 2026-05-07 (v4 prompt)
+   - Buttondown API integration ✅ built 2026-05-08
+   - Cron + wrapper ✅ built 2026-05-08 (Friday 6pm MST)
+   - First real send: Sunday 2026-05-10 (manually scheduled in Buttondown)
+4. Marana coverage in Public Record — pending
 5. Audio version of newsletter — after written newsletter is stable
 
 ## Roadmap: Repo Consolidation
@@ -684,9 +721,10 @@ Estimated effort: ~30-60 minutes. The path updates across scripts are the fiddli
 
 | Time (MST) | Job | Log |
 |---|---|---|
-| 6:00 AM | OpenClaw briefing agent | (OpenClaw internal) |
-| 6:10 AM | `run_podcast.sh` — Telegram, blog, podcast, YouTube | `/tmp/podcast-gen.log` |
-| 8:00 AM | `check_agendas.sh` — all 4 agenda pipelines + auto-schedule live recordings (`ENABLE_AUTO_SCHEDULE=1`) | `/tmp/agenda-check.log` |
+| 6:00 AM (daily) | OpenClaw briefing agent | (OpenClaw internal) |
+| 6:10 AM (daily) | `run_podcast.sh` — Telegram, blog, podcast, YouTube | `/tmp/podcast-gen.log` |
+| 8:00 AM (daily) | `check_agendas.sh` — all 4 agenda pipelines + auto-schedule live recordings (`ENABLE_AUTO_SCHEDULE=1`) | `/tmp/agenda-check.log` |
+| 6:00 PM (Fri) | `run_newsletter.sh` — TDB Weekly draft generation + upload to Buttondown | `/tmp/newsletter-gen.log` |
 | (scheduled) | `at` jobs — live reporter for YouTube + Swagit meetings | `/tmp/live-reporter*.log` |
 
 **`atd` daemon** must be enabled (`systemctl enable --now atd`) for scheduled live recordings. Jobs are one-off — each meeting needs its own `at` job (see "Scheduling live recordings with `at`" under AI Reporter Pipeline).
