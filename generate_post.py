@@ -286,6 +286,16 @@ def render_index(posts: list[dict]) -> str:
 <a href="public-record.html">Public Record &rarr;</a>
 </nav>
 
+<section class="subscribe-cta">
+<h2>TDB Weekly</h2>
+<p>A warm Sunday-morning roundup of what mattered in Tucson this week. Plus the Tucson Mini &mdash; a 5&times;5 mini crossword built just for subscribers.</p>
+<form action="https://buttondown.email/api/emails/embed-subscribe/tucsondailybrief" method="post" target="_blank">
+<input type="email" name="email" placeholder="your@email.com" aria-label="Email address" required>
+<button type="submit">Subscribe</button>
+</form>
+<p class="subscribe-fineprint">Free. Sunday mornings. Unsubscribe anytime.</p>
+</section>
+
 <ul class="post-list">
 {post_list}
 </ul>
