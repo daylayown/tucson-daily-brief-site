@@ -676,6 +676,20 @@ The Mini (see section above) is the subscriber-exclusive perk and the growth hoo
 
 NYT Mini is the dominant retention pattern for newsletters with games. The Tucson Mini is the local version: 5×5, charming, takes 1-3 minutes, has a forwardable share grid.
 
+### Site signup form
+
+Subscribe form lives on `tucsondailybrief.com` between the section nav and the daily-brief post list. Rendered by `render_index()` in `generate_post.py` (so it survives every nightly homepage rebuild) and styled in `style.css` under `.subscribe-cta` (tan panel, terracotta CTA button, brown text — matches the desert palette).
+
+Form posts directly to Buttondown's embed endpoint:
+
+```
+POST https://buttondown.email/api/emails/embed-subscribe/tucsondailybrief
+```
+
+`target="_blank"` opens Buttondown's confirmation flow in a new tab so the user stays on tucsondailybrief.com. Buttondown handles double opt-in, the success page, and the welcome email.
+
+For now the form is homepage-only. Adding to other index pages (`meeting-watch.html`, `news-reports.html`, `public-record.html`) and individual posts is straightforward but deferred until conversion data warrants it.
+
 ### Audio version (deferred)
 
 Reuse the existing TTS pipeline (`generate_podcast.py` flow). Weekly episode is just a different input text — clean for TTS, send to ElevenLabs or Voxtral, upload to R2 or Buttondown's native podcast hosting. Add this once the written newsletter is stable.
@@ -688,6 +702,7 @@ Reuse the existing TTS pipeline (`generate_podcast.py` flow). Weekly episode is 
    - Draft generator ✅ built 2026-05-07 (v4 prompt)
    - Buttondown API integration ✅ built 2026-05-08
    - Cron + wrapper ✅ built 2026-05-08 (Friday 6pm MST)
+   - Site signup form ✅ shipped 2026-05-08 (homepage, posts to Buttondown embed endpoint)
    - First real send: Sunday 2026-05-10 (manually scheduled in Buttondown)
 4. Marana coverage in Public Record — pending
 5. Audio version of newsletter — after written newsletter is stable
