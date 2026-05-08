@@ -313,7 +313,7 @@ def render_filing_html(data: dict, source_meta: dict, meeting_date: str) -> str:
 
 <header>
 <h1><a href="../">Tucson Daily Brief</a></h1>
-<p class="tagline">An AI-powered local news pipeline by Nicholas De Leon</p>
+<p class="tagline">An ongoing experiment at the intersection of artificial intelligence and local journalism, by Nicholas De Leon</p>
 </header>
 
 <a class="back-link" href="../public-record.html">&larr; All public record filings</a>

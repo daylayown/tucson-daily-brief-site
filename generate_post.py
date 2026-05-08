@@ -217,7 +217,7 @@ def render_post(date: datetime, body_html: str) -> str:
 
 <header>
 <h1><a href="../">Tucson Daily Brief</a></h1>
-<p class="tagline">An AI-powered local news pipeline by Nicholas De Leon</p>
+<p class="tagline">An ongoing experiment at the intersection of artificial intelligence and local journalism, by Nicholas De Leon</p>
 </header>
 
 <a class="back-link" href="../">&larr; All briefings</a>
@@ -277,7 +277,7 @@ def render_index(posts: list[dict]) -> str:
 
 <header>
 <h1><a href="./">Tucson Daily Brief</a></h1>
-<p class="tagline">An AI-powered local news pipeline by Nicholas De Leon</p>
+<p class="tagline">An ongoing experiment at the intersection of artificial intelligence and local journalism, by Nicholas De Leon</p>
 </header>
 
 <nav class="section-nav">
