@@ -399,6 +399,16 @@ def render_index_html(filings: list[dict]) -> str:
 
 <p class="section-intro">New restaurants, bars, and businesses go through public meetings before they open. Most never get reported on. Tucson Daily Brief surfaces them automatically from the agendas of the Pima County Board of Supervisors, Tucson Mayor &amp; Council, and Oro Valley Town Council. If you spot a place opening near you, <a href="mailto:nicholas@daylayown.org">tell us about it</a>.</p>
 
+<section class="subscribe-cta">
+<h2>TDB Weekly</h2>
+<p>A warm Sunday-morning roundup of what mattered in Tucson this week. Plus the Tucson Mini &mdash; a 5&times;5 mini crossword built just for subscribers.</p>
+<form action="https://buttondown.email/api/emails/embed-subscribe/tucsondailybrief" method="post" target="_blank">
+<input type="email" name="email" placeholder="your@email.com" aria-label="Email address" required>
+<button type="submit">Subscribe</button>
+</form>
+<p class="subscribe-fineprint">Free. Sunday mornings. Unsubscribe anytime.</p>
+</section>
+
 <ul class="post-list">
 {post_list}
 </ul>
