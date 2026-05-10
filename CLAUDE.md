@@ -15,6 +15,7 @@ Static blog for GitHub Pages — minimal, text-first, Daring Fireball style. No 
 ├── news-reports/                # Published news report HTML files (human-approved)
 ├── ai_reporter.py               # Downstream pipeline: transcript JSON → Claude report → Telegram → publish
 ├── ai_reporter_live.py          # Live input: streamlink/direct HLS → Deepgram WebSocket → transcript JSON
+├── ai_reporter_vod.py           # VOD input: ffmpeg → opus → Deepgram batch API → transcript JSON (fallback when live capture fails)
 ├── run_live_reporter.sh         # Shell wrapper for live reporter (env loading, dep validation)
 ├── transcripts/                 # Working directory: transcript JSON + drafts (gitignored)
 ├── agenda-watch/                # Working directory: markdown previews + full references (not published)
@@ -220,15 +221,18 @@ The daily brief repackages existing journalism. The agenda mining pipeline (abov
 
 ### AI Reporter Pipeline
 
-Live pipeline built March 2026. VOD pipeline planned but not yet implemented.
+Live pipeline built March 2026. VOD pipeline built May 2026 (`ai_reporter_vod.py`).
 
 **Architecture:**
 ```
 Live input (YouTube):  streamlink → ffmpeg (PCM 16kHz mono) → Deepgram WebSocket → transcript JSON
 Live input (Swagit):   ffmpeg reads HLS .m3u8 directly (--direct mode) → Deepgram WebSocket → transcript JSON
+VOD input:             ffmpeg extracts → opus file → Deepgram batch (pre-recorded) API → transcript JSON
                                                                                     │
 Downstream:            transcript JSON → Claude Sonnet 4.6 news report → Telegram review → approve → publish HTML
 ```
+
+**Why a separate VOD pipeline?** Deepgram's live WebSocket API expects ~1× real-time audio. ffmpeg reading an HLS VOD pulls audio much faster than real-time, which floods the live WebSocket and triggers a 1011 keepalive-timeout error after a minute or two. Verified on the Marana May 5 VOD (2026-05-10): live pipeline died after capturing 95 seconds; batch API processed the same 72-minute meeting cleanly in one shot. The batch API is the right tool whenever the source is a complete recording rather than a real-time stream.
 
 **Scripts:**
 
@@ -236,6 +240,7 @@ Downstream:            transcript JSON → Claude Sonnet 4.6 news report → Tel
 |---|---|
 | `ai_reporter.py` | Downstream pipeline: transcript JSON → Claude report → Telegram → approve/publish |
 | `ai_reporter_live.py` | Live input: streamlink or direct HLS → Deepgram WebSocket → real-time terminal display → transcript JSON |
+| `ai_reporter_vod.py` | VOD input: any audio/video URL or local file → ffmpeg extracts opus → Deepgram batch API → transcript JSON, then hands off to `ai_reporter.py` for the draft |
 | `run_live_reporter.sh` | Shell wrapper: loads env vars, validates deps, waits for stream to go live, passes args through. Skips streamlink/yt-dlp checks in `--direct` mode |
 
 **Usage:**
@@ -260,6 +265,14 @@ python3 ai_reporter.py --approve transcripts/pentagon-2026-03-26-draft.md
 
 # Publish an already-approved file
 python3 ai_reporter.py --publish transcripts/pentagon-2026-03-26-approved.md
+
+# VOD transcription — when live capture failed or the source is a recording
+# (HLS playlist URL works; MP4 / local file works; ffmpeg handles any input format)
+.venv/bin/python3 ai_reporter_vod.py \
+    "https://archive-stream.granicus.com/.../playlist.m3u8" \
+    --slug marana-2026-05-05 \
+    --title "Marana Town Council Regular Meeting" \
+    --started-at 2026-05-05
 ```
 
 **File layout:**
@@ -343,7 +356,7 @@ Pima County and Tucson stream on YouTube (use default streamlink mode). Oro Vall
 
 **Enable flag:** The scheduling call in `check_agendas.sh` is gated by `ENABLE_AUTO_SCHEDULE=1`. **This is enabled in the 8 AM cron line as of April 24, 2026** — the crontab prefixes the command with `ENABLE_AUTO_SCHEDULE=1`. To temporarily disable, either `crontab -e` and remove the prefix, or unset the env var in an ad-hoc run. Backup of the pre-change crontab lives at `~/.cache/crontab/crontab.bak`.
 
-**Marana stream URL is unverified** — the `STREAM_SOURCES` entry for Marana is inferred from Oro Valley's Swagit pattern. Verify it during a live Marana broadcast (browser devtools → Network → `.m3u8`) before trusting it in production.
+**Marana stream URL is unverified** — the `STREAM_SOURCES` entry for Marana is inferred from Oro Valley's Swagit pattern and has failed live capture at least twice (most recently 2026-05-05; ffmpeg retried for the full 30 minutes and never got a stream). Probing on 2026-05-10 ruled out the obvious alternatives: `maranaaz.granicus.com` / `marana.granicus.com` / `townofmarana.granicus.com` all 302 to Granicus's generic `/core/error/NotFound.aspx` (Marana is not a Granicus customer), and `archive-stream.granicus.com` is CloudFront-fronted for on-demand only (Wowza `/Live/_definst_/...` paths return CloudFront errors, not Wowza errors). The Marana archive lives on Granicus infrastructure only because Swagit→Granicus merger plumbing routes Swagit content through it; this tells us nothing about where the live stream lives. **The real live URL can only be discovered via browser devtools during an actual Marana broadcast** (Network panel → filter `.m3u8`). Next scheduled verification: Tuesday May 19, 2026. Until then, treat Marana as VOD-only — use `ai_reporter_vod.py` 1–3 business days after each meeting, once the Swagit auto-transcript posts.
 
 **Backtest and audit commands:**
 ```bash
@@ -387,11 +400,13 @@ python3 schedule_recording.py --force <preview> <full_ref> <municipality>
 
 **Tested:** March 27, 2026. Verified on live YouTube streams (WWE, Al Jazeera). Broadcast-quality audio produces near-perfect transcripts (confidence 0.999-1.0). Speaker diarization working.
 
-**VOD pipeline (planned, not yet built):**
-- `ai_reporter_vod.py` — yt-dlp downloads audio → Deepgram batch API transcribes → same downstream pipeline
-- Cost: ~$0.0043/min (~$0.78 for a 3-hour meeting)
-- Can also use Marana/OV Swagit transcripts directly where available
-- Production workhorse once live pipeline is validated
+**VOD pipeline (built 2026-05-10):**
+- `ai_reporter_vod.py` — ffmpeg extracts audio from any URL or local file → opus at 24 kbps mono 16 kHz → Deepgram pre-recorded API (`POST /v1/listen`) with `model=nova-2&diarize=true&utterances=true&smart_format=true&punctuate=true&language=en-US` → utterances mapped into the standard transcript JSON schema → exec `ai_reporter.py` for the Sonnet draft.
+- Why batch vs. live for VOD: Deepgram's live WebSocket expects ~1× real-time audio; ffmpeg pulls HLS VODs much faster and triggers a 1011 keepalive timeout. Batch API ingests at its own pace.
+- Cost: ~$0.0043/min (~$0.31 for a 72-minute meeting via the pre-recorded endpoint, well under the live pipeline's $1.38 for a 3-hour meeting because there's no streaming overhead).
+- Wall clock: ~5–10 minutes total for a 72-min meeting (ffmpeg HLS pull is the bottleneck; Deepgram batch returns much faster than real-time).
+- First production use: Marana May 5 Town Council Regular Meeting, transcribed via VOD on 2026-05-10 after live capture failed. 1,095 utterances, 16 diarized speakers, clean draft.
+- Marana/OV Swagit auto-transcripts (available 1–3 business days after a meeting at `maranaaz.new.swagit.com/videos/{id}/transcript`) remain a viable alternative when human-quality captions are preferable to Deepgram's batch output — but our pipeline doesn't ingest them yet.
 
 **STT provider research (March 2026):**
 
@@ -706,6 +721,91 @@ Reuse the existing TTS pipeline (`generate_podcast.py` flow). Weekly episode is 
    - First real send: Sunday 2026-05-10 (manually scheduled in Buttondown)
 4. Marana coverage in Public Record — pending
 5. Audio version of newsletter — after written newsletter is stable
+
+## RAG Knowledge Agent
+
+A retrieval-augmented chat agent that answers questions about Tucson using only the TDB corpus, with inline citations to source URLs. Differentiates TDB from every other local outlet — most of which can't have a meaningful conversation about their own archive. The corpus IS the moat; making it queryable is what turns it into a product.
+
+**Status:** Phase 1 live as CLI only (committed `a1d0149`, 2026-05-09). No web UI yet.
+
+### Files
+
+- `rag/build_index.py` — walks corpus, document-type-aware chunking, embeds via Voyage, writes to sqlite-vec.
+- `rag/ask.py` — CLI: question → top-K retrieval → Claude Sonnet 4.6 synthesis with citation discipline → printed answer + numbered source list.
+- `rag/index.sqlite` — vector store (gitignored).
+- `requirements.txt` — adds `voyageai`, `sqlite-vec`, `anthropic`.
+
+### Architecture
+
+- **Embeddings:** Voyage `voyage-3-lite` (512-dim, $0.02/1M tokens, Anthropic-acquired Voyage AI is the recommended pairing for Claude RAG). API key in `~/.config/environment.d/voyage.conf`.
+- **Vector store:** SQLite + `sqlite-vec` v0.1.9 extension. Single file at `rag/index.sqlite`. No server, no hosted service.
+- **Generation:** Claude Sonnet 4.6 with strict "answer only from these sources" system prompt; refuses to fabricate, suggests where to look when corpus doesn't cover the question.
+- **Chunking:** document-type-aware. Daily brief → one chunk per story. News report → title+lede + per-`<h2>` sections. Meeting preview → per top-item. Public-record filing → whole filing. Agenda full reference → 1500-char windows with 200-char overlap.
+- **Idempotency:** content hash per file in `file_state` table — re-running re-embeds only changed/new files (verified — incremental rebuild after a new daily brief takes ~0.5s).
+- **Citation URLs:** every chunk carries the public TDB URL it came from; `agenda-watch/*-full.md` references map to the corresponding `meeting-watch/{slug}.html` published preview when one exists, else fall back to the meeting-watch index page.
+
+### Index stats (as of 2026-05-10)
+
+147 files, 1,464 chunks. Distribution: 1,105 daily-brief chunks, 207 agenda-full, 121 meeting-watch, 18 public-record, 13 news-report. Initial embed: ~262K tokens, well under Voyage's 200M-token free tier.
+
+### Cost
+
+- Embedding: ~$0.005 to embed entire corpus once. Daily incremental: pennies/day.
+- **Per query at runtime:** ~$0.015 (Sonnet 4.6 with retrieved chunks). Hand-tests range $0.011–$0.020 depending on output length.
+- 100 queries/day ≈ $1.50/day, $45/month. Realistic shakedown volume is pennies/month.
+
+### Known gotchas (caught during build, must remember)
+
+1. **sqlite-vec KNN syntax:** use `WHERE embedding MATCH ? AND k = ?` inside the WHERE clause, NOT a regular SQL `LIMIT`. Plain `LIMIT` raises `OperationalError: A LIMIT or 'k = ?' constraint is required on vec0 knn queries`.
+2. **Voyage `input_type`:** use `"document"` when embedding for the index, `"query"` when embedding the user's question. They're tuned differently.
+3. **Vector serialization:** sqlite-vec accepts `sqlite_vec.serialize_float32(vec)` for storage. Do not pass Python lists directly.
+4. **Boolean params on SDKs:** Voyage 0.2.x is fine, but the Deepgram pattern of "pass booleans as strings" is a precedent worth remembering when integrating other vector/SDK libraries.
+
+### Usage
+
+```bash
+.venv/bin/python3 rag/build_index.py              # incremental — only re-embeds changed files
+.venv/bin/python3 rag/build_index.py --rebuild    # drop everything and re-embed all
+.venv/bin/python3 rag/build_index.py --dry-run    # walk + chunk only, no API calls
+
+.venv/bin/python3 rag/ask.py "your question here"
+.venv/bin/python3 rag/ask.py --k 15 "..."         # retrieve more chunks
+.venv/bin/python3 rag/ask.py --json "..."         # machine-readable output
+```
+
+### Phase 2 — public web UI (next, ~2-3 days of focused work)
+
+The chat agent ships publicly as the **launch event** of the project's marketing push. Plan:
+
+1. **`ask.html` at the site root** — static page, desert-palette styled, input box + answer area + citation list. No JS framework, vanilla.
+2. **Cloudflare Worker** — holds Voyage + Anthropic keys server-side, takes a question via POST, embeds via Voyage, queries the sqlite-vec database (deployed to Cloudflare D1 or kept on a backend VPS — TBD), calls Sonnet, returns JSON with answer + sources. Free tier handles expected traffic easily.
+3. **Per-IP rate limiting** in the Worker (e.g., 20 questions/hour) to bound abuse.
+4. **Unlisted URL for ~1 week of real-use shakedown**, then public launch as marketing event (r/Tucson post + LinkedIn + local press pitch). Don't make it discoverable until it's tested.
+5. **Cron the incremental index rebuild** after the 8 AM agenda check so new daily briefs and meeting previews are queryable within hours.
+
+**Open Phase 2 question:** where the SQLite database actually lives in the deployed setup. Cloudflare D1 is SQLite-compatible but doesn't yet support custom extensions like sqlite-vec. Alternatives: keep the DB on a small VPS and have the Worker call out to it; or replace sqlite-vec with a Cloudflare-native vector store (Vectorize); or accept the architectural drift and use a different runtime (Fly.io, Railway). Decide before building the Worker.
+
+### Phase 3+ (eval-driven, defer until Phase 2 has run for a few weeks)
+
+- **Eval set** — 30–50 hand-graded real Tucson questions, automated regression-tested on every change. Build before any of the items below; without it, "improvements" are guesses.
+- **Hybrid search** — BM25 + vector, then rerank top-30 → top-10 via Voyage Rerank or Cohere Rerank. Highest-leverage quality lever in most RAG systems.
+- **Recency weighting** — explicit time-decay scoring if Sonnet isn't picking up "what's happening lately" framing from prompt instructions alone.
+- **Agentic multi-hop retrieval** — for cross-document questions ("Who funded the council member who voted yes on Bloom Tea's liquor license?"). Let the model issue multiple retrieval queries iteratively.
+- **Operational RAG extension** — once the Responsiveness Index ships, extend the agent to query its live SQLite store alongside the text corpus (covered in detail in `responsiveness/PLANNING.md` under "Function 3 — Access").
+
+## Tucson Responsiveness Index (planned, researched 2026-05-10)
+
+Side project that evolves TDB from aggregation toward original reporting. A living website at `tucsondailybrief.com/responsiveness/` (working title — name TBD) that reframes Tucson's civic infrastructure through three lenses no one else combines: how the city responds to resident-reported problems, what the city publishes vs. what it doesn't, and how the desert (heat / water / power) makes both questions structurally different than they'd be in any other US metro.
+
+**Status:** Research complete (M0). Not yet building. Active TDB priorities (RAG agent Phase 2, 60-day marketing push, Marana Public Record) come first.
+
+**Canonical planning doc:** `responsiveness/PLANNING.md` — covers the full thesis, four publishable surfaces (live dashboard, weekly explainer, Transparency Tracker, original journalism using accumulated data), the four AI functions (Discovery, Synthesis, Access, Translation) with specific applications under each, build sequence (M1 → M3 → beyond), data source URLs and gotchas, codebase reuse plan, and open decisions.
+
+**M1 scope (locked):** SeeClickFix 311 + TPD CFS only. No Equity Score in v1 (politically charged, dropped 2026-05-10). Three deliverables ship together: Transparency Tracker page, 311 dashboard with citywide numbers, "How this works" methodology page.
+
+**The editorial thesis from research:** *"Before we measure how fast Tucson responds, we have to measure what Tucson tells us."* Tucson does not publish 311 on its own open-data portal, does not publish code enforcement at all, does not publish permits in bulk, and Tucson Water publishes no operational KPI report (a peer utility — Oro Valley Water — does). The Transparency Tracker leads; responsiveness numbers follow; the desert lens is permanent.
+
+When picking this up cold: read `responsiveness/PLANNING.md` and the `project_responsiveness_index.md` memory entry. Both are durable — the data sources, gotchas, and architecture decisions don't expire fast.
 
 ## Roadmap: Repo Consolidation
 
