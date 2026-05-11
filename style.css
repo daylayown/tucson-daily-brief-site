@@ -1328,11 +1328,7 @@ article.post-page p.source {
 
   .featured__grid { gap: var(--gap-l); }
 
-  .featured__sun {
-    width: 90px;
-    top: -8px;
-    right: 8px;
-  }
+  .featured__sun { display: none; }
 
 
   .recent__item,
