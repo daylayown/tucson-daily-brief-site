@@ -274,7 +274,7 @@ Three rounds of research agents covered: 311 + permits + code enforcement + poli
 ## Open decisions / deferred calls
 
 1. **Name.** "Tucson Responsiveness Index" works for the analytical core but might want a friendlier umbrella. Strong candidate: **"How Tucson Works."** Decide once a draft home-page layout exists.
-2. **URL.** Likely `tucsondailybrief.com/responsiveness/`, matching the existing `meeting-watch/`, `news-reports/`, `public-record/` precedent. Could also live under a friendlier path if the name changes.
+2. **URL.** Currently a coming-soon stub at `tucsondailybrief.com/responsiveness.html` (root level, mirrors the pattern of every other section index after the 2026-05-11 IA redesign). When the real dashboard ships, options: keep it at `responsiveness.html` as a single-page dashboard; or use `responsiveness/dashboard.html`, `responsiveness/methodology.html`, `responsiveness/transparency-tracker.html` for multi-page navigation, with `responsiveness.html` as the landing page that links into them. **Avoid `responsiveness/index.html`** — GitHub Pages does not serve directory index files on this site (verified during the 2026-05-11 redesign; site has `.nojekyll`).
 3. **City engagement protocol.** Publish cold, or give the city 24-hour notice with a chance to provide context that lands in the report? Leaning toward notice (models the responsiveness being measured; non-response itself becomes a finding).
 4. **Equity Score re-introduction.** Dropped from v1 (2026-05-10). Methodology (population-weighted block-to-ward crosswalk + MOE handling) is documented above. May return with mature methodology and heavy caveats.
 5. **Geographic granularity in dashboard.** Per-ward maps are off-table for v1, but neighborhood-level hot-spot maps are still on (operational, not equity-comparison). Exact granularity (intersection / block face / census tract) is a v0 design call.
@@ -285,14 +285,16 @@ Three rounds of research agents covered: 311 + permits + code enforcement + poli
 
 ## When to resume
 
-This work is paused as of **2026-05-10**. Active TDB priorities ahead of it:
+This work is paused as of **2026-05-10**. Status update **2026-05-11**: full IA + visual redesign of the site shipped (commits `b927b4a` through `35fd6fb`). A coming-soon stub for this section is live at `responsiveness.html`. Active TDB priorities now:
 
-1. **RAG agent Phase 2** — web UI + Cloudflare Worker + public launch as the marketing event. (Was in flight when this responsiveness research happened.)
-2. **60-day marketing push** — r/Tucson + local press + LinkedIn build-in-public. Newsletter seeding. Cafe brochures.
-3. **Marana Public Record** — pending tier-1 work.
+1. **RAG agent Phase 2** — web UI + Cloudflare Worker + public launch as the marketing event. This and the Responsiveness Index are the two queued next-builds; pick one to attack on the next session. Phase 2 has an unresolved architectural question (where the sqlite-vec DB lives in deploy) — see CLAUDE.md "Phase 2 — public web UI" section.
+2. **The Responsiveness Index itself** (this doc). M1 scope is locked.
+3. **Marana Spotted coverage** — pending tier-1 work. Smaller scope than either of the above; could fit between them.
+4. **The Old Pueblo Speaks** — outreach-based reporting; roadmap stub in CLAUDE.md. Not blocking anything.
+5. **60-day marketing push** — kicks off after RAG Phase 2 ships publicly.
 
 Pick this up when:
-- The RAG agent has shipped publicly and demonstrated the chat-over-corpus pattern works.
+- The RAG agent ships publicly and demonstrated the chat-over-corpus pattern works.
 - Or when an editorial trigger appears (a major Tucson Water or TEP story makes the project's framing irresistible).
 - Or when the user is between bigger items and wants a focused weekend project.
 

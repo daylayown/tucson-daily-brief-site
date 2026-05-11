@@ -5,14 +5,19 @@ Static blog for GitHub Pages — minimal, text-first, Daring Fireball style. No 
 ## Project Structure
 
 ```
-├── style.css                    # Desert/Southwest themed CSS (sand, terracotta, sage)
-├── generate_post.py             # Daily brief: Markdown → HTML generator + index rebuilder
-├── index.html                   # Auto-generated daily brief index page (newest-first)
+├── style.css                    # Warm-organic Southwest editorial CSS (see REDESIGN-V2.md)
+├── generate_post.py             # Daily brief renderer + shared chrome (masthead, footer, section nav, subscribe panel, SVG primitives); also rebuilds homepage and briefings archive
+├── index.html                   # Auto-generated homepage — zoned entry-hall layout (NOT the daily archive)
+├── briefings.html               # Auto-generated full daily-brief archive page (formerly the role of index.html)
 ├── posts/                       # Individual daily brief HTML files (named YYYY-MM-DD.html)
 ├── meeting-watch.html           # Auto-generated Meeting Watch index page
 ├── meeting-watch/               # Published meeting preview HTML files
 ├── news-reports.html            # Auto-generated News Reports index page
 ├── news-reports/                # Published news report HTML files (human-approved)
+├── public-record.html           # Auto-generated section index (display name: "Spotted"; URL kept for backwards-compat)
+├── public-record/               # Published HTML files for individual filings
+├── ask.html                     # Coming-soon stub for the RAG-powered Q&A surface (Phase 2 of RAG agent)
+├── responsiveness.html          # Coming-soon stub for the Tucson Responsiveness Index dashboard
 ├── ai_reporter.py               # Downstream pipeline: transcript JSON → Claude report → Telegram → publish
 ├── ai_reporter_live.py          # Live input: streamlink/direct HLS → Deepgram WebSocket → transcript JSON
 ├── ai_reporter_vod.py           # VOD input: ffmpeg → opus → Deepgram batch API → transcript JSON (fallback when live capture fails)
@@ -25,9 +30,11 @@ Static blog for GitHub Pages — minimal, text-first, Daring Fireball style. No 
 ├── agenda_mining_tucson.py      # City of Tucson pipeline (Hyland OnBase PDF + pdftotext)
 ├── check_agendas.sh             # Daily cron wrapper: runs all 4 pipelines + public record, auto-publishes, pushes
 ├── schedule_recording.py        # Auto-schedules live AI reporter `at` jobs for discovered meetings
-├── public_record_liquor.py      # Public Record pipeline: extracts liquor license filings from agenda-watch reference files
-├── public-record.html           # Auto-generated Public Record section index
-├── public-record/               # Published HTML files for individual filings
+├── public_record_liquor.py      # Spotted pipeline: extracts liquor license filings from agenda-watch reference files
+├── rag/                         # RAG knowledge agent — Phase 1 (CLI) live; Phase 2 (web UI) is the next major build
+│   ├── build_index.py           # Walks corpus, document-type-aware chunking, embeds via Voyage, writes to sqlite-vec
+│   ├── ask.py                   # CLI: question → retrieval → Sonnet synthesis with citation discipline
+│   └── index.sqlite             # Vector store (gitignored)
 ├── crossword/                   # The Tucson Mini — weekly subscriber crossword (see section below)
 │   ├── play.html                # Playable shell, reads ?p=slug query param, has noindex meta
 │   ├── crossword.js, style.css  # Vendored game engine (from CtS) + desert-palette restyle
@@ -38,6 +45,11 @@ Static blog for GitHub Pages — minimal, text-first, Daring Fireball style. No 
 ├── run_newsletter.sh            # Friday 6pm cron wrapper: env loading + generate + upload
 ├── newsletter/                  # TDB Weekly working directory
 │   └── drafts/                  # Generated markdown drafts (gitignored, human-reviewed before send)
+├── responsiveness/              # Tucson Responsiveness Index — planning only, not yet building
+│   └── PLANNING.md              # Canonical thesis, M1 scope (SeeClickFix 311 + TPD CFS), build sequence
+├── REDESIGN.md                  # Information architecture redesign — Direction B (zoned homepage), shipped 2026-05-11
+├── REDESIGN-V2.md               # Visual language redesign — warm-organic Southwest editorial, shipped 2026-05-11
+├── redesign-preview.html        # Self-contained reference demo of the v2 visual language (single file, embedded CSS)
 ├── MEETING-WATCH-PIPELINE.md    # Full reference docs for the meeting watch system
 ├── CNAME                        # Custom domain: tucsondailybrief.com
 ├── .nojekyll                    # Tells GitHub Pages to skip Jekyll
@@ -50,14 +62,24 @@ Static blog for GitHub Pages — minimal, text-first, Daring Fireball style. No 
 `generate_post.py` takes a briefing markdown file as input and:
 1. Extracts the date from the filename (e.g., `tucson-brief-2026-02-18.md` → `2026-02-18`)
 2. Converts the markdown to HTML (handles bold, emoji section headers, source citations with links, separators)
-3. Writes an HTML post to `posts/YYYY-MM-DD.html`
-4. Rebuilds `index.html` by scanning all posts in `posts/` and listing them newest-first
+3. Writes an editorial-style HTML post (Fraunces display date, drop cap, magazine-style section heads) to `posts/YYYY-MM-DD.html`
+4. Calls `rebuild_homepage()` which scans all posts in `posts/` AND the newest entry in `meeting-watch/`, `news-reports/`, `public-record/`, then rebuilds **both** `index.html` (zoned homepage) and `briefings.html` (full daily archive). The homepage's cross-stream cards surface the latest items from every section so a new daily brief, new meeting preview, new news report, or new Spotted filing all refresh the homepage.
 5. Is idempotent — running it twice with the same input overwrites cleanly, no duplicates
 
 Usage:
 ```
+# Normal mode — process a single new briefing and refresh derived pages
 python generate_post.py ~/.openclaw/workspace/briefings/tucson-brief-2026-02-18.md
+
+# Refresh-only mode — rebuild homepage + briefings.html with no new post
+python generate_post.py --rebuild-homepage
+
+# Bulk regen — re-render every individual post HTML from .md sources, then refresh.
+# Useful after template changes; not used by cron.
+python generate_post.py --rebuild-all ~/.openclaw/workspace/briefings/
 ```
+
+`generate_post.py` is also the home of the shared chrome — every section index renderer (`agenda_mining.py`, `ai_reporter.py`, `public_record_liquor.py`) imports `ANALYTICS_HTML`, `FOOTER_HTML`, `SUBSCRIBE_PANEL_HTML`, `SCROLL_TRIGGER_JS`, `HAND_RULE_SVG`, `SUNRAY_SVG`, `ARROW_SVG`, `ARROW_LEFT_SVG`, `FEATURED_SUN_SVG`, `site_header_html()`, `section_nav_html()`, and `rebuild_homepage()`. One source of truth for masthead, footer, nav, subscribe panel, and SVG primitives.
 
 ## Input Format
 
@@ -74,12 +96,31 @@ Briefing files come from the Tucson Daily Brief podcast project at `~/.openclaw/
 
 ## Design
 
-- Desert palette: sand bg `#f5f0e6`, terracotta links `#c75b39`, sage dates `#7a8b6f`, brown text `#3d3029`
-- Single-column, max-width 600px, centered
-- System font stack, line-height 1.7
-- Mobile-friendly via viewport meta + fluid layout
-- Footer links to Apple Podcasts, YouTube, LinkedIn, and Email
-- Google Analytics (GA4) tracking via gtag.js, measurement ID `G-MEYSB9GYF2`
+The current visual language is **warm-organic Southwest editorial**, shipped 2026-05-11. The original Daring Fireball-inspired restraint (system fonts, single 600px column, no decoration) is gone. See `REDESIGN-V2.md` for the full plan and `REDESIGN.md` for the IA-only step that preceded it. `redesign-preview.html` at the repo root is a self-contained single-file reference of the visual language.
+
+**Tokens (in `style.css :root`):**
+- Locked palette: sand `#f5f0e6`, tan `#e8dfd1`, terracotta `#c75b39` / dark `#a84a2e`, sage `#7a8b6f`, brown `#3d3029` / light `#5c4a3f`
+- Extensions (warm-only): bone `#faf4e8`, adobe `#d97048`, clay `#8c3a1f`, dusk `#4a382c`, shadow `#251c17`, dust (hairlines) `#c7b9a4`
+- Type: Fraunces (display, with `WONK` axis on for hand-set feel) + Newsreader (body), both variable, both Google Fonts
+- Three container widths: reading 640px, editorial 1040px, full 1280px
+- Mobile breakpoint: `max-width: 880px` (single-column collapse, site-wide)
+- Vertical rhythm: 8px base, sections in multiples of 24px
+
+**Atmospheric signature moves (none of these are required to understand the layout, but they're the brand):**
+- **Sun-cast** — fixed warm radial gradient on `body::before`, slowly drifts via 180s alternating animation
+- **Paper-grain** — SVG turbulence noise overlay on `body::after`, multiply blend, every page
+- **Paper-grain bleed** — denser local noise on `.featured::before`, masked to fade out on the right, concentrating "ink" under the headline
+- **Featured sun motif** (`FEATURED_SUN_SVG`) — desert sun with 12 rays of varied length in the upper-right of the homepage feature; echoes the small sunray dingbat used in kickers. Desktop only (hidden under the 880px breakpoint)
+- **Hand-drawn SVG underlines** under section heads, animated draw on first viewport entry via IntersectionObserver
+- **Drop caps** on the lede of daily-brief posts (large Fraunces capital, pulled into the column)
+
+**Section nav, footer, masthead** are centralized in `generate_post.py` constants. The masthead kicker reads "From the Old Pueblo" — ties to the "The Old Pueblo Speaks" outreach section under the Roadmap. Footer: Apple Podcasts, YouTube, LinkedIn, X (`x.com/nicholasadeleon`), Bluesky (`bsky.app/profile/nicholasadeleon.bsky.social`), Email.
+
+**Feature flag: `SHOW_TOOLS`** in `generate_post.py`. Currently `False`. When `False`, the homepage Tools card row AND the Tools nav row (Ask, Responsiveness) are both hidden site-wide. Stub pages at `/ask.html` and `/responsiveness.html` still exist and work; they just aren't linked from the main nav until this flag flips. Flip to `True` once at least one tool ships and is ready to surface.
+
+**Public Record → "Spotted" display rename.** The section's user-facing name is **Spotted** (in the nav, page titles, eyebrows, post-meta). The URL stayed `public-record.html` and the directory stayed `public-record/` so existing links and bookmarks don't break. Internal references in code (file names, Python module names, CSS class `public-record-filing`, etc.) all keep the original `public-record` terminology — only display text changed.
+
+**Analytics:** Google Analytics (GA4) via `gtag.js`, measurement ID `G-MEYSB9GYF2`. Loaded site-wide via `ANALYTICS_HTML` in `generate_post.py`.
 
 ## Source Links
 
@@ -193,7 +234,7 @@ The daily brief repackages existing journalism. The agenda mining pipeline (abov
 
 - **Agenda Mining** — ✅ **LIVE.** Before meetings happen, read every agenda and supporting document. Surface buried items that reporters would miss and publish "what to watch" previews. Auto-publishes for all four municipalities.
 
-- **Public Record** — ✅ **LIVE (April 11, 2026).** Surfaces public filings buried in government meeting agendas — starting with liquor license applications. Most never get reported on. The pipeline (`public_record_liquor.py`) is a post-process that runs after the four agenda miners finish: it scans the `agenda-watch/*-full.md` reference files, identifies liquor license items via keyword + line clustering, and uses Claude Sonnet to extract structured data (business name, address, series, license type, action type, applicant, ward) plus a 2-sentence newspaper-style summary. Each filing publishes as its own HTML page under `public-record/` with the existing site styling. Coverage: Pima County BOS, City of Tucson, Oro Valley Town Council. **Marana intentionally not supported** — Marana handles liquor licenses administratively through the Town Clerk and does not agendize them for council vote. Future expansion: scrape the Marana clerk page directly. Each cron run sends one consolidated Telegram notification if any new filings were published. Idempotent via `public-record/.processed.txt` (gitignored) plus per-filing output-file existence check. Cost: ~$0.005 per source file processed (one Sonnet call per liquor block, typically 1-3 filings extracted per call). The "Roadmap: Original Journalism" thesis in action — these filings are the basis for both automated coverage and optional human follow-up (the user can chase a filing for a quote/photo, promoting it from a Tier 1 filing to a Tier 2 feature; Tier 2 workflow is not yet built but is the natural next iteration).
+- **Spotted** (formerly "Public Record") — ✅ **LIVE (April 11, 2026; renamed 2026-05-11).** Surfaces public filings buried in government meeting agendas — starting with liquor license applications. Most never get reported on. The pipeline (`public_record_liquor.py`) is a post-process that runs after the four agenda miners finish: it scans the `agenda-watch/*-full.md` reference files, identifies liquor license items via keyword + line clustering, and uses Claude Sonnet to extract structured data (business name, address, series, license type, action type, applicant, ward) plus a 2-sentence newspaper-style summary. Each filing publishes as its own HTML page under `public-record/` (URL kept; only display name changed). Coverage: Pima County BOS, City of Tucson, Oro Valley Town Council. **Marana intentionally not supported** — Marana handles liquor licenses administratively through the Town Clerk and does not agendize them for council vote. Future expansion: scrape the Marana clerk page directly. Each cron run sends one consolidated Telegram notification if any new filings were published. Idempotent via `public-record/.processed.txt` (gitignored) plus per-filing output-file existence check. Cost: ~$0.005 per source file processed (one Sonnet call per liquor block, typically 1-3 filings extracted per call). The "Roadmap: Original Journalism" thesis in action — these filings are the basis for both automated coverage and the planned **The Old Pueblo Speaks** outreach pipeline (see above), which takes each Spotted filing and produces a draft request-for-comment email to the business owner for human review and send.
 
 ### Post-meeting data sources (researched March 2026)
 
@@ -440,7 +481,7 @@ The 10-15 minute session cap is even worse than OpenAI's 60 minutes — would ne
 
 **Transcript availability timing (Marana, tested March 2026):** Marana's policy is recordings within 3 working days. In practice, the March 3 (Tuesday evening) meeting had a full Swagit transcript available by March 8 (Sunday). Transcripts are auto-generated from closed captions, so they're likely available as soon as the video is posted — estimated **1-3 business days** after the meeting. Pipeline approach: morning-after cron check, retry daily until transcript appears, then draft and send to Telegram for human review.
 
-- **Public Record** — Monitor building permits, business license applications, court filings, and campaign finance disclosures. Flag anomalies: large developments before they're announced, unusual donations, lawsuits involving the city.
+- **Spotted, expanded scope** — Currently covers liquor license filings (live as of 2026-04-11). Roadmap: monitor building permits, business license applications, court filings, and campaign finance disclosures. Flag anomalies — large developments before they're announced, unusual donations, lawsuits involving the city.
 
 - **Budget & Spending Analysis** — Track city/county budgets, check registers, and contract awards. Flag unusually large contracts, sole-source awards, and spending trends. Compare budget projections vs. actuals over time.
 
@@ -478,11 +519,16 @@ The Tucson metro area broadly: City of Tucson, Pima County, Town of Marana, Town
 
 ### Site structure
 
-- **Daily Brief** (`index.html`, `posts/`) — daily news synthesis from local sources (live)
+The homepage at `/` is now a **zoned entry hall** (featured Today's Brief + cross-stream cards + Tools row [gated] + subscribe panel + last 7 daily briefs). Direction B from `REDESIGN.md`. The full daily-brief archive lives at `/briefings.html`. Every section page uses a shared two-row nav: streams on top (terracotta), tools below (sage, hidden behind `SHOW_TOOLS` flag).
+
+- **Daily Brief** (`/`, `/briefings.html`, `posts/`) — daily news synthesis from local sources (live). Homepage features today's brief prominently; full archive at `/briefings.html`
 - **Meeting Watch** (`meeting-watch.html`, `meeting-watch/`) — AI-generated agenda previews for 4 municipalities (live, auto-published)
 - **News Reports** (`news-reports.html`, `news-reports/`) — AI-drafted, human-reviewed post-meeting news reports (pipeline built, first real recordings scheduled April 7, 2026)
-- **Public Record** (`public-record.html`, `public-record/`) — flagged filings surfaced from agendas; v1 covers liquor license applications across Pima County BOS, City of Tucson, Oro Valley (live as of April 11, 2026)
-- **The Tucson Mini** (`crossword/`) — weekly Tucson-themed 5×5 mini crossword; subscriber perk for the forthcoming TDB Weekly newsletter; unlisted (noindex, no public links) (v0.4 live as of May 6, 2026; see "The Tucson Mini" section below)
+- **Spotted** (`public-record.html`, `public-record/`) — flagged filings surfaced from agendas; v1 covers liquor license applications across Pima County BOS, City of Tucson, Oro Valley (live as of April 11, 2026). Display name changed from "Public Record" to "Spotted" on 2026-05-11; URL preserved
+- **Ask** (`ask.html`) — stub page for the RAG-powered Q&A surface. Phase 1 (CLI) shipped; Phase 2 (web UI + Cloudflare Worker) is queued
+- **Tucson Responsiveness Index** (`responsiveness.html`) — stub page for the upcoming dashboard. Planning in `responsiveness/PLANNING.md`; no code yet
+- **The Tucson Mini** (`crossword/`) — weekly Tucson-themed 5×5 mini crossword; subscriber perk for the TDB Weekly newsletter; unlisted (noindex, no public links) (v0.4 live as of May 6, 2026; see "The Tucson Mini" section below)
+- **The Old Pueblo Speaks** — future outreach-based reporting section (see Roadmap above); not yet building
 - **Deep Read** — AI-assisted analysis of large documents (planned)
 
 ### Story ideas
@@ -791,13 +837,16 @@ A retrieval-augmented chat agent that answers questions about Tucson using only 
 
 The chat agent ships publicly as the **launch event** of the project's marketing push. Plan:
 
-1. **`ask.html` at the site root** — static page, desert-palette styled, input box + answer area + citation list. No JS framework, vanilla.
-2. **Cloudflare Worker** — holds Voyage + Anthropic keys server-side, takes a question via POST, embeds via Voyage, queries the sqlite-vec database (deployed to Cloudflare D1 or kept on a backend VPS — TBD), calls Sonnet, returns JSON with answer + sources. Free tier handles expected traffic easily.
+1. **`ask.html` rebuild** — currently a coming-soon stub in the warm-organic visual language. Rebuild it as the live interface: input box + answer area + citation list. Stays JS-light (vanilla; the Worker does the heavy lifting). When the rebuild ships, flip the `SHOW_TOOLS` flag in `generate_post.py` to `True` so the homepage Tools card row and the Tools nav row both surface Ask + Responsiveness across the site.
+2. **Cloudflare Worker** — holds Voyage + Anthropic keys server-side, takes a question via POST, embeds via Voyage, queries the sqlite-vec database (see open question below), calls Sonnet, returns JSON with answer + sources. Free tier handles expected traffic easily.
 3. **Per-IP rate limiting** in the Worker (e.g., 20 questions/hour) to bound abuse.
-4. **Unlisted URL for ~1 week of real-use shakedown**, then public launch as marketing event (r/Tucson post + LinkedIn + local press pitch). Don't make it discoverable until it's tested.
+4. **Unlisted URL for ~1 week of real-use shakedown**, then public launch as marketing event (r/Tucson post + LinkedIn + local press pitch). Don't make it discoverable until it's tested. Don't flip `SHOW_TOOLS` until shakedown is clean.
 5. **Cron the incremental index rebuild** after the 8 AM agenda check so new daily briefs and meeting previews are queryable within hours.
 
-**Open Phase 2 question:** where the SQLite database actually lives in the deployed setup. Cloudflare D1 is SQLite-compatible but doesn't yet support custom extensions like sqlite-vec. Alternatives: keep the DB on a small VPS and have the Worker call out to it; or replace sqlite-vec with a Cloudflare-native vector store (Vectorize); or accept the architectural drift and use a different runtime (Fly.io, Railway). Decide before building the Worker.
+**Open Phase 2 question (must decide before writing the Worker):** where the SQLite database actually lives in the deployed setup. Cloudflare D1 is SQLite-compatible but doesn't yet support custom extensions like sqlite-vec. Three paths:
+- (a) Keep the DB on a small VPS and have the Worker call out to it (cheapest infra, adds a network hop)
+- (b) Replace sqlite-vec with Cloudflare-native Vectorize (one platform, requires re-embedding + re-implementing the chunk-to-id mapping)
+- (c) Move the whole runtime to Fly.io or Railway (no Worker; small VM with SQLite local). Simpler architecture, slightly more ops overhead.
 
 ### Phase 3+ (eval-driven, defer until Phase 2 has run for a few weeks)
 
@@ -809,9 +858,9 @@ The chat agent ships publicly as the **launch event** of the project's marketing
 
 ## Tucson Responsiveness Index (planned, researched 2026-05-10)
 
-Side project that evolves TDB from aggregation toward original reporting. A living website at `tucsondailybrief.com/responsiveness/` (working title — name TBD) that reframes Tucson's civic infrastructure through three lenses no one else combines: how the city responds to resident-reported problems, what the city publishes vs. what it doesn't, and how the desert (heat / water / power) makes both questions structurally different than they'd be in any other US metro.
+Side project that evolves TDB from aggregation toward original reporting. A living dashboard at `tucsondailybrief.com/responsiveness.html` (currently a coming-soon stub with a sample 3-card preview) that reframes Tucson's civic infrastructure through three lenses no one else combines: how the city responds to resident-reported problems, what the city publishes vs. what it doesn't, and how the desert (heat / water / power) makes both questions structurally different than they'd be in any other US metro.
 
-**Status:** Research complete (M0). Not yet building. Active TDB priorities (RAG agent Phase 2, 60-day marketing push, Marana Public Record) come first.
+**Status:** Research complete (M0). Coming-soon stub live at `responsiveness.html` (not yet linked from main nav — gated behind `SHOW_TOOLS=False`). Not yet building the real dashboard. Two queued next-build candidates: this and RAG agent Phase 2 — pick one to attack on the next session.
 
 **Canonical planning doc:** `responsiveness/PLANNING.md` — covers the full thesis, four publishable surfaces (live dashboard, weekly explainer, Transparency Tracker, original journalism using accumulated data), the four AI functions (Discovery, Synthesis, Access, Translation) with specific applications under each, build sequence (M1 → M3 → beyond), data source URLs and gotchas, codebase reuse plan, and open decisions.
 
