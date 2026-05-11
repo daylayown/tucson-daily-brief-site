@@ -648,9 +648,7 @@ def render_homepage(posts: list[dict],
             recent_block = f"""<section class="recent">
 <div class="container container--editorial">
 <div class="recent__head">
-<h2 class="section-head">Recent briefings
-{HAND_RULE_SVG}
-</h2>
+<h2 class="section-head">Recent briefings</h2>
 </div>
 <ul class="recent__list">
 {recent_items}
