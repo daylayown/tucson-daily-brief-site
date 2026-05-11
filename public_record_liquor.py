@@ -38,9 +38,12 @@ from pathlib import Path
 from generate_post import (
     ANALYTICS_HTML,
     FOOTER_HTML,
+    HAND_RULE_SVG,
+    SCROLL_TRIGGER_JS,
     SUBSCRIBE_PANEL_HTML,
     rebuild_homepage,
     section_nav_html,
+    site_header_html,
 )
 
 # --- Config ---
@@ -301,33 +304,30 @@ def render_filing_html(data: dict, source_meta: dict, meeting_date: str) -> str:
 
     facts_html = "\n".join(facts)
 
+    from generate_post import ARROW_LEFT_SVG, post_header_html
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{escape_html(title)}</title>
+<title>{escape_html(title)} &mdash; Tucson Daily Brief</title>
 <link rel="stylesheet" href="../style.css">
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-MEYSB9GYF2"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){{dataLayer.push(arguments);}}
-  gtag('js', new Date());
-  gtag('config', 'G-MEYSB9GYF2');
-</script>
+{ANALYTICS_HTML}
 </head>
 <body>
+
+{post_header_html()}
+
 <div class="container">
+{section_nav_html(active="record", path_prefix="../")}
+</div>
 
-<header>
-<h1><a href="../">Tucson Daily Brief</a></h1>
-<p class="tagline">An ongoing experiment at the intersection of artificial intelligence and local journalism, by Nicholas De Leon</p>
-</header>
+<main>
+<div class="container container--reading">
+<a class="back-link" href="../public-record.html">{ARROW_LEFT_SVG} All spotted filings</a>
 
-<a class="back-link" href="../public-record.html">&larr; All public record filings</a>
-
-<article class="public-record-filing">
-<p class="post-meta">Public Record &middot; Liquor License Filing</p>
+<article class="post-page public-record-filing">
+<p class="post-meta">Spotted &middot; Liquor License Filing</p>
 <h1>{escape_html(business)}</h1>
 <p class="filing-subtitle">Series {escape_html(series)} {escape_html(license_type)} &middot; {escape_html(action_type)}</p>
 
@@ -341,23 +341,18 @@ def render_filing_html(data: dict, source_meta: dict, meeting_date: str) -> str:
 
 <hr>
 
-<p class="filing-disclosure"><em>This is a public record filing surfaced automatically from the {escape_html(body_name)} agenda. Tucson Daily Brief is interested in talking to the people behind new businesses opening in our community — if you're affiliated with this filing and would like to share more about your plans, <a href="mailto:nicholas@daylayown.org">get in touch</a>.</em></p>
+<p class="filing-disclosure"><em>This is a public record filing surfaced automatically from the {escape_html(body_name)} agenda. Tucson Daily Brief is interested in talking to the people behind new businesses opening in our community — if you&rsquo;re affiliated with this filing and would like to share more about your plans, <a href="mailto:nicholas@daylayown.org">get in touch</a>.</em></p>
 
-<p class="filing-meta"><em>Generated {datetime.now().strftime('%Y-%m-%d')} by Tucson Daily Brief Public Record pipeline using {CLAUDE_MODEL}. AI-extracted from a public meeting agenda. Source: {escape_html(body_name)}.</em></p>
+<p class="filing-meta"><em>Generated {datetime.now().strftime('%Y-%m-%d')} by Tucson Daily Brief&rsquo;s Spotted pipeline using {CLAUDE_MODEL}. AI-extracted from a public meeting agenda. Source: {escape_html(body_name)}.</em></p>
 </article>
-
-<footer>
-<p>By Nicholas De Leon</p>
-<p class="footer-links">
-<a href="https://podcasts.apple.com/us/podcast/tucson-daily-brief/id1878173070">Apple Podcasts</a> &middot;
-<a href="https://www.youtube.com/@tucsondailybrief">YouTube</a> &middot;
-<a href="https://www.linkedin.com/in/nicholas-de-leon-3b5b6a9">LinkedIn</a> &middot;
-<a href="https://www.instagram.com/daylayownphoto">Instagram</a> &middot;
-<a href="mailto:nicholas@daylayown.org">Email</a>
-</p>
-</footer>
-
 </div>
+</main>
+
+<div class="container">
+{FOOTER_HTML}
+</div>
+
+{SCROLL_TRIGGER_JS}
 </body>
 </html>
 """
@@ -381,31 +376,40 @@ def render_index_html(filings: list[dict]) -> str:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Public Record &mdash; Tucson Daily Brief</title>
+<title>Spotted &mdash; Tucson Daily Brief</title>
 <link rel="stylesheet" href="style.css">
 {ANALYTICS_HTML}
 </head>
 <body>
+
+{site_header_html()}
+
 <div class="container">
-
-<header>
-<h1><a href="./">Tucson Daily Brief</a></h1>
-<p class="tagline">Public Record &mdash; new businesses, permits, and filings surfaced from public meetings</p>
-</header>
-
 {section_nav_html(active="record")}
+</div>
 
-<p class="section-intro">New restaurants, bars, and businesses go through public meetings before they open. Most never get reported on. Tucson Daily Brief surfaces them automatically from the agendas of the Pima County Board of Supervisors, Tucson Mayor &amp; Council, and Oro Valley Town Council. If you spot a place opening near you, <a href="mailto:nicholas@daylayown.org">tell us about it</a>.</p>
+<main>
+<div class="container container--editorial">
+<div style="padding-top:var(--gap-xl);margin-bottom:var(--gap-l)">
+<h2 class="section-head">Spotted
+{HAND_RULE_SVG}
+</h2>
+<p class="section-intro">New restaurants, bars, businesses, and filings going through public review &mdash; most of which never get reported on. We pull them automatically from the agendas of Pima County BOS, Tucson Mayor &amp; Council, and Oro Valley Town Council. Spot one near you? <a href="mailto:nicholas@daylayown.org">Let us know</a>.</p>
+</div>
 
-{SUBSCRIBE_PANEL_HTML}
+<div style="margin-bottom:var(--gap-xl)">{SUBSCRIBE_PANEL_HTML}</div>
 
 <ul class="post-list">
 {post_list}
 </ul>
-
-{FOOTER_HTML}
-
 </div>
+</main>
+
+<div class="container">
+{FOOTER_HTML}
+</div>
+
+{SCROLL_TRIGGER_JS}
 </body>
 </html>
 """

@@ -13,7 +13,7 @@ import sys
 import os
 import re
 import argparse
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 SITE_DIR = Path(__file__).resolve().parent
@@ -21,6 +21,14 @@ POSTS_DIR = SITE_DIR / "posts"
 MEETINGS_DIR = SITE_DIR / "meeting-watch"
 REPORTS_DIR = SITE_DIR / "news-reports"
 PUBLIC_RECORD_DIR = SITE_DIR / "public-record"
+
+# Feature flag: surface the Tools (Ask, Responsiveness Index) on the site.
+# Flip to True once at least one tool ships. When False:
+#   - The homepage Tools card row is hidden
+#   - The Tools nav row (under streams nav) is hidden on every page
+# Stub pages at /ask.html and /responsiveness.html still exist and work; they
+# just aren't linked from the main nav until this flag flips.
+SHOW_TOOLS = False
 
 # Map source outlet names to their homepages (longest names first to match greedily)
 SOURCE_URLS = {
@@ -203,7 +211,11 @@ def extract_lede(text: str) -> str:
 # Shared page chrome — used by every index page on the site
 # ---------------------------------------------------------------------------
 
-ANALYTICS_HTML = """<script async src="https://www.googletagmanager.com/gtag/js?id=G-MEYSB9GYF2"></script>
+ANALYTICS_HTML = """<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..900,0..100,0..1&family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&display=swap">
+<noscript><style>.section-head__rule path { stroke-dashoffset: 0 !important; }</style></noscript>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-MEYSB9GYF2"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -211,26 +223,103 @@ ANALYTICS_HTML = """<script async src="https://www.googletagmanager.com/gtag/js?
   gtag('config', 'G-MEYSB9GYF2');
 </script>"""
 
-FOOTER_HTML = """<footer>
-<p>By Nicholas De Leon</p>
-<p class="footer-links">
-<a href="https://podcasts.apple.com/us/podcast/tucson-daily-brief/id1878173070">Apple Podcasts</a> &middot;
-<a href="https://www.youtube.com/@tucsondailybrief">YouTube</a> &middot;
-<a href="https://www.linkedin.com/in/nicholas-de-leon-3b5b6a9">LinkedIn</a> &middot;
-<a href="https://www.instagram.com/daylayownphoto">Instagram</a> &middot;
+# Inline SVGs reused across the site
+SUNRAY_SVG = """<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+<circle cx="7" cy="7" r="2.2" fill="currentColor"/>
+<g stroke="currentColor" stroke-width="1.2" stroke-linecap="round">
+<line x1="7" y1="0.5" x2="7" y2="2.5"/><line x1="7" y1="11.5" x2="7" y2="13.5"/>
+<line x1="0.5" y1="7" x2="2.5" y2="7"/><line x1="11.5" y1="7" x2="13.5" y2="7"/>
+<line x1="2.4" y1="2.4" x2="3.6" y2="3.6"/><line x1="10.4" y1="10.4" x2="11.6" y2="11.6"/>
+<line x1="2.4" y1="11.6" x2="3.6" y2="10.4"/><line x1="10.4" y1="3.6" x2="11.6" y2="2.4"/>
+</g></svg>"""
+
+ARROW_SVG = """<svg width="18" height="14" viewBox="0 0 18 14" aria-hidden="true"><path d="M1 7h15M11 2l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>"""
+
+ARROW_LEFT_SVG = """<svg width="18" height="14" viewBox="0 0 18 14" aria-hidden="true"><path d="M17 7H2M7 2L2 7l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>"""
+
+HAND_RULE_SVG = """<svg class="section-head__rule" width="280" height="14" viewBox="0 0 280 14" fill="none" aria-hidden="true">
+<path d="M2 8 C 30 4, 80 12, 130 7 S 230 4, 278 9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+</svg>"""
+
+# Vanilla JS for scroll-triggered hand-drawn underlines
+SCROLL_TRIGGER_JS = """<script>
+(function(){if(!('IntersectionObserver' in window)){document.querySelectorAll('.section-head__rule').forEach(el=>el.classList.add('in-view'));return;}
+const io=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in-view');io.unobserve(e.target);}});},{rootMargin:'0px 0px -8% 0px',threshold:0.1});
+document.querySelectorAll('.section-head__rule').forEach(el=>io.observe(el));})();
+</script>"""
+
+FOOTER_HTML = """<div class="footer-row">
+<p class="footer-row__byline">By Nicholas De Leon, in Tucson.</p>
+<p class="footer-row__links">
+<a href="https://podcasts.apple.com/us/podcast/tucson-daily-brief/id1878173070">Apple Podcasts</a>
+<a href="https://www.youtube.com/@tucsondailybrief">YouTube</a>
+<a href="https://www.linkedin.com/in/nicholas-de-leon-3b5b6a9">LinkedIn</a>
+<a href="https://x.com/nicholasadeleon">X</a>
+<a href="https://bsky.app/profile/nicholasadeleon.bsky.social">Bluesky</a>
 <a href="mailto:nicholas@daylayown.org">Email</a>
 </p>
-</footer>"""
+</div>"""
 
-SUBSCRIBE_PANEL_HTML = """<section class="subscribe-cta">
-<h2>TDB Weekly</h2>
-<p>A warm Sunday-morning roundup of what mattered in Tucson this week. Subscribers also get The Tucson Mini &mdash; a 5&times;5 crossword built just for them.</p>
-<form action="https://buttondown.email/api/emails/embed-subscribe/tucsondailybrief" method="post" target="_blank">
-<input type="email" name="email" placeholder="your@email.com" aria-label="Email address" required>
-<button type="submit">Subscribe</button>
+# Decorative SVG for the subscribe panel: sun, mountains, saguaro silhouette
+SUBSCRIBE_ART_SVG = """<svg viewBox="0 0 240 240" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0%" stop-color="#d97048" stop-opacity="0"/>
+<stop offset="100%" stop-color="#8c3a1f" stop-opacity="0.5"/>
+</linearGradient></defs>
+<circle cx="190" cy="60" r="36" fill="#f5f0e6" opacity="0.92"/>
+<g stroke="#faf4e8" stroke-width="1.5" stroke-linecap="round" opacity="0.55">
+<line x1="190" y1="6" x2="190" y2="20"/><line x1="190" y1="100" x2="190" y2="114"/>
+<line x1="136" y1="60" x2="150" y2="60"/><line x1="230" y1="60" x2="244" y2="60"/>
+<line x1="152" y1="22" x2="162" y2="32"/><line x1="218" y1="98" x2="228" y2="108"/>
+<line x1="152" y1="98" x2="162" y2="88"/><line x1="218" y1="22" x2="228" y2="12"/>
+</g>
+<path d="M -10 200 L 30 150 L 60 175 L 90 130 L 130 165 L 170 110 L 210 145 L 250 175 L 250 240 L -10 240 Z" fill="#3d3029" opacity="0.6"/>
+<path d="M -10 230 L 50 195 L 100 215 L 150 185 L 200 205 L 250 190 L 250 240 L -10 240 Z" fill="#251c17" opacity="0.55"/>
+<g transform="translate(60 130)" fill="#3d3029" opacity="0.85">
+<rect x="-4" y="0" width="8" height="80" rx="3"/>
+<rect x="-4" y="20" width="3" height="22" rx="1.5"/>
+<rect x="1" y="36" width="3" height="16" rx="1.5"/>
+<rect x="-12" y="22" width="8" height="3" rx="1.5"/>
+<rect x="-9" y="20" width="3" height="14" rx="1.5"/>
+<rect x="4" y="32" width="8" height="3" rx="1.5"/>
+<rect x="9" y="22" width="3" height="14" rx="1.5"/>
+</g>
+<rect x="0" y="0" width="240" height="240" fill="url(#sky)"/>
+</svg>"""
+
+SUBSCRIBE_PANEL_HTML = f"""<div class="subscribe__panel">
+<div class="subscribe__art">{SUBSCRIBE_ART_SVG}</div>
+<div class="subscribe__body">
+<p class="subscribe__eyebrow">TDB Weekly</p>
+<h2 class="subscribe__title">A warm Sunday-morning roundup of Tucson, in your inbox.</h2>
+<p>Five sections, ~900 words. Subscribers also get The Tucson Mini &mdash; a 5&times;5 crossword built just for them.</p>
+<form action="https://buttondown.email/api/emails/embed-subscribe/tucsondailybrief" method="post" target="_blank" class="subscribe__form">
+<input class="subscribe__input" type="email" name="email" placeholder="you@somewhere.com" aria-label="Email address" required>
+<button class="subscribe__button" type="submit">Subscribe</button>
 </form>
-<p class="subscribe-fineprint">Free. Sunday mornings. Unsubscribe anytime.</p>
-</section>"""
+<p class="subscribe__fine">Free. Sunday mornings. Unsubscribe anytime.</p>
+</div>
+</div>"""
+
+# Header used by every page on the site
+def site_header_html() -> str:
+    return """<header class="masthead">
+<div class="container">
+<p class="masthead__kicker">From the Old Pueblo</p>
+<h1 class="masthead__wordmark"><a href="./">Tucson Daily Brief</a></h1>
+<p class="masthead__tagline">An ongoing experiment at the intersection of artificial intelligence and local journalism, by Nicholas De Leon.</p>
+</div>
+</header>"""
+
+# Subpage header (for individual posts) — relative paths back to root
+def post_header_html() -> str:
+    return """<header class="masthead">
+<div class="container">
+<p class="masthead__kicker">From the Old Pueblo</p>
+<h1 class="masthead__wordmark"><a href="../">Tucson Daily Brief</a></h1>
+<p class="masthead__tagline">An ongoing experiment at the intersection of artificial intelligence and local journalism, by Nicholas De Leon.</p>
+</div>
+</header>"""
 
 
 # Section nav slots — used to mark the current page (no link) and adjust paths
@@ -240,7 +329,7 @@ _STREAMS = [
     ("briefings", "Briefings", "briefings.html"),
     ("meetings", "Meeting Watch", "meeting-watch.html"),
     ("reports", "News Reports", "news-reports.html"),
-    ("record", "Public Record", "public-record.html"),
+    ("record", "Spotted", "public-record.html"),
 ]
 
 _TOOLS = [
@@ -250,19 +339,25 @@ _TOOLS = [
 
 
 def section_nav_html(active: str = "", path_prefix: str = "") -> str:
-    """Render the two-row section nav. `active` marks the current page (rendered
-    as plain text). `path_prefix` is "" for site root or "../" for nested pages."""
+    """Render the section nav. `active` marks the current page (rendered as
+    plain text). `path_prefix` is "" for site root or "../" for nested pages.
+    The Tools row is gated by the SHOW_TOOLS flag."""
     def link_or_text(key, label, href):
         if key == active:
             return f'<span class="active">{label}</span>'
         return f'<a href="{path_prefix}{href}">{label}</a>'
 
     streams = " &middot; ".join(link_or_text(*s) for s in _STREAMS)
-    tools = " &middot; ".join(link_or_text(*t) for t in _TOOLS)
+
+    if SHOW_TOOLS:
+        tools = " &middot; ".join(link_or_text(*t) for t in _TOOLS)
+        tools_row = f'<div class="tools-nav">{tools}</div>'
+    else:
+        tools_row = ""
 
     return f"""<nav class="section-nav">
 <div class="streams-nav">{streams}</div>
-<div class="tools-nav">{tools}</div>
+{tools_row}
 </nav>"""
 
 
@@ -271,36 +366,59 @@ def section_nav_html(active: str = "", path_prefix: str = "") -> str:
 # ---------------------------------------------------------------------------
 
 def render_post(date: datetime, body_html: str) -> str:
-    """Render a full post HTML page."""
-    title = f"Tucson Daily Brief &mdash; {format_date_long(date)}"
+    """Render a daily-brief individual post page in the new editorial language."""
+    title = f"{format_date_long(date)} &mdash; Tucson Daily Brief"
     slug = post_slug(date)
+    weekday = date.strftime("%A")
+    css_path = "../style.css"
+    home_href = "../"
+    back_href = "../briefings.html"
+
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{title}</title>
-<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="{css_path}">
 {ANALYTICS_HTML}
 </head>
 <body>
-<div class="container">
 
-<header>
-<h1><a href="../">Tucson Daily Brief</a></h1>
-<p class="tagline">An ongoing experiment at the intersection of artificial intelligence and local journalism, by Nicholas De Leon</p>
+<header class="masthead">
+<div class="container">
+<p class="masthead__kicker">From the Old Pueblo</p>
+<h1 class="masthead__wordmark"><a href="{home_href}">Tucson Daily Brief</a></h1>
+<p class="masthead__tagline">An ongoing experiment at the intersection of artificial intelligence and local journalism, by Nicholas De Leon.</p>
+</div>
 </header>
 
-<a class="back-link" href="../briefings.html">&larr; All briefings</a>
-
-<article id="{slug}">
-<p class="post-meta">{format_date_long(date)}</p>
-{body_html}
-</article>
-
-{FOOTER_HTML}
-
+<div class="container">
+{section_nav_html(active="briefings", path_prefix=home_href)}
 </div>
+
+<main>
+<div class="container container--reading">
+<a class="back-link" href="{back_href}">{ARROW_LEFT_SVG} All briefings</a>
+
+<article id="{slug}" class="brief">
+<header class="brief-header">
+<p class="brief-kicker">{SUNRAY_SVG} Daily Brief</p>
+<h1 class="brief-date">{format_date_long(date)}</h1>
+<p class="brief-weekday">{weekday}</p>
+</header>
+<div class="brief-body">
+{body_html}
+</div>
+</article>
+</div>
+</main>
+
+<div class="container">
+{FOOTER_HTML}
+</div>
+
+{SCROLL_TRIGGER_JS}
 </body>
 </html>
 """
@@ -454,89 +572,146 @@ def collect_latest_filing() -> dict | None:
 # Homepage and full-archive (briefings.html) rendering
 # ---------------------------------------------------------------------------
 
-def _render_featured_card(featured: dict) -> str:
-    """The big 'Today's Brief' card at the top of the homepage."""
-    return f"""<article class="home-feature">
-<p class="eyebrow stream">{format_date_eyebrow(featured["date"])}</p>
-<h2 class="home-feature-title">Today's Brief</h2>
-<p class="home-feature-lede">{escape(featured["lede"])}</p>
-<p class="home-feature-cta"><a href="posts/{featured["slug"]}.html">Read today's brief &rarr;</a></p>
-</article>"""
+def _render_featured(featured: dict) -> str:
+    """The Today's Brief feature with kicker, headline, aside w/ drop cap.
+    A translucent terracotta wash sits behind the lower-right of the section
+    as a Barragán-style depth accent (see .featured__block in style.css)."""
+    return f"""<section class="featured">
+<div class="featured__block" aria-hidden="true"></div>
+<div class="container">
+<div class="featured__grid">
+<div>
+<div class="featured__kicker">
+{SUNRAY_SVG}
+<span class="featured__kicker-text">{format_date_eyebrow(featured["date"])}</span>
+</div>
+<h2 class="featured__headline">{escape(featured["lede"])}</h2>
+</div>
+<aside class="featured__aside">
+<p class="featured__aside-kicker">Today&rsquo;s Brief</p>
+<p class="featured__aside-lede">Plus the rest of the day&rsquo;s news from Tucson, Pima County, and beyond.</p>
+<a href="posts/{featured["slug"]}.html" class="featured__cta">
+Read today&rsquo;s brief {ARROW_SVG}
+</a>
+</aside>
+</div>
+</div>
+</section>"""
 
 
-def _render_stream_card(label: str, item: dict) -> str:
-    """A cross-stream card (Meeting Watch, News Reports, or Public Record)."""
-    eyebrow = f"{label} &middot; {format_date_short(item['date'])}"
-    lede_html = f'<p class="home-card-lede">{escape(item["lede"])}</p>' if item.get("lede") else ""
-    return f"""<article class="home-card">
-<p class="eyebrow stream">{eyebrow}</p>
-<h3 class="home-card-title"><a href="{item["href"]}">{escape(item["title"])}</a></h3>
+def _render_stream_card(label: str, when: str, item: dict) -> str:
+    """A cross-stream card: eyebrow with section + date, big title, optional lede."""
+    lede_html = f'<p class="card__lede">{escape(item["lede"])}</p>' if item.get("lede") else ""
+    return f"""<article class="card">
+<p class="card__eyebrow">
+{SUNRAY_SVG}
+<span>{label}</span>
+<span class="dot"></span>
+<span>{when}</span>
+</p>
+<h3 class="card__title"><a href="{item["href"]}">{escape(item["title"])}</a></h3>
 {lede_html}
 </article>"""
 
 
-def _render_tool_card(label: str, blurb: str, href: str) -> str:
-    """A card for an interactive tool (Ask, Responsiveness)."""
-    return f"""<article class="home-card tool-card">
-<p class="eyebrow tool">{label}</p>
-<p class="tool-card-blurb"><a href="{href}">{blurb} &rarr;</a></p>
-</article>"""
+def _render_tool_card(label: str, title: str, body: str, cta: str, href: str) -> str:
+    """A clay tool card on the homepage (Ask, Responsiveness)."""
+    return f"""<a href="{href}" class="tool-card">
+<p class="tool-card__eyebrow">{label}</p>
+<h3 class="tool-card__title">{title}</h3>
+<p class="tool-card__body">{body}</p>
+<span class="tool-card__cta">{cta} {ARROW_SVG}</span>
+</a>"""
 
 
-def _render_recent_list(posts: list[dict]) -> str:
-    """Compressed list of the most recent daily briefs (after the featured one)."""
-    items = []
-    for p in posts:
-        items.append(f"""<li>
-<span class="recent-date">{format_date_short(p["date"])}</span>
-<a href="posts/{p["slug"]}.html">{escape(p["lede"])}</a>
-</li>""")
-    return "\n".join(items)
+def _render_recent_item(p: dict) -> str:
+    weekday_abbr = p["date"].strftime("%a")
+    date_str = p["date"].strftime("%b %-d") + f" &middot; {weekday_abbr}"
+    return f"""<li class="recent__item">
+<span class="recent__date">{date_str}</span>
+<h3 class="recent__title"><a href="posts/{p["slug"]}.html">{escape(p["lede"])}</a></h3>
+</li>"""
 
 
 def render_homepage(posts: list[dict],
                     latest_meeting: dict | None,
                     latest_report: dict | None,
                     latest_filing: dict | None) -> str:
-    """Render the new zoned homepage."""
+    """Render the new zoned homepage in the warm-organic design language."""
+    today = datetime.now()
+
     if not posts:
-        featured_html = '<p class="empty">No briefings yet.</p>'
-        recent_html = ""
+        featured_block = '<section class="featured"><div class="container"><p style="color:var(--ink-muted);font-style:italic">No briefings yet.</p></div></section>'
+        recent_block = ""
     else:
-        featured = posts[0]
-        featured_html = _render_featured_card(featured)
+        featured_block = _render_featured(posts[0])
         recent = posts[1:8]
         if recent:
-            recent_html = f"""<section class="home-recent">
-<h2 class="home-section-title">Recent briefings</h2>
-<ul class="home-recent-list">
-{_render_recent_list(recent)}
+            recent_items = "\n".join(_render_recent_item(p) for p in recent)
+            recent_block = f"""<section class="recent">
+<div class="container container--editorial">
+<div class="recent__head">
+<h2 class="section-head">Recent briefings
+{HAND_RULE_SVG}
+</h2>
+</div>
+<ul class="recent__list">
+{recent_items}
 </ul>
-<p class="see-all"><a href="briefings.html">See all daily briefings &rarr;</a></p>
+<p class="recent__see-all">
+<a href="briefings.html">See all daily briefings {ARROW_SVG}</a>
+</p>
+</div>
 </section>"""
         else:
-            recent_html = ""
+            recent_block = ""
 
     cards = []
     if latest_meeting:
-        cards.append(_render_stream_card("MEETING WATCH", latest_meeting))
+        when = "Tomorrow" if latest_meeting["date"].date() == (today.date() + timedelta(days=1)) else format_date_short(latest_meeting["date"])
+        cards.append(_render_stream_card("Meeting Watch", when, latest_meeting))
     if latest_report:
-        cards.append(_render_stream_card("NEWS REPORTS", latest_report))
+        cards.append(_render_stream_card("News Reports", format_date_short(latest_report["date"]), latest_report))
     if latest_filing:
-        cards.append(_render_stream_card("PUBLIC RECORD", latest_filing))
+        cards.append(_render_stream_card("Spotted", format_date_short(latest_filing["date"]), latest_filing))
 
     if cards:
-        cross_section_html = f"""<section class="home-cross">
-<h2 class="home-section-title">Latest from across TDB</h2>
+        cross_block = f"""<section class="cross-section">
+<div class="container container--editorial">
+<div class="cross-section__head">
+<h2 class="section-head">Latest from across TDB
+{HAND_RULE_SVG}
+</h2>
+</div>
+<div class="cross-grid">
 {"".join(cards)}
+</div>
+</div>
 </section>"""
     else:
-        cross_section_html = ""
+        cross_block = ""
 
-    tools_html = f"""<section class="home-tools">
-<h2 class="home-section-title">Tools</h2>
-{_render_tool_card("ASK TDB", "Ask any question about Tucson. Answers come from TDB&rsquo;s own reporting, with citations.", "ask.html")}
-{_render_tool_card("RESPONSIVENESS INDEX", "How fast does Tucson respond to its residents? A living dashboard.", "responsiveness.html")}
+    if SHOW_TOOLS:
+        tools_block = f"""<section class="tools-section">
+<div class="container container--editorial">
+<div class="tools-section__head">
+<h2 class="section-head">Tools
+{HAND_RULE_SVG}
+</h2>
+</div>
+<div class="tools-grid">
+{_render_tool_card("Coming soon", "Ask Tucson anything.", "Answers from three months &mdash; soon, three years &mdash; of original TDB reporting. Citations included.", "Try it", "ask.html")}
+{_render_tool_card("Coming soon", "How fast does Tucson respond to its residents?", "A living dashboard measuring the city&rsquo;s 311 service requests, code enforcement, and public records.", "See the index", "responsiveness.html")}
+</div>
+</div>
+</section>"""
+    else:
+        tools_block = ""
+
+    subscribe_block = f"""<section class="subscribe">
+<div class="container container--editorial">
+{SUBSCRIBE_PANEL_HTML}
+</div>
 </section>"""
 
     return f"""<!DOCTYPE html>
@@ -549,35 +724,33 @@ def render_homepage(posts: list[dict],
 {ANALYTICS_HTML}
 </head>
 <body>
+
+{site_header_html()}
+
 <div class="container">
-
-<header>
-<h1><a href="./">Tucson Daily Brief</a></h1>
-<p class="tagline">An ongoing experiment at the intersection of artificial intelligence and local journalism, by Nicholas De Leon</p>
-</header>
-
 {section_nav_html(active="")}
-
-{featured_html}
-
-{cross_section_html}
-
-{tools_html}
-
-{SUBSCRIBE_PANEL_HTML}
-
-{recent_html}
-
-{FOOTER_HTML}
-
 </div>
+
+<main>
+{featured_block}
+{cross_block}
+{tools_block}
+{subscribe_block}
+{recent_block}
+</main>
+
+<div class="container">
+{FOOTER_HTML}
+</div>
+
+{SCROLL_TRIGGER_JS}
 </body>
 </html>
 """
 
 
 def render_briefings_index(posts: list[dict]) -> str:
-    """Render the full daily-brief archive page (formerly index.html's role)."""
+    """Render the full daily-brief archive page."""
     items = []
     for p in posts:
         items.append(f"""<li>
@@ -598,27 +771,60 @@ def render_briefings_index(posts: list[dict]) -> str:
 {ANALYTICS_HTML}
 </head>
 <body>
+
+{site_header_html()}
+
 <div class="container">
-
-<header>
-<h1><a href="./">Tucson Daily Brief</a></h1>
-<p class="tagline">Daily briefings &mdash; every day&rsquo;s local news synthesis, newest first</p>
-</header>
-
 {section_nav_html(active="briefings")}
+</div>
 
-{SUBSCRIBE_PANEL_HTML}
+<main>
+<div class="container container--editorial">
+<div style="padding-top:var(--gap-xl);margin-bottom:var(--gap-l)">
+<h2 class="section-head">Daily briefings
+{HAND_RULE_SVG}
+</h2>
+<p class="section-intro">Every day&rsquo;s synthesis of Tucson, Pima County, and Arizona news, newest first.</p>
+</div>
+
+<div style="margin-bottom:var(--gap-xl)">{SUBSCRIBE_PANEL_HTML}</div>
 
 <ul class="post-list">
 {post_list}
 </ul>
-
-{FOOTER_HTML}
-
 </div>
+</main>
+
+<div class="container">
+{FOOTER_HTML}
+</div>
+
+{SCROLL_TRIGGER_JS}
 </body>
 </html>
 """
+
+
+def rebuild_all_briefs(source_dir: str | Path) -> None:
+    """Regenerate every individual post HTML by re-running each markdown source
+    through render_post(). Called once after a render_post() template change."""
+    source = Path(source_dir).expanduser()
+    if not source.exists():
+        print(f"  Source dir not found: {source}")
+        return
+    count = 0
+    POSTS_DIR.mkdir(exist_ok=True)
+    for md_path in sorted(source.glob("tucson-brief-*.md")):
+        m = re.search(r"(\d{4}-\d{2}-\d{2})", md_path.stem)
+        if not m:
+            continue
+        date = datetime.strptime(m.group(1), "%Y-%m-%d")
+        slug = post_slug(date)
+        md_text = md_path.read_text()
+        body_html = md_to_html(md_text)
+        (POSTS_DIR / f"{slug}.html").write_text(render_post(date, body_html))
+        count += 1
+    print(f"  Regenerated {count} daily-brief HTML page(s)")
 
 
 def rebuild_homepage() -> None:
@@ -645,7 +851,14 @@ def main():
     parser.add_argument("briefing", nargs="?", help="Path to tucson-brief-YYYY-MM-DD.md")
     parser.add_argument("--rebuild-homepage", action="store_true",
                         help="Refresh index.html and briefings.html only; do not process a briefing.")
+    parser.add_argument("--rebuild-all", metavar="DIR",
+                        help="Regenerate all individual post HTML from .md files in DIR, then rebuild homepage.")
     args = parser.parse_args()
+
+    if args.rebuild_all:
+        rebuild_all_briefs(args.rebuild_all)
+        rebuild_homepage()
+        return
 
     if args.rebuild_homepage:
         rebuild_homepage()

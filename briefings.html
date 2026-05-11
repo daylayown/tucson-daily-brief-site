@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Daily Briefings &mdash; Tucson Daily Brief</title>
 <link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..900,0..100,0..1&family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&display=swap">
+<noscript><style>.section-head__rule path { stroke-dashoffset: 0 !important; }</style></noscript>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-MEYSB9GYF2"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -14,27 +18,70 @@
 </script>
 </head>
 <body>
-<div class="container">
 
-<header>
-<h1><a href="./">Tucson Daily Brief</a></h1>
-<p class="tagline">Daily briefings &mdash; every day&rsquo;s local news synthesis, newest first</p>
+<header class="masthead">
+<div class="container">
+<p class="masthead__kicker">From the Old Pueblo</p>
+<h1 class="masthead__wordmark"><a href="./">Tucson Daily Brief</a></h1>
+<p class="masthead__tagline">An ongoing experiment at the intersection of artificial intelligence and local journalism, by Nicholas De Leon.</p>
+</div>
 </header>
 
+<div class="container">
 <nav class="section-nav">
-<div class="streams-nav"><span class="active">Briefings</span> &middot; <a href="meeting-watch.html">Meeting Watch</a> &middot; <a href="news-reports.html">News Reports</a> &middot; <a href="public-record.html">Public Record</a></div>
-<div class="tools-nav"><a href="ask.html">Ask</a> &middot; <a href="responsiveness.html">Responsiveness</a></div>
-</nav>
+<div class="streams-nav"><span class="active">Briefings</span> &middot; <a href="meeting-watch.html">Meeting Watch</a> &middot; <a href="news-reports.html">News Reports</a> &middot; <a href="public-record.html">Spotted</a></div>
 
-<section class="subscribe-cta">
-<h2>TDB Weekly</h2>
-<p>A warm Sunday-morning roundup of what mattered in Tucson this week. Subscribers also get The Tucson Mini &mdash; a 5&times;5 crossword built just for them.</p>
-<form action="https://buttondown.email/api/emails/embed-subscribe/tucsondailybrief" method="post" target="_blank">
-<input type="email" name="email" placeholder="your@email.com" aria-label="Email address" required>
-<button type="submit">Subscribe</button>
+</nav>
+</div>
+
+<main>
+<div class="container container--editorial">
+<div style="padding-top:var(--gap-xl);margin-bottom:var(--gap-l)">
+<h2 class="section-head">Daily briefings
+<svg class="section-head__rule" width="280" height="14" viewBox="0 0 280 14" fill="none" aria-hidden="true">
+<path d="M2 8 C 30 4, 80 12, 130 7 S 230 4, 278 9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+</svg>
+</h2>
+<p class="section-intro">Every day&rsquo;s synthesis of Tucson, Pima County, and Arizona news, newest first.</p>
+</div>
+
+<div style="margin-bottom:var(--gap-xl)"><div class="subscribe__panel">
+<div class="subscribe__art"><svg viewBox="0 0 240 240" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0%" stop-color="#d97048" stop-opacity="0"/>
+<stop offset="100%" stop-color="#8c3a1f" stop-opacity="0.5"/>
+</linearGradient></defs>
+<circle cx="190" cy="60" r="36" fill="#f5f0e6" opacity="0.92"/>
+<g stroke="#faf4e8" stroke-width="1.5" stroke-linecap="round" opacity="0.55">
+<line x1="190" y1="6" x2="190" y2="20"/><line x1="190" y1="100" x2="190" y2="114"/>
+<line x1="136" y1="60" x2="150" y2="60"/><line x1="230" y1="60" x2="244" y2="60"/>
+<line x1="152" y1="22" x2="162" y2="32"/><line x1="218" y1="98" x2="228" y2="108"/>
+<line x1="152" y1="98" x2="162" y2="88"/><line x1="218" y1="22" x2="228" y2="12"/>
+</g>
+<path d="M -10 200 L 30 150 L 60 175 L 90 130 L 130 165 L 170 110 L 210 145 L 250 175 L 250 240 L -10 240 Z" fill="#3d3029" opacity="0.6"/>
+<path d="M -10 230 L 50 195 L 100 215 L 150 185 L 200 205 L 250 190 L 250 240 L -10 240 Z" fill="#251c17" opacity="0.55"/>
+<g transform="translate(60 130)" fill="#3d3029" opacity="0.85">
+<rect x="-4" y="0" width="8" height="80" rx="3"/>
+<rect x="-4" y="20" width="3" height="22" rx="1.5"/>
+<rect x="1" y="36" width="3" height="16" rx="1.5"/>
+<rect x="-12" y="22" width="8" height="3" rx="1.5"/>
+<rect x="-9" y="20" width="3" height="14" rx="1.5"/>
+<rect x="4" y="32" width="8" height="3" rx="1.5"/>
+<rect x="9" y="22" width="3" height="14" rx="1.5"/>
+</g>
+<rect x="0" y="0" width="240" height="240" fill="url(#sky)"/>
+</svg></div>
+<div class="subscribe__body">
+<p class="subscribe__eyebrow">TDB Weekly</p>
+<h2 class="subscribe__title">A warm Sunday-morning roundup of Tucson, in your inbox.</h2>
+<p>Five sections, ~900 words. Subscribers also get The Tucson Mini &mdash; a 5&times;5 crossword built just for them.</p>
+<form action="https://buttondown.email/api/emails/embed-subscribe/tucsondailybrief" method="post" target="_blank" class="subscribe__form">
+<input class="subscribe__input" type="email" name="email" placeholder="you@somewhere.com" aria-label="Email address" required>
+<button class="subscribe__button" type="submit">Subscribe</button>
 </form>
-<p class="subscribe-fineprint">Free. Sunday mornings. Unsubscribe anytime.</p>
-</section>
+<p class="subscribe__fine">Free. Sunday mornings. Unsubscribe anytime.</p>
+</div>
+</div></div>
 
 <ul class="post-list">
 <li>
@@ -458,18 +505,27 @@
 <p class="post-lede">Officer-Involved Shooting Details Released on Southside Incident</p>
 </li>
 </ul>
+</div>
+</main>
 
-<footer>
-<p>By Nicholas De Leon</p>
-<p class="footer-links">
-<a href="https://podcasts.apple.com/us/podcast/tucson-daily-brief/id1878173070">Apple Podcasts</a> &middot;
-<a href="https://www.youtube.com/@tucsondailybrief">YouTube</a> &middot;
-<a href="https://www.linkedin.com/in/nicholas-de-leon-3b5b6a9">LinkedIn</a> &middot;
-<a href="https://www.instagram.com/daylayownphoto">Instagram</a> &middot;
+<div class="container">
+<div class="footer-row">
+<p class="footer-row__byline">By Nicholas De Leon, in Tucson.</p>
+<p class="footer-row__links">
+<a href="https://podcasts.apple.com/us/podcast/tucson-daily-brief/id1878173070">Apple Podcasts</a>
+<a href="https://www.youtube.com/@tucsondailybrief">YouTube</a>
+<a href="https://www.linkedin.com/in/nicholas-de-leon-3b5b6a9">LinkedIn</a>
+<a href="https://x.com/nicholasadeleon">X</a>
+<a href="https://bsky.app/profile/nicholasadeleon.bsky.social">Bluesky</a>
 <a href="mailto:nicholas@daylayown.org">Email</a>
 </p>
-</footer>
-
 </div>
+</div>
+
+<script>
+(function(){if(!('IntersectionObserver' in window)){document.querySelectorAll('.section-head__rule').forEach(el=>el.classList.add('in-view'));return;}
+const io=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in-view');io.unobserve(e.target);}});},{rootMargin:'0px 0px -8% 0px',threshold:0.1});
+document.querySelectorAll('.section-head__rule').forEach(el=>io.observe(el));})();
+</script>
 </body>
 </html>

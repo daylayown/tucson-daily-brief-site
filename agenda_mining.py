@@ -26,9 +26,12 @@ from pathlib import Path
 from generate_post import (
     ANALYTICS_HTML,
     FOOTER_HTML,
+    HAND_RULE_SVG,
+    SCROLL_TRIGGER_JS,
     SUBSCRIBE_PANEL_HTML,
     rebuild_homepage,
     section_nav_html,
+    site_header_html,
 )
 
 # --- Config ---
@@ -496,49 +499,41 @@ def extract_preview_lede(md_text: str) -> str:
 
 def render_meeting_post(title: str, date: datetime, body_html: str) -> str:
     """Render a full meeting watch HTML page."""
+    from generate_post import ARROW_LEFT_SVG, post_header_html
     slug = date.strftime("%Y-%m-%d")
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{escape_html(title)}</title>
+<title>{escape_html(title)} &mdash; Tucson Daily Brief</title>
 <link rel="stylesheet" href="../style.css">
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-MEYSB9GYF2"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){{dataLayer.push(arguments);}}
-  gtag('js', new Date());
-  gtag('config', 'G-MEYSB9GYF2');
-</script>
+{ANALYTICS_HTML}
 </head>
 <body>
+
+{post_header_html()}
+
 <div class="container">
+{section_nav_html(active="meetings", path_prefix="../")}
+</div>
 
-<header>
-<h1><a href="../">Tucson Daily Brief</a></h1>
-<p class="tagline">An ongoing experiment at the intersection of artificial intelligence and local journalism, by Nicholas De Leon</p>
-</header>
+<main>
+<div class="container container--reading">
+<a class="back-link" href="../meeting-watch.html">{ARROW_LEFT_SVG} All meeting previews</a>
 
-<a class="back-link" href="../meeting-watch.html">&larr; All meeting previews</a>
-
-<article id="meeting-{slug}">
+<article id="meeting-{slug}" class="post-page">
 <p class="post-meta">{title}</p>
 {body_html}
 </article>
-
-<footer>
-<p>By Nicholas De Leon</p>
-<p class="footer-links">
-<a href="https://podcasts.apple.com/us/podcast/tucson-daily-brief/id1878173070">Apple Podcasts</a> &middot;
-<a href="https://www.youtube.com/@tucsondailybrief">YouTube</a> &middot;
-<a href="https://www.linkedin.com/in/nicholas-de-leon-3b5b6a9">LinkedIn</a> &middot;
-<a href="https://www.instagram.com/daylayownphoto">Instagram</a> &middot;
-<a href="mailto:nicholas@daylayown.org">Email</a>
-</p>
-</footer>
-
 </div>
+</main>
+
+<div class="container">
+{FOOTER_HTML}
+</div>
+
+{SCROLL_TRIGGER_JS}
 </body>
 </html>
 """
@@ -566,24 +561,35 @@ def render_meeting_index(posts: list[dict]) -> str:
 {ANALYTICS_HTML}
 </head>
 <body>
+
+{site_header_html()}
+
 <div class="container">
-
-<header>
-<h1><a href="./">Tucson Daily Brief</a></h1>
-<p class="tagline">Meeting Watch &mdash; AI-assisted agenda previews</p>
-</header>
-
 {section_nav_html(active="meetings")}
+</div>
 
-{SUBSCRIBE_PANEL_HTML}
+<main>
+<div class="container container--editorial">
+<div style="padding-top:var(--gap-xl);margin-bottom:var(--gap-l)">
+<h2 class="section-head">Meeting Watch
+{HAND_RULE_SVG}
+</h2>
+<p class="section-intro">AI-assisted previews of government meetings across Tucson, Pima County, Marana, and Oro Valley. Auto-published the morning agendas drop.</p>
+</div>
+
+<div style="margin-bottom:var(--gap-xl)">{SUBSCRIBE_PANEL_HTML}</div>
 
 <ul class="post-list">
 {post_list}
 </ul>
-
-{FOOTER_HTML}
-
 </div>
+</main>
+
+<div class="container">
+{FOOTER_HTML}
+</div>
+
+{SCROLL_TRIGGER_JS}
 </body>
 </html>
 """

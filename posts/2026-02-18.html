@@ -3,8 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tucson Daily Brief &mdash; February 18, 2026</title>
+<title>February 18, 2026 &mdash; Tucson Daily Brief</title>
 <link rel="stylesheet" href="../style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..900,0..100,0..1&family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&display=swap">
+<noscript><style>.section-head__rule path { stroke-dashoffset: 0 !important; }</style></noscript>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-MEYSB9GYF2"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -14,17 +18,40 @@
 </script>
 </head>
 <body>
-<div class="container">
 
-<header>
-<h1><a href="../">Tucson Daily Brief</a></h1>
-<p class="tagline">An ongoing experiment at the intersection of artificial intelligence and local journalism, by Nicholas De Leon</p>
+<header class="masthead">
+<div class="container">
+<p class="masthead__kicker">From the Old Pueblo</p>
+<h1 class="masthead__wordmark"><a href="../">Tucson Daily Brief</a></h1>
+<p class="masthead__tagline">An ongoing experiment at the intersection of artificial intelligence and local journalism, by Nicholas De Leon.</p>
+</div>
 </header>
 
-<a class="back-link" href="../briefings.html">&larr; All briefings</a>
+<div class="container">
+<nav class="section-nav">
+<div class="streams-nav"><span class="active">Briefings</span> &middot; <a href="../meeting-watch.html">Meeting Watch</a> &middot; <a href="../news-reports.html">News Reports</a> &middot; <a href="../public-record.html">Spotted</a></div>
 
-<article id="2026-02-18">
-<p class="post-meta">February 18, 2026</p>
+</nav>
+</div>
+
+<main>
+<div class="container container--reading">
+<a class="back-link" href="../briefings.html"><svg width="18" height="14" viewBox="0 0 18 14" aria-hidden="true"><path d="M17 7H2M7 2L2 7l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg> All briefings</a>
+
+<article id="2026-02-18" class="brief">
+<header class="brief-header">
+<p class="brief-kicker"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+<circle cx="7" cy="7" r="2.2" fill="currentColor"/>
+<g stroke="currentColor" stroke-width="1.2" stroke-linecap="round">
+<line x1="7" y1="0.5" x2="7" y2="2.5"/><line x1="7" y1="11.5" x2="7" y2="13.5"/>
+<line x1="0.5" y1="7" x2="2.5" y2="7"/><line x1="11.5" y1="7" x2="13.5" y2="7"/>
+<line x1="2.4" y1="2.4" x2="3.6" y2="3.6"/><line x1="10.4" y1="10.4" x2="11.6" y2="11.6"/>
+<line x1="2.4" y1="11.6" x2="3.6" y2="10.4"/><line x1="10.4" y1="3.6" x2="11.6" y2="2.4"/>
+</g></svg> Daily Brief</p>
+<h1 class="brief-date">February 18, 2026</h1>
+<p class="brief-weekday">Wednesday</p>
+</header>
+<div class="brief-body">
 <p># Tucson Daily Brief — February 18, 2026</p>
 <h2>🏛️ Government &amp; Policy</h2>
 <p><strong>Pima County Supervisors Restrict Federal Immigration Enforcement.</strong> Pima County supervisors adopted two new policies aimed at restricting federal immigration enforcement efforts on county property. The measures include limits on ICE raids conducted on county facilities and a mask ban for federal law enforcement agents. The resolutions reflect growing community concerns about immigration enforcement tactics in Southern Arizona.</p>
@@ -67,19 +94,29 @@
 <p class="source"><a href="https://forecast.weather.gov/MapClick.php?CityName=Tucson&state=AZ">NWS Tucson</a> Forecast API</p>
 <hr>
 <p><strong>Briefing saved:</strong> tucson-brief-2026-02-18.md <strong>Sources fetched:</strong> 12 of 13 RSS feeds returned data (1 unavailable: This Is Tucson feed had URL issues but primary sources covered) <strong>Next update:</strong> 6:00 AM MST Friday, February 19, 2026</p>
+</div>
 </article>
+</div>
+</main>
 
-<footer>
-<p>By Nicholas De Leon</p>
-<p class="footer-links">
-<a href="https://podcasts.apple.com/us/podcast/tucson-daily-brief/id1878173070">Apple Podcasts</a> &middot;
-<a href="https://www.youtube.com/@tucsondailybrief">YouTube</a> &middot;
-<a href="https://www.linkedin.com/in/nicholas-de-leon-3b5b6a9">LinkedIn</a> &middot;
-<a href="https://www.instagram.com/daylayownphoto">Instagram</a> &middot;
+<div class="container">
+<div class="footer-row">
+<p class="footer-row__byline">By Nicholas De Leon, in Tucson.</p>
+<p class="footer-row__links">
+<a href="https://podcasts.apple.com/us/podcast/tucson-daily-brief/id1878173070">Apple Podcasts</a>
+<a href="https://www.youtube.com/@tucsondailybrief">YouTube</a>
+<a href="https://www.linkedin.com/in/nicholas-de-leon-3b5b6a9">LinkedIn</a>
+<a href="https://x.com/nicholasadeleon">X</a>
+<a href="https://bsky.app/profile/nicholasadeleon.bsky.social">Bluesky</a>
 <a href="mailto:nicholas@daylayown.org">Email</a>
 </p>
-</footer>
-
 </div>
+</div>
+
+<script>
+(function(){if(!('IntersectionObserver' in window)){document.querySelectorAll('.section-head__rule').forEach(el=>el.classList.add('in-view'));return;}
+const io=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in-view');io.unobserve(e.target);}});},{rootMargin:'0px 0px -8% 0px',threshold:0.1});
+document.querySelectorAll('.section-head__rule').forEach(el=>io.observe(el));})();
+</script>
 </body>
 </html>

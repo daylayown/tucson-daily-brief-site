@@ -3,8 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Quick Mart — Series 10 Beer and Wine Store (New License)</title>
+<title>Quick Mart — Series 10 Beer and Wine Store (New License) &mdash; Tucson Daily Brief</title>
 <link rel="stylesheet" href="../style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..900,0..100,0..1&family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&display=swap">
+<noscript><style>.section-head__rule path { stroke-dashoffset: 0 !important; }</style></noscript>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-MEYSB9GYF2"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -14,17 +18,28 @@
 </script>
 </head>
 <body>
-<div class="container">
 
-<header>
-<h1><a href="../">Tucson Daily Brief</a></h1>
-<p class="tagline">An ongoing experiment at the intersection of artificial intelligence and local journalism, by Nicholas De Leon</p>
+<header class="masthead">
+<div class="container">
+<p class="masthead__kicker">From the Old Pueblo</p>
+<h1 class="masthead__wordmark"><a href="../">Tucson Daily Brief</a></h1>
+<p class="masthead__tagline">An ongoing experiment at the intersection of artificial intelligence and local journalism, by Nicholas De Leon.</p>
+</div>
 </header>
 
-<a class="back-link" href="../public-record.html">&larr; All public record filings</a>
+<div class="container">
+<nav class="section-nav">
+<div class="streams-nav"><a href="../briefings.html">Briefings</a> &middot; <a href="../meeting-watch.html">Meeting Watch</a> &middot; <a href="../news-reports.html">News Reports</a> &middot; <span class="active">Spotted</span></div>
 
-<article class="public-record-filing">
-<p class="post-meta">Public Record &middot; Liquor License Filing</p>
+</nav>
+</div>
+
+<main>
+<div class="container container--reading">
+<a class="back-link" href="../public-record.html"><svg width="18" height="14" viewBox="0 0 18 14" aria-hidden="true"><path d="M17 7H2M7 2L2 7l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg> All spotted filings</a>
+
+<article class="post-page public-record-filing">
+<p class="post-meta">Spotted &middot; Liquor License Filing</p>
 <h1>Quick Mart</h1>
 <p class="filing-subtitle">Series 10 Beer and Wine Store &middot; New License</p>
 
@@ -43,22 +58,31 @@
 
 <hr>
 
-<p class="filing-disclosure"><em>This is a public record filing surfaced automatically from the Pima County Board of Supervisors agenda. Tucson Daily Brief is interested in talking to the people behind new businesses opening in our community — if you're affiliated with this filing and would like to share more about your plans, <a href="mailto:nicholas@daylayown.org">get in touch</a>.</em></p>
+<p class="filing-disclosure"><em>This is a public record filing surfaced automatically from the Pima County Board of Supervisors agenda. Tucson Daily Brief is interested in talking to the people behind new businesses opening in our community — if you&rsquo;re affiliated with this filing and would like to share more about your plans, <a href="mailto:nicholas@daylayown.org">get in touch</a>.</em></p>
 
-<p class="filing-meta"><em>Generated 2026-05-08 by Tucson Daily Brief Public Record pipeline using claude-sonnet-4-6. AI-extracted from a public meeting agenda. Source: Pima County Board of Supervisors.</em></p>
+<p class="filing-meta"><em>Generated 2026-05-11 by Tucson Daily Brief&rsquo;s Spotted pipeline using claude-sonnet-4-6. AI-extracted from a public meeting agenda. Source: Pima County Board of Supervisors.</em></p>
 </article>
+</div>
+</main>
 
-<footer>
-<p>By Nicholas De Leon</p>
-<p class="footer-links">
-<a href="https://podcasts.apple.com/us/podcast/tucson-daily-brief/id1878173070">Apple Podcasts</a> &middot;
-<a href="https://www.youtube.com/@tucsondailybrief">YouTube</a> &middot;
-<a href="https://www.linkedin.com/in/nicholas-de-leon-3b5b6a9">LinkedIn</a> &middot;
-<a href="https://www.instagram.com/daylayownphoto">Instagram</a> &middot;
+<div class="container">
+<div class="footer-row">
+<p class="footer-row__byline">By Nicholas De Leon, in Tucson.</p>
+<p class="footer-row__links">
+<a href="https://podcasts.apple.com/us/podcast/tucson-daily-brief/id1878173070">Apple Podcasts</a>
+<a href="https://www.youtube.com/@tucsondailybrief">YouTube</a>
+<a href="https://www.linkedin.com/in/nicholas-de-leon-3b5b6a9">LinkedIn</a>
+<a href="https://x.com/nicholasadeleon">X</a>
+<a href="https://bsky.app/profile/nicholasadeleon.bsky.social">Bluesky</a>
 <a href="mailto:nicholas@daylayown.org">Email</a>
 </p>
-</footer>
-
 </div>
+</div>
+
+<script>
+(function(){if(!('IntersectionObserver' in window)){document.querySelectorAll('.section-head__rule').forEach(el=>el.classList.add('in-view'));return;}
+const io=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in-view');io.unobserve(e.target);}});},{rootMargin:'0px 0px -8% 0px',threshold:0.1});
+document.querySelectorAll('.section-head__rule').forEach(el=>io.observe(el));})();
+</script>
 </body>
 </html>
