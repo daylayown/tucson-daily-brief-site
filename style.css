@@ -290,6 +290,21 @@ a { color: var(--accent); }
   position: relative;
 }
 
+/* Paper-grain bleed: a denser, slightly darker noise layer concentrated under
+   the featured area, masked so it fades out on the right where the aside sits.
+   Reads as ink soaking deeper into the page right where you start reading. */
+.featured::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='280' height='280'><filter id='b'><feTurbulence type='fractalNoise' baseFrequency='1.05' numOctaves='2' seed='9' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5  0 0 0 0 0.32  0 0 0 0 0.16  0 0 0 0.38 0'/></filter><rect width='100%25' height='100%25' filter='url(%23b)'/></svg>");
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  z-index: 0;
+  -webkit-mask: radial-gradient(ellipse 75% 80% at 28% 50%, #000 0%, rgba(0,0,0,0.5) 55%, transparent 100%);
+  mask: radial-gradient(ellipse 75% 80% at 28% 50%, #000 0%, rgba(0,0,0,0.5) 55%, transparent 100%);
+}
+
 .featured__grid {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
@@ -382,6 +397,22 @@ a { color: var(--accent); }
 }
 
 .featured__grid { position: relative; z-index: 1; }
+
+/* Terracotta sun motif: sits in the upper-right of the featured section,
+   in the negative space above the aside copy. Echoes the small sunray
+   dingbat used in kickers, scaled up to act as a Sonoran-light anchor. */
+.featured .container { position: relative; }
+
+.featured__sun {
+  position: absolute;
+  top: clamp(-20px, -1vw, 8px);
+  right: clamp(40px, 8vw, 140px);
+  width: clamp(150px, 18vw, 240px);
+  height: auto;
+  color: var(--terracotta);
+  pointer-events: none;
+  z-index: 0;
+}
 
 /* ─── Cross-stream cards ─── */
 
@@ -1296,6 +1327,12 @@ article.post-page p.source {
   }
 
   .featured__grid { gap: var(--gap-l); }
+
+  .featured__sun {
+    width: 90px;
+    top: -8px;
+    right: 8px;
+  }
 
 
   .recent__item,

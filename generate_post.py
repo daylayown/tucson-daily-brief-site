@@ -233,6 +233,26 @@ SUNRAY_SVG = """<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="tru
 <line x1="2.4" y1="11.6" x2="3.6" y2="10.4"/><line x1="10.4" y1="3.6" x2="11.6" y2="2.4"/>
 </g></svg>"""
 
+# Larger sun motif for the homepage featured area — same geometry as SUNRAY_SVG
+# but scaled up with 12 rays of varied length so it reads as an editorial mark
+# rather than a tiny dingbat. Uses currentColor so the CSS sets the tint.
+FEATURED_SUN_SVG = """<svg class="featured__sun" viewBox="0 0 160 160" aria-hidden="true">
+<circle cx="80" cy="80" r="30" fill="currentColor" fill-opacity="0.85"/>
+<g stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-opacity="0.75">
+<line x1="80" y1="8" x2="80" y2="30"/>
+<line x1="80" y1="130" x2="80" y2="152"/>
+<line x1="8" y1="80" x2="30" y2="80"/>
+<line x1="130" y1="80" x2="152" y2="80"/>
+<line x1="29" y1="29" x2="44" y2="44"/>
+<line x1="116" y1="116" x2="131" y2="131"/>
+<line x1="29" y1="131" x2="44" y2="116"/>
+<line x1="116" y1="44" x2="131" y2="29"/>
+<line x1="50" y1="14" x2="56" y2="32"/>
+<line x1="110" y1="14" x2="104" y2="32"/>
+<line x1="50" y1="146" x2="56" y2="128"/>
+<line x1="110" y1="146" x2="104" y2="128"/>
+</g></svg>"""
+
 ARROW_SVG = """<svg width="18" height="14" viewBox="0 0 18 14" aria-hidden="true"><path d="M1 7h15M11 2l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>"""
 
 ARROW_LEFT_SVG = """<svg width="18" height="14" viewBox="0 0 18 14" aria-hidden="true"><path d="M17 7H2M7 2L2 7l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>"""
@@ -573,9 +593,12 @@ def collect_latest_filing() -> dict | None:
 # ---------------------------------------------------------------------------
 
 def _render_featured(featured: dict) -> str:
-    """The Today's Brief feature: kicker, headline, aside w/ drop cap."""
+    """The Today's Brief feature: kicker, headline, aside w/ drop cap.
+    A terracotta sun motif sits in the upper-right negative space of the
+    featured area (see .featured__sun in style.css)."""
     return f"""<section class="featured">
 <div class="container">
+{FEATURED_SUN_SVG}
 <div class="featured__grid">
 <div>
 <div class="featured__kicker">
