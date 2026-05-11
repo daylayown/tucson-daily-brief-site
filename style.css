@@ -78,12 +78,11 @@ nav a:hover {
 
 .section-nav {
     margin-top: -1.5rem;
-    margin-bottom: 2rem;
+    margin-bottom: 2.25rem;
     padding-top: 0.75rem;
 }
 
 .section-nav a {
-    color: var(--terracotta);
     text-decoration: none;
     font-size: 0.9rem;
     font-weight: 600;
@@ -91,6 +90,26 @@ nav a:hover {
 
 .section-nav a:hover {
     text-decoration: underline;
+}
+
+.section-nav .streams-nav {
+    margin-bottom: 0.15rem;
+}
+
+.section-nav .streams-nav a,
+.section-nav .streams-nav .active {
+    color: var(--terracotta);
+}
+
+.section-nav .tools-nav a,
+.section-nav .tools-nav .active {
+    color: var(--sage);
+    font-size: 0.85rem;
+}
+
+.section-nav .active {
+    font-weight: 600;
+    cursor: default;
 }
 
 /* Blockquotes (used in meeting watch previews) */
@@ -388,4 +407,215 @@ footer .footer-links {
     color: var(--brown-light);
     font-style: italic;
     margin-bottom: 0;
+}
+
+/* Homepage — zoned layout */
+
+.eyebrow {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.4rem;
+}
+
+.eyebrow.stream {
+    color: var(--terracotta);
+}
+
+.eyebrow.tool {
+    color: var(--sage);
+}
+
+.home-feature {
+    margin-bottom: 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--rule);
+}
+
+.home-feature .eyebrow {
+    color: var(--sage);
+}
+
+.home-feature-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.25;
+    margin-bottom: 0.5rem;
+    color: var(--brown);
+    letter-spacing: -0.01em;
+}
+
+.home-feature-lede {
+    font-size: 1.05rem;
+    color: var(--brown-light);
+    line-height: 1.5;
+    margin-bottom: 0.85rem;
+}
+
+.home-feature-cta a {
+    color: var(--terracotta);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.home-feature-cta a:hover {
+    text-decoration: underline;
+}
+
+.home-section-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--brown-light);
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--rule);
+}
+
+.home-cross,
+.home-tools,
+.home-recent {
+    margin-bottom: 2.5rem;
+}
+
+.home-card {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--rule);
+}
+
+.home-card:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.home-card-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.35;
+    margin-bottom: 0.3rem;
+}
+
+.home-card-title a {
+    color: var(--terracotta);
+    text-decoration: none;
+}
+
+.home-card-title a:hover {
+    text-decoration: underline;
+}
+
+.home-card-lede {
+    color: var(--brown-light);
+    font-size: 0.92rem;
+    line-height: 1.5;
+}
+
+.tool-card .tool-card-blurb {
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--brown);
+}
+
+.tool-card .tool-card-blurb a {
+    color: var(--sage);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.tool-card .tool-card-blurb a:hover {
+    color: var(--terracotta);
+    text-decoration: underline;
+}
+
+.home-recent-list {
+    list-style: none;
+}
+
+.home-recent-list li {
+    margin-bottom: 0.7rem;
+    line-height: 1.45;
+}
+
+.home-recent-list .recent-date {
+    display: inline-block;
+    width: 5.5rem;
+    font-size: 0.78rem;
+    color: var(--sage);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    vertical-align: baseline;
+}
+
+.home-recent-list a {
+    color: var(--terracotta);
+    text-decoration: none;
+    font-size: 0.95rem;
+}
+
+.home-recent-list a:hover {
+    text-decoration: underline;
+}
+
+.see-all {
+    margin-top: 1.25rem;
+    font-size: 0.9rem;
+}
+
+.see-all a {
+    color: var(--terracotta);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.see-all a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+    .home-feature-title { font-size: 1.3rem; }
+    .home-feature-lede { font-size: 1rem; }
+    .home-recent-list .recent-date {
+        display: block;
+        width: auto;
+        margin-bottom: 0.1rem;
+    }
+}
+
+/* "Coming soon" tool stubs (ask.html, responsiveness.html) */
+
+.coming-soon {
+    margin-bottom: 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--rule);
+}
+
+.coming-soon-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1.25;
+    margin-bottom: 0.75rem;
+    color: var(--brown);
+    letter-spacing: -0.01em;
+}
+
+.coming-soon-lede {
+    font-size: 1.1rem;
+    color: var(--brown);
+    line-height: 1.55;
+    margin-bottom: 1.1rem;
+}
+
+.coming-soon-body {
+    color: var(--brown-light);
+    margin-bottom: 1.1rem;
+}
+
+.coming-soon-cta {
+    font-weight: 600;
+    color: var(--brown);
 }

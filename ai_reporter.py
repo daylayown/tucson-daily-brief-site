@@ -28,6 +28,14 @@ import urllib.request
 from datetime import datetime
 from pathlib import Path
 
+from generate_post import (
+    ANALYTICS_HTML,
+    FOOTER_HTML,
+    SUBSCRIBE_PANEL_HTML,
+    rebuild_homepage,
+    section_nav_html,
+)
+
 # --- Config ---
 SITE_DIR = Path(__file__).resolve().parent
 TRANSCRIPTS_DIR = SITE_DIR / "transcripts"
@@ -460,13 +468,7 @@ def render_report_index(posts: list[dict]) -> str:
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>News Reports &mdash; Tucson Daily Brief</title>
 <link rel="stylesheet" href="style.css">
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-MEYSB9GYF2"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){{dataLayer.push(arguments);}}
-  gtag('js', new Date());
-  gtag('config', 'G-MEYSB9GYF2');
-</script>
+{ANALYTICS_HTML}
 </head>
 <body>
 <div class="container">
@@ -476,36 +478,15 @@ def render_report_index(posts: list[dict]) -> str:
 <p class="tagline">News Reports &mdash; AI-drafted, human-reviewed coverage</p>
 </header>
 
-<nav class="section-nav">
-<a href="./">&larr; Daily briefings</a>
-<a href="meeting-watch.html">Meeting Watch &rarr;</a>
-<a href="public-record.html">Public Record &rarr;</a>
-</nav>
+{section_nav_html(active="reports")}
 
-<section class="subscribe-cta">
-<h2>TDB Weekly</h2>
-<p>A warm Sunday-morning roundup of what mattered in Tucson this week. Plus the Tucson Mini &mdash; a 5&times;5 mini crossword built just for subscribers.</p>
-<form action="https://buttondown.email/api/emails/embed-subscribe/tucsondailybrief" method="post" target="_blank">
-<input type="email" name="email" placeholder="your@email.com" aria-label="Email address" required>
-<button type="submit">Subscribe</button>
-</form>
-<p class="subscribe-fineprint">Free. Sunday mornings. Unsubscribe anytime.</p>
-</section>
+{SUBSCRIBE_PANEL_HTML}
 
 <ul class="post-list">
 {post_list}
 </ul>
 
-<footer>
-<p>By Nicholas De Leon</p>
-<p class="footer-links">
-<a href="https://podcasts.apple.com/us/podcast/tucson-daily-brief/id1878173070">Apple Podcasts</a> &middot;
-<a href="https://www.youtube.com/@tucsondailybrief">YouTube</a> &middot;
-<a href="https://www.linkedin.com/in/nicholas-de-leon-3b5b6a9">LinkedIn</a> &middot;
-<a href="https://www.instagram.com/daylayownphoto">Instagram</a> &middot;
-<a href="mailto:nicholas@daylayown.org">Email</a>
-</p>
-</footer>
+{FOOTER_HTML}
 
 </div>
 </body>
@@ -596,6 +577,7 @@ def rebuild_report_index() -> None:
     index_path = SITE_DIR / "news-reports.html"
     index_path.write_text(render_report_index(posts))
     print(f"  Updated index: {index_path} ({len(posts)} report(s))")
+    rebuild_homepage()
 
 
 # ---------------------------------------------------------------------------

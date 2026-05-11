@@ -334,6 +334,7 @@ def publish_preview(preview_path: str) -> None:
 
     # Rebuild meeting watch index
     from agenda_mining import render_meeting_index
+    from generate_post import rebuild_homepage
     posts = []
     for f in PUBLISHED_DIR.glob("*.html"):
         m = re.search(r"(\d{4}-\d{2}-\d{2})", f.stem)
@@ -357,6 +358,7 @@ def publish_preview(preview_path: str) -> None:
     index_path = SITE_DIR / "meeting-watch.html"
     index_path.write_text(render_meeting_index(posts))
     print(f"  Updated index: {index_path} ({len(posts)} preview(s))")
+    rebuild_homepage()
 
 
 def process_meeting(meeting_id: str, meeting_name: str, meeting_date: datetime,

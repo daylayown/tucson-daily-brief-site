@@ -35,6 +35,14 @@ import urllib.request
 from datetime import datetime
 from pathlib import Path
 
+from generate_post import (
+    ANALYTICS_HTML,
+    FOOTER_HTML,
+    SUBSCRIBE_PANEL_HTML,
+    rebuild_homepage,
+    section_nav_html,
+)
+
 # --- Config ---
 SITE_DIR = Path(__file__).resolve().parent
 AGENDA_WATCH_DIR = SITE_DIR / "agenda-watch"
@@ -375,13 +383,7 @@ def render_index_html(filings: list[dict]) -> str:
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Public Record &mdash; Tucson Daily Brief</title>
 <link rel="stylesheet" href="style.css">
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-MEYSB9GYF2"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){{dataLayer.push(arguments);}}
-  gtag('js', new Date());
-  gtag('config', 'G-MEYSB9GYF2');
-</script>
+{ANALYTICS_HTML}
 </head>
 <body>
 <div class="container">
@@ -391,38 +393,17 @@ def render_index_html(filings: list[dict]) -> str:
 <p class="tagline">Public Record &mdash; new businesses, permits, and filings surfaced from public meetings</p>
 </header>
 
-<nav class="section-nav">
-<a href="./">&larr; Daily briefings</a>
-<a href="meeting-watch.html">Meeting Watch &rarr;</a>
-<a href="news-reports.html">News Reports &rarr;</a>
-</nav>
+{section_nav_html(active="record")}
 
 <p class="section-intro">New restaurants, bars, and businesses go through public meetings before they open. Most never get reported on. Tucson Daily Brief surfaces them automatically from the agendas of the Pima County Board of Supervisors, Tucson Mayor &amp; Council, and Oro Valley Town Council. If you spot a place opening near you, <a href="mailto:nicholas@daylayown.org">tell us about it</a>.</p>
 
-<section class="subscribe-cta">
-<h2>TDB Weekly</h2>
-<p>A warm Sunday-morning roundup of what mattered in Tucson this week. Plus the Tucson Mini &mdash; a 5&times;5 mini crossword built just for subscribers.</p>
-<form action="https://buttondown.email/api/emails/embed-subscribe/tucsondailybrief" method="post" target="_blank">
-<input type="email" name="email" placeholder="your@email.com" aria-label="Email address" required>
-<button type="submit">Subscribe</button>
-</form>
-<p class="subscribe-fineprint">Free. Sunday mornings. Unsubscribe anytime.</p>
-</section>
+{SUBSCRIBE_PANEL_HTML}
 
 <ul class="post-list">
 {post_list}
 </ul>
 
-<footer>
-<p>By Nicholas De Leon</p>
-<p class="footer-links">
-<a href="https://podcasts.apple.com/us/podcast/tucson-daily-brief/id1878173070">Apple Podcasts</a> &middot;
-<a href="https://www.youtube.com/@tucsondailybrief">YouTube</a> &middot;
-<a href="https://www.linkedin.com/in/nicholas-de-leon-3b5b6a9">LinkedIn</a> &middot;
-<a href="https://www.instagram.com/daylayownphoto">Instagram</a> &middot;
-<a href="mailto:nicholas@daylayown.org">Email</a>
-</p>
-</footer>
+{FOOTER_HTML}
 
 </div>
 </body>
@@ -466,6 +447,7 @@ def rebuild_index() -> int:
     filings.sort(key=lambda p: p["date"], reverse=True)
     INDEX_PATH.write_text(render_index_html(filings))
     print(f"  Rebuilt index: {INDEX_PATH} ({len(filings)} filing(s))")
+    rebuild_homepage()
     return len(filings)
 
 
