@@ -674,9 +674,7 @@ def render_homepage(posts: list[dict],
         cross_block = f"""<section class="cross-section">
 <div class="container container--editorial">
 <div class="cross-section__head">
-<h2 class="section-head">Latest from across TDB
-{HAND_RULE_SVG}
-</h2>
+<h2 class="section-head">Latest from across TDB</h2>
 </div>
 <div class="cross-grid">
 {"".join(cards)}
