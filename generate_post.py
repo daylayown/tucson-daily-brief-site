@@ -573,11 +573,8 @@ def collect_latest_filing() -> dict | None:
 # ---------------------------------------------------------------------------
 
 def _render_featured(featured: dict) -> str:
-    """The Today's Brief feature with kicker, headline, aside w/ drop cap.
-    A translucent terracotta wash sits behind the lower-right of the section
-    as a Barragán-style depth accent (see .featured__block in style.css)."""
+    """The Today's Brief feature: kicker, headline, aside w/ drop cap."""
     return f"""<section class="featured">
-<div class="featured__block" aria-hidden="true"></div>
 <div class="container">
 <div class="featured__grid">
 <div>

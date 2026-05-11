@@ -381,26 +381,6 @@ a { color: var(--accent); }
   transform: translateX(3px);
 }
 
-.featured__block {
-  position: absolute;
-  left: clamp(-16px, -1vw, 8px);
-  right: clamp(34%, 38%, 42%);
-  top: clamp(40px, 5vw, 64px);
-  bottom: clamp(28px, 4vw, 56px);
-  background: rgba(140, 58, 31, 0.46);
-  z-index: 0;
-  transform: rotate(-1deg);
-  pointer-events: none;
-}
-
-.featured__block::after {
-  content: "";
-  position: absolute;
-  inset: 16px;
-  border: 1px solid rgba(140, 58, 31, 0.30);
-  pointer-events: none;
-}
-
 .featured__grid { position: relative; z-index: 1; }
 
 /* ─── Cross-stream cards ─── */
@@ -1317,13 +1297,6 @@ article.post-page p.source {
 
   .featured__grid { gap: var(--gap-l); }
 
-  .featured__block {
-    top: 50px;
-    left: -12px;
-    right: 12%;
-    bottom: auto;
-    height: clamp(220px, 50vw, 360px);
-  }
 
   .recent__item,
   .post-list li {
