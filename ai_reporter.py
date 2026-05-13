@@ -43,10 +43,81 @@ from generate_post import (
 SITE_DIR = Path(__file__).resolve().parent
 TRANSCRIPTS_DIR = SITE_DIR / "transcripts"
 REPORTS_DIR = SITE_DIR / "news-reports"
+LOCAL_NAMES_PATH = SITE_DIR / "pipeline" / "local_names.json"
 SEND_TELEGRAM = Path.home() / ".openclaw/skills/tucson-daily-brief/scripts/send_telegram.py"
 
 CLAUDE_API_URL = "https://api.anthropic.com/v1/messages"
 CLAUDE_MODEL = "claude-sonnet-4-6"
+
+
+# ---------------------------------------------------------------------------
+# Local names + places bible
+# ---------------------------------------------------------------------------
+
+MUNICIPALITY_PREFIXES = ("pima-county", "tucson", "marana", "orovalley")
+
+
+def municipality_from_slug(slug: str) -> str | None:
+    for key in MUNICIPALITY_PREFIXES:
+        if slug.startswith(key):
+            return key
+    return None
+
+
+def load_local_names_reference(slug: str) -> str:
+    """Return a prompt-ready reference block of canonical names and places for the
+    slug's municipality, including the shared 'regional' bucket. Empty string if
+    the file is missing or no entries match."""
+    if not LOCAL_NAMES_PATH.exists():
+        return ""
+    try:
+        with open(LOCAL_NAMES_PATH) as f:
+            bible = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return ""
+
+    municipality = municipality_from_slug(slug)
+    if municipality is None:
+        return ""
+
+    people_lines = []
+    place_lines = []
+    for muni_key in (municipality, "regional"):
+        muni = bible.get(muni_key) or {}
+        for person in muni.get("people", []):
+            line = f"- {person['canonical']}"
+            if person.get("title"):
+                line += f", {person['title']}"
+            if person.get("pronouns"):
+                line += f" ({person['pronouns']})"
+            misreads = person.get("deepgram_misreads") or []
+            if misreads:
+                line += f" — transcript may show: {', '.join(misreads)}"
+            people_lines.append(line)
+        for place in muni.get("places", []):
+            line = f"- {place['canonical']}"
+            misreads = place.get("deepgram_misreads") or []
+            if misreads:
+                line += f" — transcript may show: {', '.join(misreads)}"
+            place_lines.append(line)
+
+    if not people_lines and not place_lines:
+        return ""
+
+    block = ["", "REFERENCE — CANONICAL NAMES AND PLACES FOR THIS JURISDICTION:",
+             "The transcript is from Deepgram and routinely mistranscribes proper nouns.",
+             "Use the canonical spelling and title below when writing the report. If the",
+             "transcript shows one of the listed misread variants, replace it with the canonical form.",
+             ""]
+    if people_lines:
+        block.append("People:")
+        block.extend(people_lines)
+        block.append("")
+    if place_lines:
+        block.append("Places:")
+        block.extend(place_lines)
+        block.append("")
+    return "\n".join(block)
 
 
 # ---------------------------------------------------------------------------
@@ -146,6 +217,8 @@ def generate_news_report(data: dict, force: bool = False) -> str | None:
     else:
         speaker_note = "No speaker diarization is available. Attribute statements generically (e.g., 'a spokesperson said', 'one official noted')."
 
+    names_reference = load_local_names_reference(slug)
+
     prompt = f"""You are a local government reporter writing in AP style for the Tucson Daily Brief.
 
 You have just monitored a meeting/briefing. Below is the full transcript. Write a news report covering the most significant actions, decisions, and statements.
@@ -162,7 +235,7 @@ Guidelines:
 9. Keep it concise — a reader should get the key takeaways in under 3 minutes
 
 {speaker_note}
-
+{names_reference}
 Format as markdown:
 - H1 headline (newsy, specific, not bureaucratic)
 - A dateline paragraph in bold that opens with the key news
