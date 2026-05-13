@@ -6,7 +6,8 @@
     "verification_needed": [
       "regional.people: Suzanne Droubie (Pima County Assessor) — re-verify on pima.gov before relying on",
       "pima-county.people: Dan Hunt (CIO) — most recent direct confirmation was 2022; re-verify"
-    ]
+    ],
+    "scope_note": "Regional bucket also holds state-level officials (e.g., Arizona Auditor General) since they appear at any municipality's meetings and don't belong in any single municipality bucket."
   },
 
   "pima-county": {
@@ -24,7 +25,8 @@
       {"canonical": "Dr. Theresa Cullen", "title": "Director, Pima County Health Department", "deepgram_misreads": ["Cohen", "Doctor Cohen"]},
       {"canonical": "Art Cuaron", "title": "Director, Finance and Risk Management Department", "deepgram_misreads": ["Quaron", "Karen", "Caron"]},
       {"canonical": "Jackson Jenkins", "title": "Director, Regional Wastewater Reclamation Department"},
-      {"canonical": "Dan Hunt", "title": "Chief Information Officer / Director, Information Technology Department"}
+      {"canonical": "Dan Hunt", "title": "Chief Information Officer / Director, Information Technology Department"},
+      {"canonical": "Constance L. Hargrove", "title": "Pima County Elections Director", "deepgram_misreads": ["Khargrove", "Hargrave"]}
     ],
     "places": [
       {"canonical": "Pima County Board of Supervisors Hearing Room"},
@@ -136,7 +138,10 @@
       {"canonical": "Gabriella Cázares-Kelly", "title": "Pima County Recorder", "deepgram_misreads": ["Cazares Kelly", "Cazares-Kelly", "Gabriella Cazares Kelly"]},
       {"canonical": "Brian Johnson", "title": "Pima County Treasurer"},
       {"canonical": "Dustin Williams", "title": "Pima County Superintendent of Schools"},
-      {"canonical": "James W. Giacomino", "title": "Clerk of the Superior Court, Pima County"}
+      {"canonical": "James W. Giacomino", "title": "Clerk of the Superior Court, Pima County"},
+      {"canonical": "Lindsey A. Perry", "title": "Arizona Auditor General"},
+      {"canonical": "Catherine Edwards Tucker", "title": "Financial Audit Director, Arizona Auditor General's Office", "deepgram_misreads": ["Edwards Stecker", "Catherine Edwards Stecker"]},
+      {"canonical": "Victoria Fisher", "title": "Financial Audit Manager, Arizona Auditor General's Office"}
     ],
     "places": [
       {"canonical": "Santa Catalina Mountains"},
