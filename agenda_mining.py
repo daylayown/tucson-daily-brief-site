@@ -571,9 +571,7 @@ def render_meeting_index(posts: list[dict]) -> str:
 <main>
 <div class="container container--editorial">
 <div style="padding-top:var(--gap-xl);margin-bottom:var(--gap-l)">
-<h2 class="section-head">Meeting Watch
-{HAND_RULE_SVG}
-</h2>
+<h2 class="section-head">Meeting Watch</h2>
 <p class="section-intro">AI-assisted previews of government meetings across Tucson, Pima County, Marana, and Oro Valley. Auto-published the morning agendas drop.</p>
 </div>
 

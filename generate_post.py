@@ -797,9 +797,7 @@ def render_briefings_index(posts: list[dict]) -> str:
 <main>
 <div class="container container--editorial">
 <div style="padding-top:var(--gap-xl);margin-bottom:var(--gap-l)">
-<h2 class="section-head">Daily briefings
-{HAND_RULE_SVG}
-</h2>
+<h2 class="section-head">Daily briefings</h2>
 <p class="section-intro">Every day&rsquo;s synthesis of Tucson, Pima County, and Arizona news, newest first.</p>
 </div>
 

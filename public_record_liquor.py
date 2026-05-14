@@ -391,9 +391,7 @@ def render_index_html(filings: list[dict]) -> str:
 <main>
 <div class="container container--editorial">
 <div style="padding-top:var(--gap-xl);margin-bottom:var(--gap-l)">
-<h2 class="section-head">Spotted
-{HAND_RULE_SVG}
-</h2>
+<h2 class="section-head">Spotted</h2>
 <p class="section-intro">New restaurants, bars, businesses, and filings going through public review &mdash; most of which never get reported on. We pull them automatically from the agendas of Pima County BOS, Tucson Mayor &amp; Council, and Oro Valley Town Council. Spot one near you? <a href="mailto:nicholas@daylayown.org">Let us know</a>.</p>
 </div>
 

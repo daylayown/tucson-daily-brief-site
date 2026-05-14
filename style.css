@@ -405,9 +405,9 @@ a { color: var(--accent); }
 
 .featured__sun {
   position: absolute;
-  top: clamp(-20px, -1vw, 8px);
+  top: -28px;
   right: clamp(40px, 8vw, 140px);
-  width: clamp(150px, 18vw, 240px);
+  width: clamp(120px, 14vw, 180px);
   height: auto;
   color: var(--terracotta);
   pointer-events: none;

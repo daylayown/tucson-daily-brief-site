@@ -549,9 +549,7 @@ def render_report_index(posts: list[dict]) -> str:
 <main>
 <div class="container container--editorial">
 <div style="padding-top:var(--gap-xl);margin-bottom:var(--gap-l)">
-<h2 class="section-head">News Reports
-{HAND_RULE_SVG}
-</h2>
+<h2 class="section-head">News Reports</h2>
 <p class="section-intro">AI-drafted, human-reviewed coverage of government meetings across the Tucson metro. Every report sees an editor before it&rsquo;s published.</p>
 </div>
 
