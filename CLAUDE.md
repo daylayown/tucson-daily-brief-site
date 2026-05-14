@@ -22,6 +22,9 @@ Static blog for GitHub Pages — minimal, text-first, Daring Fireball style. No 
 ├── ai_reporter_live.py          # Live input: streamlink/direct HLS → Deepgram WebSocket → transcript JSON
 ├── ai_reporter_vod.py           # VOD input: ffmpeg → opus → Deepgram batch API → transcript JSON (fallback when live capture fails)
 ├── run_live_reporter.sh         # Shell wrapper for live reporter (env loading, dep validation)
+├── pipeline/                    # Shared reference data injected into pipeline prompts
+│   └── local_names.json         # Canonical names + titles + Deepgram misreads for Southern AZ officials and places; loaded by ai_reporter.py at draft time
+├── people-photos/               # Research only as of 2026-05-12 — official portraits + _manifest.json + ARCHITECTURE.md; not yet wired into the renderer
 ├── transcripts/                 # Working directory: transcript JSON + drafts (gitignored)
 ├── agenda-watch/                # Working directory: markdown previews + full references (not published)
 ├── agenda_mining.py             # Pima County BOS pipeline (Legistar API)
@@ -110,8 +113,8 @@ The current visual language is **warm-organic Southwest editorial**, shipped 202
 - **Sun-cast** — fixed warm radial gradient on `body::before`, slowly drifts via 180s alternating animation
 - **Paper-grain** — SVG turbulence noise overlay on `body::after`, multiply blend, every page
 - **Paper-grain bleed** — denser local noise on `.featured::before`, masked to fade out on the right, concentrating "ink" under the headline
-- **Featured sun motif** (`FEATURED_SUN_SVG`) — desert sun with 12 rays of varied length in the upper-right of the homepage feature; echoes the small sunray dingbat used in kickers. Desktop only (hidden under the 880px breakpoint)
-- **Hand-drawn SVG underlines** under section heads, animated draw on first viewport entry via IntersectionObserver
+- **Featured sun motif** (`FEATURED_SUN_SVG`) — desert sun with 12 rays of varied length in the upper-right of the homepage feature; echoes the small sunray dingbat used in kickers. Desktop only (hidden under the 880px breakpoint). Sized down 2026-05-13 (max width 240→180px, top -28px) so the bottom of the sun clears the right-column aside even when the daily-brief headline is short (3 lines)
+- **Hand-drawn SVG underlines** (`HAND_RULE_SVG`) under section heads on daily-brief posts only — animated draw on first viewport entry via IntersectionObserver. Removed 2026-05-13 from the four section index heads (Daily briefings, Meeting Watch, News Reports, Spotted) where they read as awkward decoration on the big titles
 - **Drop caps** on the lede of daily-brief posts (large Fraunces capital, pulled into the column)
 
 **Section nav, footer, masthead** are centralized in `generate_post.py` constants. The masthead kicker reads "From the Old Pueblo" — ties to the "The Old Pueblo Speaks" outreach section under the Roadmap. Footer: Apple Podcasts, YouTube, LinkedIn, X (`x.com/nicholasadeleon`), Bluesky (`bsky.app/profile/nicholasadeleon.bsky.social`), Email.
@@ -230,7 +233,7 @@ The daily brief repackages existing journalism. The agenda mining pipeline (abov
 
 ### Planned content types
 
-- **Post-Meeting News Reports** — 🚧 **FIRST REAL RECORDINGS SCHEDULED (April 7-8, 2026).** AI reporter that transcribes government meetings (live or from VOD) and generates AP-style news reports. Requires human editorial review before publishing. Live pipeline tested on YouTube livestreams (`ai_reporter.py` + `ai_reporter_live.py`). Pima County BOS (9 AM) and Tucson Mayor & Council (5:30 PM) scheduled via `at` for April 7. Oro Valley Town Council (5 PM) scheduled for April 8 — first Swagit live capture using `--direct` mode. `run_live_reporter.sh` includes a wait-for-stream retry loop (polls every 60s for up to 30 min).
+- **Post-Meeting News Reports** — ✅ **LIVE.** AI reporter transcribes government meetings (live or from VOD) and generates AP-style news reports; human editorial review required before publishing. First real recordings April 7-8, 2026; steady cadence since. As of 2026-05-13, seven reports published covering Pima County BOS (study sessions, regular meetings, special meetings), Tucson Mayor & Council, Marana Town Council, and Oro Valley Town Council. Recording is auto-scheduled by `schedule_recording.py` from agenda-watch previews (gated by `ENABLE_AUTO_SCHEDULE=1`). Names bible (`pipeline/local_names.json`, see below) injected into the report-generation prompt as of 2026-05-12 dramatically reduced editorial review time by correcting Deepgram name mistranscriptions before drafts land.
 
 - **Agenda Mining** — ✅ **LIVE.** Before meetings happen, read every agenda and supporting document. Surface buried items that reporters would miss and publish "what to watch" previews. Auto-publishes for all four municipalities.
 
@@ -480,6 +483,18 @@ The 10-15 minute session cap is even worse than OpenAI's 60 minutes — would ne
 **No municipality publishes verbatim transcripts as official records** — all four produce summary/action minutes only. For full meeting content, video/audio recordings + transcription is the only path.
 
 **Transcript availability timing (Marana, tested March 2026):** Marana's policy is recordings within 3 working days. In practice, the March 3 (Tuesday evening) meeting had a full Swagit transcript available by March 8 (Sunday). Transcripts are auto-generated from closed captions, so they're likely available as soon as the video is posted — estimated **1-3 business days** after the meeting. Pipeline approach: morning-after cron check, retry daily until transcript appears, then draft and send to Telegram for human review.
+
+### Local names and places bible
+
+Built 2026-05-12 during an editorial review of a Pima County BOS draft that surfaced systematic Deepgram errors (Cano → Conner, Cullen → Cohen, Cuaron → Quaron, Acuña → Cunno, Heinz → Hines, Winfield → Rainfield/Wynne/Ranfeld). The bible is a single JSON file holding canonical names, titles, and known mistranscriptions for every regularly-cited official across the four municipalities plus regional/state players. Loaded by `ai_reporter.py` and injected into the report-generation system prompt so Sonnet writes the correct name on first reference and fixes pronouns to match.
+
+**File:** `pipeline/local_names.json`. Top-level keys: `pima-county`, `tucson`, `marana`, `orovalley` (per-jurisdiction rosters) and `regional` (countywide elected officials, state-level players like the AZ Auditor General, regional landmarks). Each bucket has `people[]` and `places[]` arrays with `canonical`, `title`, optional `pronouns`, and `deepgram_misreads` arrays. A `_meta.verification_needed` array flags entries the original roster pass couldn't fully confirm (currently Suzanne Droubie, Dan Hunt) so they get re-checked before they appear in a real transcript.
+
+**Integration in `ai_reporter.py`:** `municipality_from_slug()` matches the transcript slug prefix to a municipality, and `load_local_names_reference()` formats the relevant municipality plus the shared `regional` bucket into a "REFERENCE — CANONICAL NAMES AND PLACES" block injected after the speaker note. Unknown slugs return empty cleanly. Per-call overhead: ~500-700 tokens (fractions of a cent).
+
+**How to grow the bible:** every editorial review yields new misreads — add them to the relevant entry's `deepgram_misreads` array as you encounter them. New officials surfacing in a meeting (e.g., the Pima County Elections Director, AZ Auditor General team) should be added to the appropriate bucket. Bible is the single source of truth; no separate post-pass regex layer is needed at this scale.
+
+**First production proof:** the 2026-05-12 Pima County BOS regular meeting draft (Nanos perjury referral). Every Pima County name came through correctly on first reference — Cano with accent, Heinz not Hines, Cázares-Kelly with accent, DeBonis spelled right — and editorial review focused entirely on substantive issues (vote tally, attribution, framing) rather than name corrections.
 
 - **Spotted, expanded scope** — Currently covers liquor license filings (live as of 2026-04-11). Roadmap: monitor building permits, business license applications, court filings, and campaign finance disclosures. Flag anomalies — large developments before they're announced, unusual donations, lawsuits involving the city.
 
