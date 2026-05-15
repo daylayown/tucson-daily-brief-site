@@ -33,47 +33,16 @@
 <div class="container container--editorial">
 <section class="coming-soon">
 <p class="coming-soon-kicker">About</p>
-<h2 class="coming-soon-title">A small newsroom run by one person and a lot of software.</h2>
-<p class="coming-soon-lede">Tucson Daily Brief is an ongoing experiment in what local journalism looks like when AI does the watching, and a person does the judging.</p>
-<p class="coming-soon-body">Tucson is one of the most under-covered metros in the country relative to its size. The Old Pueblo has more than a million people in its metro area; it has a handful of beat reporters covering everything from school boards to courts to development. More public business happens here in any given week than the existing outlets can possibly reach.</p>
-<p class="coming-soon-body">I started TDB because I wanted to know what was going on in Tucson and couldn&rsquo;t find a place that put it together. Now it puts itself together: every morning, a brief; before every meeting, a preview; after every meaningful vote, an account; for every license filing nobody else writes about, a short post.</p>
+<h2 class="coming-soon-title">A tool-assisted speedrun of local news.</h2>
+<p class="coming-soon-lede">Tucson Daily Brief is an ongoing experiment in AI-augmented local journalism, by Nicholas De Leon.</p>
+<p class="coming-soon-body">There is a thing in video games called a tool-assisted speedrun: a player uses software &mdash; frame-by-frame input, save states, automation &mdash; to play through a game with a level of precision and speed that no human could achieve in real time. The result isn&rsquo;t laziness or cheating. It&rsquo;s a demonstration of what the game makes possible once you stop pretending the constraints of human reflex are the constraints of the medium.</p>
+<p class="coming-soon-body">Tucson Daily Brief is that same idea, applied to local news.</p>
+<p class="coming-soon-body">The newsroom is one person &mdash; me. The tools are large language models, transcription engines, public-data scrapers, schedulers, and a few hundred lines of glue Python. Together, the run reads every agenda packet that drops, listens to every council meeting that streams, scans every public-records filing, and synthesizes what the rest of the Tucson press is reporting &mdash; most mornings, before breakfast.</p>
+<p class="coming-soon-body">This matters here because Tucson is one of the most under-covered metros in the country relative to its size. The Old Pueblo has more than a million people in its metro area and a handful of beat reporters covering everything from school boards to courts to development. More public business happens here in any given week than the existing outlets can possibly reach. The legacy economics of local news will not support the coverage this city deserves. So I&rsquo;m running a speedrun instead.</p>
+<p class="coming-soon-body">What you&rsquo;re looking at isn&rsquo;t the future of local news. It&rsquo;s one experiment in what that future could look like &mdash; when a working journalist treats AI not as a replacement for the work, but as the toolkit that finally lets him cover a city at the depth it deserves.</p>
 </section>
 
 <article class="post-page" style="padding-top:0;">
-
-<h2>What this site does</h2>
-
-<p><strong>The Daily Brief.</strong> Every morning at 6&nbsp;AM, an agent reads about thirty Tucson and Pima County news sources and writes a synthesis of what&rsquo;s worth knowing. It runs without human supervision; the editorial guidance lives in a long-running prompt that I edit by hand when something needs adjusting.</p>
-
-<p><strong>Meeting Watch.</strong> Before each city or county meeting, another agent reads the full agenda packet &mdash; sometimes hundreds of pages &mdash; and writes a &ldquo;what to watch&rdquo; preview. It runs for Pima County, the City of Tucson, Marana, and Oro Valley.</p>
-
-<p><strong>News Reports.</strong> When a council meets, the pipeline records the live stream, transcribes it with speaker diarization, and drafts an AP-style news report. Every report is read and edited by a human before it publishes &mdash; no exceptions.</p>
-
-<p><strong>Spotted.</strong> A daily pass over every published agenda surfaces filings that almost never make the news but matter: liquor license applications, transfers, new business openings. Each item becomes its own short, plain-language post.</p>
-
-<h2>The live AI reporter</h2>
-
-<p>When the Pima County Board of Supervisors gavels in at 9&nbsp;AM on a Tuesday, a Python script that woke itself up at 8:55 is already pulling the live YouTube stream. The audio runs through Deepgram, which transcribes speech and labels who&rsquo;s talking. The transcript streams onto disk in real time.</p>
-
-<p>When the meeting ends &mdash; sometimes hours later &mdash; the transcript goes to Claude Sonnet along with a &ldquo;names bible&rdquo; containing canonical spellings for every regular at the dais. (The bible exists because automated transcription routinely turns &ldquo;Cuaron&rdquo; into &ldquo;Quaron&rdquo; and &ldquo;Acu&ntilde;a&rdquo; into &ldquo;Cunno.&rdquo; The fix has to happen before the model ever sees the transcript.) A draft news report lands in my Telegram a few minutes later.</p>
-
-<p>I read it against the recording. I correct, cut, sometimes rewrite. When I&rsquo;m satisfied, one command publishes it. The whole loop &mdash; meeting ends to published report &mdash; can finish in under an hour.</p>
-
-<p>This is what AI does well in journalism: it gets you from a five-hour recording to a seven-hundred-word draft fast, without missing the procedural vote that everyone else missed because they had to leave at 4&nbsp;PM. What it doesn&rsquo;t do is decide what matters, or which sentence belongs first. That&rsquo;s still my job.</p>
-
-<h2>Spotted (the public-records pipeline)</h2>
-
-<p>Every published agenda gets parsed for filings hidden in the consent calendar that deserve their own paragraph. The first pass is liquor licenses: who&rsquo;s opening what, where, on what street, on what schedule. Each gets rolled up into a short post with the structured details &mdash; series, license type, action, applicant, ward &mdash; and a two-sentence newspaper-style summary.</p>
-
-<p>Most of these filings never get reported anywhere. They&rsquo;re sitting in the public record, waiting for someone to read them. Now something is reading them every day.</p>
-
-<p>From here, the roadmap is bigger: building permits, court filings, campaign finance disclosures, contract awards. Same pattern &mdash; pull from a published source, extract structured items, summarize each with care and citations. A companion outreach pipeline is also in the works, the kind that takes each new filing and drafts a polite request-for-comment email to the business owner for me to review and send. The site has plenty to say about Tucson&rsquo;s civic life; eventually it should let Tucson&rsquo;s civic life talk back.</p>
-
-<h2>Where AI does not go</h2>
-
-<p>The line is human review on anything resembling original journalism. Agenda previews and the daily brief publish automatically &mdash; the first is a forward-looking summary of public meeting packets, the second is a synthesis of news that&rsquo;s already been reported elsewhere. Both are low-risk; both are clearly disclosed.</p>
-
-<p>Everything else &mdash; the news reports written from transcripts, anything that resembles reporting &mdash; gets read, corrected, and approved by me before it goes live. There are no exceptions to this rule. Every piece on the site carries a clear disclosure about AI&rsquo;s role in producing it.</p>
 
 <h2>About the byline</h2>
 
