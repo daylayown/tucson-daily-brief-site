@@ -268,9 +268,12 @@ const io=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isInterse
 document.querySelectorAll('.section-head__rule').forEach(el=>io.observe(el));})();
 </script>"""
 
-FOOTER_HTML = """<div class="footer-row">
+def footer_html(path_prefix: str = "") -> str:
+    """Site-wide footer. `path_prefix` is "" for root pages, "../" for nested pages."""
+    return f"""<div class="footer-row">
 <p class="footer-row__byline">By Nicholas De Leon, in Tucson.</p>
 <p class="footer-row__links">
+<a href="{path_prefix}about.html">About</a>
 <a href="https://podcasts.apple.com/us/podcast/tucson-daily-brief/id1878173070">Apple Podcasts</a>
 <a href="https://www.youtube.com/@tucsondailybrief">YouTube</a>
 <a href="https://www.linkedin.com/in/nicholas-de-leon-3b5b6a9">LinkedIn</a>
@@ -435,7 +438,7 @@ def render_post(date: datetime, body_html: str) -> str:
 </main>
 
 <div class="container">
-{FOOTER_HTML}
+{footer_html(path_prefix=home_href)}
 </div>
 
 {SCROLL_TRIGGER_JS}
@@ -756,7 +759,7 @@ def render_homepage(posts: list[dict],
 </main>
 
 <div class="container">
-{FOOTER_HTML}
+{footer_html()}
 </div>
 
 {SCROLL_TRIGGER_JS}
@@ -810,7 +813,7 @@ def render_briefings_index(posts: list[dict]) -> str:
 </main>
 
 <div class="container">
-{FOOTER_HTML}
+{footer_html()}
 </div>
 
 {SCROLL_TRIGGER_JS}

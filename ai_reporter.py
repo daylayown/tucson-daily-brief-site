@@ -30,10 +30,10 @@ from pathlib import Path
 
 from generate_post import (
     ANALYTICS_HTML,
-    FOOTER_HTML,
     HAND_RULE_SVG,
     SCROLL_TRIGGER_JS,
     SUBSCRIBE_PANEL_HTML,
+    footer_html,
     rebuild_homepage,
     section_nav_html,
     site_header_html,
@@ -508,7 +508,7 @@ def render_report_post(title: str, date: datetime, body_html: str) -> str:
 </main>
 
 <div class="container">
-{FOOTER_HTML}
+{footer_html(path_prefix="../")}
 </div>
 
 {SCROLL_TRIGGER_JS}
@@ -562,7 +562,7 @@ def render_report_index(posts: list[dict]) -> str:
 </main>
 
 <div class="container">
-{FOOTER_HTML}
+{footer_html()}
 </div>
 
 {SCROLL_TRIGGER_JS}

@@ -37,10 +37,10 @@ from pathlib import Path
 
 from generate_post import (
     ANALYTICS_HTML,
-    FOOTER_HTML,
     HAND_RULE_SVG,
     SCROLL_TRIGGER_JS,
     SUBSCRIBE_PANEL_HTML,
+    footer_html,
     rebuild_homepage,
     section_nav_html,
     site_header_html,
@@ -349,7 +349,7 @@ def render_filing_html(data: dict, source_meta: dict, meeting_date: str) -> str:
 </main>
 
 <div class="container">
-{FOOTER_HTML}
+{footer_html(path_prefix="../")}
 </div>
 
 {SCROLL_TRIGGER_JS}
@@ -404,7 +404,7 @@ def render_index_html(filings: list[dict]) -> str:
 </main>
 
 <div class="container">
-{FOOTER_HTML}
+{footer_html()}
 </div>
 
 {SCROLL_TRIGGER_JS}

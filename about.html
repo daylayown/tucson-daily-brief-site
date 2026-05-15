@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About &mdash; Tucson Daily Brief</title>
+<link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..900,0..100,0..1&family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&display=swap">
+<noscript><style>.section-head__rule path { stroke-dashoffset: 0 !important; }</style></noscript>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-MEYSB9GYF2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-MEYSB9GYF2');
+</script>
+</head>
+<body>
+<header class="masthead">
+<div class="container">
+<p class="masthead__kicker">From the Old Pueblo</p>
+<h1 class="masthead__wordmark"><a href="./">Tucson Daily Brief</a></h1>
+<p class="masthead__tagline">An ongoing experiment at the intersection of artificial intelligence and local journalism, by Nicholas De Leon.</p>
+</div>
+</header>
+<div class="container"><nav class="section-nav">
+<div class="streams-nav"><a href="briefings.html">Briefings</a> &middot; <a href="meeting-watch.html">Meeting Watch</a> &middot; <a href="news-reports.html">News Reports</a> &middot; <a href="public-record.html">Spotted</a></div>
+
+</nav></div>
+<main>
+<div class="container container--editorial">
+<section class="coming-soon">
+<p class="coming-soon-kicker">About</p>
+<h2 class="coming-soon-title">A small newsroom run by one person and a lot of software.</h2>
+<p class="coming-soon-lede">Tucson Daily Brief is an ongoing experiment in what local journalism looks like when AI does the watching, and a person does the judging.</p>
+<p class="coming-soon-body">Tucson is one of the most under-covered metros in the country relative to its size. The Old Pueblo has more than a million people in its metro area; it has a handful of beat reporters covering everything from school boards to courts to development. More public business happens here in any given week than the existing outlets can possibly reach.</p>
+<p class="coming-soon-body">I started TDB because I wanted to know what was going on in Tucson and couldn&rsquo;t find a place that put it together. Now it puts itself together: every morning, a brief; before every meeting, a preview; after every meaningful vote, an account; for every license filing nobody else writes about, a short post.</p>
+</section>
+
+<article class="post-page" style="padding-top:0;">
+
+<h2>What this site does</h2>
+
+<p><strong>The Daily Brief.</strong> Every morning at 6&nbsp;AM, an agent reads about thirty Tucson and Pima County news sources and writes a synthesis of what&rsquo;s worth knowing. It runs without human supervision; the editorial guidance lives in a long-running prompt that I edit by hand when something needs adjusting.</p>
+
+<p><strong>Meeting Watch.</strong> Before each city or county meeting, another agent reads the full agenda packet &mdash; sometimes hundreds of pages &mdash; and writes a &ldquo;what to watch&rdquo; preview. It runs for Pima County, the City of Tucson, Marana, and Oro Valley.</p>
+
+<p><strong>News Reports.</strong> When a council meets, the pipeline records the live stream, transcribes it with speaker diarization, and drafts an AP-style news report. Every report is read and edited by a human before it publishes &mdash; no exceptions.</p>
+
+<p><strong>Spotted.</strong> A daily pass over every published agenda surfaces filings that almost never make the news but matter: liquor license applications, transfers, new business openings. Each item becomes its own short, plain-language post.</p>
+
+<h2>The live AI reporter</h2>
+
+<p>When the Pima County Board of Supervisors gavels in at 9&nbsp;AM on a Tuesday, a Python script that woke itself up at 8:55 is already pulling the live YouTube stream. The audio runs through Deepgram, which transcribes speech and labels who&rsquo;s talking. The transcript streams onto disk in real time.</p>
+
+<p>When the meeting ends &mdash; sometimes hours later &mdash; the transcript goes to Claude Sonnet along with a &ldquo;names bible&rdquo; containing canonical spellings for every regular at the dais. (The bible exists because automated transcription routinely turns &ldquo;Cuaron&rdquo; into &ldquo;Quaron&rdquo; and &ldquo;Acu&ntilde;a&rdquo; into &ldquo;Cunno.&rdquo; The fix has to happen before the model ever sees the transcript.) A draft news report lands in my Telegram a few minutes later.</p>
+
+<p>I read it against the recording. I correct, cut, sometimes rewrite. When I&rsquo;m satisfied, one command publishes it. The whole loop &mdash; meeting ends to published report &mdash; can finish in under an hour.</p>
+
+<p>This is what AI does well in journalism: it gets you from a five-hour recording to a seven-hundred-word draft fast, without missing the procedural vote that everyone else missed because they had to leave at 4&nbsp;PM. What it doesn&rsquo;t do is decide what matters, or which sentence belongs first. That&rsquo;s still my job.</p>
+
+<h2>Spotted (the public-records pipeline)</h2>
+
+<p>Every published agenda gets parsed for filings hidden in the consent calendar that deserve their own paragraph. The first pass is liquor licenses: who&rsquo;s opening what, where, on what street, on what schedule. Each gets rolled up into a short post with the structured details &mdash; series, license type, action, applicant, ward &mdash; and a two-sentence newspaper-style summary.</p>
+
+<p>Most of these filings never get reported anywhere. They&rsquo;re sitting in the public record, waiting for someone to read them. Now something is reading them every day.</p>
+
+<p>From here, the roadmap is bigger: building permits, court filings, campaign finance disclosures, contract awards. Same pattern &mdash; pull from a published source, extract structured items, summarize each with care and citations. A companion outreach pipeline is also in the works, the kind that takes each new filing and drafts a polite request-for-comment email to the business owner for me to review and send. The site has plenty to say about Tucson&rsquo;s civic life; eventually it should let Tucson&rsquo;s civic life talk back.</p>
+
+<h2>Where AI does not go</h2>
+
+<p>The line is human review on anything resembling original journalism. Agenda previews and the daily brief publish automatically &mdash; the first is a forward-looking summary of public meeting packets, the second is a synthesis of news that&rsquo;s already been reported elsewhere. Both are low-risk; both are clearly disclosed.</p>
+
+<p>Everything else &mdash; the news reports written from transcripts, anything that resembles reporting &mdash; gets read, corrected, and approved by me before it goes live. There are no exceptions to this rule. Every piece on the site carries a clear disclosure about AI&rsquo;s role in producing it.</p>
+
+<h2>About the byline</h2>
+
+<p>My name is Nicholas De Leon. I&rsquo;m a longtime technology reporter born and raised in NYC. I moved to Tucson in 2023 and quickly fell in love with the place! By day I&rsquo;m a Senior Reporter at <a href="https://www.consumerreports.org/">Consumer Reports</a> and by night I work on TDB as well as a host of other interesting projects. The fastest way to contact me is by <a href="mailto:nicholas@daylayown.org">email</a>. Tips, corrections, leads, and friendly hellos are all welcome.</p>
+
+</article>
+</div>
+
+<section class="subscribe" style="padding-top:0"><div class="container container--editorial"><div class="subscribe__panel">
+<div class="subscribe__art"><svg viewBox="0 0 240 240" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0%" stop-color="#d97048" stop-opacity="0"/>
+<stop offset="100%" stop-color="#8c3a1f" stop-opacity="0.5"/>
+</linearGradient></defs>
+<circle cx="190" cy="60" r="36" fill="#f5f0e6" opacity="0.92"/>
+<g stroke="#faf4e8" stroke-width="1.5" stroke-linecap="round" opacity="0.55">
+<line x1="190" y1="6" x2="190" y2="20"/><line x1="190" y1="100" x2="190" y2="114"/>
+<line x1="136" y1="60" x2="150" y2="60"/><line x1="230" y1="60" x2="244" y2="60"/>
+<line x1="152" y1="22" x2="162" y2="32"/><line x1="218" y1="98" x2="228" y2="108"/>
+<line x1="152" y1="98" x2="162" y2="88"/><line x1="218" y1="22" x2="228" y2="12"/>
+</g>
+<path d="M -10 200 L 30 150 L 60 175 L 90 130 L 130 165 L 170 110 L 210 145 L 250 175 L 250 240 L -10 240 Z" fill="#3d3029" opacity="0.6"/>
+<path d="M -10 230 L 50 195 L 100 215 L 150 185 L 200 205 L 250 190 L 250 240 L -10 240 Z" fill="#251c17" opacity="0.55"/>
+<g transform="translate(60 130)" fill="#3d3029" opacity="0.85">
+<rect x="-4" y="0" width="8" height="80" rx="3"/>
+<rect x="-4" y="20" width="3" height="22" rx="1.5"/>
+<rect x="1" y="36" width="3" height="16" rx="1.5"/>
+<rect x="-12" y="22" width="8" height="3" rx="1.5"/>
+<rect x="-9" y="20" width="3" height="14" rx="1.5"/>
+<rect x="4" y="32" width="8" height="3" rx="1.5"/>
+<rect x="9" y="22" width="3" height="14" rx="1.5"/>
+</g>
+<rect x="0" y="0" width="240" height="240" fill="url(#sky)"/>
+</svg></div>
+<div class="subscribe__body">
+<p class="subscribe__eyebrow">TDB Weekly</p>
+<h2 class="subscribe__title">A warm Sunday-morning roundup of Tucson, in your inbox.</h2>
+<p>Five sections, ~900 words. Subscribers also get The Tucson Mini &mdash; a 5&times;5 crossword built just for them.</p>
+<form action="https://buttondown.email/api/emails/embed-subscribe/tucsondailybrief" method="post" target="_blank" class="subscribe__form">
+<input class="subscribe__input" type="email" name="email" placeholder="you@somewhere.com" aria-label="Email address" required>
+<button class="subscribe__button" type="submit">Subscribe</button>
+</form>
+<p class="subscribe__fine">Free. Sunday mornings. Unsubscribe anytime.</p>
+</div>
+</div></div></section>
+</main>
+<div class="container"><div class="footer-row">
+<p class="footer-row__byline">By Nicholas De Leon, in Tucson.</p>
+<p class="footer-row__links">
+<a href="about.html">About</a>
+<a href="https://podcasts.apple.com/us/podcast/tucson-daily-brief/id1878173070">Apple Podcasts</a>
+<a href="https://www.youtube.com/@tucsondailybrief">YouTube</a>
+<a href="https://www.linkedin.com/in/nicholas-de-leon-3b5b6a9">LinkedIn</a>
+<a href="https://x.com/nicholasadeleon">X</a>
+<a href="https://bsky.app/profile/nicholasadeleon.bsky.social">Bluesky</a>
+<a href="mailto:nicholas@daylayown.org">Email</a>
+</p>
+</div></div>
+<script>
+(function(){if(!('IntersectionObserver' in window)){document.querySelectorAll('.section-head__rule').forEach(el=>el.classList.add('in-view'));return;}
+const io=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in-view');io.unobserve(e.target);}});},{rootMargin:'0px 0px -8% 0px',threshold:0.1});
+document.querySelectorAll('.section-head__rule').forEach(el=>io.observe(el));})();
+</script>
+</body>
+</html>
