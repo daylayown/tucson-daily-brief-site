@@ -56,18 +56,14 @@ STREAM_SOURCES = {
         "body_name": "Oro Valley Town Council",
     },
     "marana": {
-        # UNVERIFIED — this URL was inferred from Oro Valley's Swagit pattern and has
-        # failed live capture at least twice (most recently 2026-05-05). Probing on
-        # 2026-05-10 ruled out the obvious Granicus alternatives: no Marana subdomain
-        # on granicus.com, and archive-stream.granicus.com is CloudFront-fronted for
-        # on-demand only. The real live URL can only be discovered via browser devtools
-        # during a live Marana broadcast (Network panel → .m3u8). Until then, Marana
-        # is effectively VOD-only — use ai_reporter_vod.py against the Swagit archive
-        # 1-3 business days after each meeting.
-        "url": "https://stream.swagit.com/live-edge/maranaaz/smil:hd-16x9-1-a/playlist.m3u8",
+        # Verified 2026-05-19 via devtools on www.maranaaz.gov/Council/Public-Meeting-Videos
+        # during a live Town Council broadcast. The inferred Oro Valley pattern
+        # (stream.swagit.com/live-edge/...) is wrong on three dimensions for Marana:
+        # different host (edge-f.swagit.com), different path (/live/, not /live-edge/),
+        # different stream slug (live-1-a, not smil:hd-16x9-1-a).
+        "url": "https://edge-f.swagit.com/live/maranaaz/live-1-a/playlist.m3u8",
         "mode": "direct",
         "body_name": "Marana Town Council",
-        "unverified": True,
     },
 }
 

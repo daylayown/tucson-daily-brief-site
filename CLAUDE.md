@@ -55,6 +55,8 @@ Static blog for GitHub Pages — minimal, text-first, Daring Fireball style. No 
 ├── REDESIGN-V2.md               # Visual language redesign — warm-organic Southwest editorial, shipped 2026-05-11
 ├── redesign-preview.html        # Self-contained reference demo of the v2 visual language (single file, embedded CSS)
 ├── MEETING-WATCH-PIPELINE.md    # Full reference docs for the meeting watch system
+├── crime.md                     # Research notes (2026-05-19) — FBI NIBRS reporting gap for TPD; downstream aggregators showing "0 violent crimes" for Tucson
+├── crime-tpd-data.md            # Research notes (2026-05-19) — TPD's own published crime data 2019–2025, clearance-rate methodology gap, peer-city comparison
 ├── CNAME                        # Custom domain: tucsondailybrief.com
 ├── .nojekyll                    # Tells GitHub Pages to skip Jekyll
 ├── .gitignore                   # Excludes __pycache__/, .venv/, transcripts/, etc.
@@ -388,7 +390,7 @@ atrm <job_number>
 | Pima County BOS | YouTube | `https://www.youtube.com/@PimaCountyArizona/live` | streamlink (default) |
 | City of Tucson | YouTube | `https://www.youtube.com/user/CityofTucson/live` | streamlink (default) |
 | Oro Valley | Swagit (HLS) | `https://stream.swagit.com/live-edge/orovalleyaz/smil:hd-16x9-1-a/playlist.m3u8` | `--direct` |
-| Marana | Swagit (HLS) | TBD — likely `https://stream.swagit.com/live-edge/maranaaz/smil:hd-16x9-1-a/playlist.m3u8` | `--direct` |
+| Marana | Swagit (HLS) | `https://edge-f.swagit.com/live/maranaaz/live-1-a/playlist.m3u8` | `--direct` |
 
 Pima County and Tucson stream on YouTube (use default streamlink mode). Oro Valley and Marana stream on Swagit, which serves HLS `.m3u8` streams — use `--direct` mode to have ffmpeg read the URL directly, bypassing streamlink. Swagit's streaming infrastructure uses Video.js + HLS.js on the frontend, backed by `stream.swagit.com` CDN.
 
@@ -403,7 +405,7 @@ Pima County and Tucson stream on YouTube (use default streamlink mode). Oro Vall
 
 **Enable flag:** The scheduling call in `check_agendas.sh` is gated by `ENABLE_AUTO_SCHEDULE=1`. **This is enabled in the 8 AM cron line as of April 24, 2026** — the crontab prefixes the command with `ENABLE_AUTO_SCHEDULE=1`. To temporarily disable, either `crontab -e` and remove the prefix, or unset the env var in an ad-hoc run. Backup of the pre-change crontab lives at `~/.cache/crontab/crontab.bak`.
 
-**Marana stream URL is unverified** — the `STREAM_SOURCES` entry for Marana is inferred from Oro Valley's Swagit pattern and has failed live capture at least twice (most recently 2026-05-05; ffmpeg retried for the full 30 minutes and never got a stream). Probing on 2026-05-10 ruled out the obvious alternatives: `maranaaz.granicus.com` / `marana.granicus.com` / `townofmarana.granicus.com` all 302 to Granicus's generic `/core/error/NotFound.aspx` (Marana is not a Granicus customer), and `archive-stream.granicus.com` is CloudFront-fronted for on-demand only (Wowza `/Live/_definst_/...` paths return CloudFront errors, not Wowza errors). The Marana archive lives on Granicus infrastructure only because Swagit→Granicus merger plumbing routes Swagit content through it; this tells us nothing about where the live stream lives. **The real live URL can only be discovered via browser devtools during an actual Marana broadcast** (Network panel → filter `.m3u8`). Next scheduled verification: Tuesday May 19, 2026. Until then, treat Marana as VOD-only — use `ai_reporter_vod.py` 1–3 business days after each meeting, once the Swagit auto-transcript posts.
+**Marana stream URL verified 2026-05-19.** The live URL is `https://edge-f.swagit.com/live/maranaaz/live-1-a/playlist.m3u8` — captured via devtools (Network → `.m3u8` filter) on `www.maranaaz.gov/Council/Public-Meeting-Videos` during the May 19 Town Council broadcast. The previous inferred URL (`stream.swagit.com/live-edge/maranaaz/smil:hd-16x9-1-a/playlist.m3u8`, copied from the Oro Valley pattern) was wrong on three dimensions: different host (`edge-f` vs `stream`), different path segment (`/live/` vs `/live-edge/`), and different stream slug (`live-1-a` vs `smil:hd-16x9-1-a`). The inferred URL had failed live capture twice (most recently 2026-05-05, ffmpeg retried for 30 min and got nothing). Lesson: Swagit's URL conventions vary per municipality — do not infer; always verify via devtools during a real broadcast before scheduling.
 
 **Backtest and audit commands:**
 ```bash
@@ -553,6 +555,11 @@ The homepage at `/` is now a **zoned entry hall** (featured Today's Brief + cros
 ### Story ideas
 
 - **"The Accessibility of Public Data in Southern Arizona"** — An investigative deep dive comparing how four municipalities in the same metro area handle public access to government meeting data. Pima County offers a free, unauthenticated REST API (Legistar); Marana has scrapeable HTML pages (Destiny Hosted); Oro Valley pays for proprietary Granicus software with no public API; Tucson (the largest city) locks agendas in PDFs via Hyland OnBase. All of this is taxpayer-funded public record, yet accessibility varies wildly based on vendor choices most residents don't know were made. Could include public records requests for contract amounts to show what each municipality pays for its system.
+
+- **"Tucson's Crime, in the FBI's Database vs. Tucson's Own"** — Two-part story arc developed from research on 2026-05-19. Full notes in `crime.md` and `crime-tpd-data.md`.
+  - **Part one (the federal hole):** Per the FBI's own agency metadata for TPD (ORI AZ0100300), TPD's NIBRS reporting start date is January 1, 2024 — three years after the FBI's hard cutover. TPD's data didn't flow to the FBI for all of 2021, most of 2022, and most of 2023. Downstream aggregators like Crime Explorer (crimeexplorer.com) present that as "0 violent crimes 2019–2024" with internally broken rate math ("97% below national average" — actual Tucson property crime is *above* the national average). A statistician's analysis named Tucson as the only US agency over 250K population that failed to report to the FBI in 2022. Historical precedent: TPD also fell out of the FBI report in 2014 (TPD→AZ DPS→FBI handoff failure) and the FBI left Tucson's property categories blank from 2006–2012 — this is a pattern, not a one-time NIBRS transition.
+  - **Part two (TPD's own numbers):** TPD's PowerBI dashboard shows 54 homicides in 2025, down 22% from 69 in 2024 and below the 2021 peak of 78. Metro-wide (TPD + PCSD + Marana + Oro Valley + Sahuarita) = 62 homicides in 2025, lowest in seven years. 2024 FBI peer comparison: Tucson sits at 589 violent / 3,313 property per 100K, higher than Mesa and El Paso, lower than Fresno/Sacramento/Albuquerque. **The reportable methodology bombshell:** TPD's 2024 city report claims a 97.56% homicide "resolution rate" while the FBI-format clearance it submits to AZ DPS shows 57.45% for the same year — both numbers are accurate but measure different things, and no source explains the gap.
+  - **Three unlocks needed before publishing** (documented at the top of `crime-tpd-data.md`): a browser session capturing the live PowerBI dashboard at policeanalysis.tucsonaz.gov (renders client-side, can't be scraped), a human download of the 2024 TPD Annual Report PDF (city asset server 403s non-browser clients), and a public-records request for the methodology behind the 97.56% figure.
 
 ### Constraints
 

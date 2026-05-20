@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Canonical names and places for Southern Arizona municipalities. Loaded by ai_reporter.py and injected into the news-report generation prompt to correct Deepgram mistranscriptions.",
-    "last_updated": "2026-05-12",
+    "last_updated": "2026-05-19",
     "deepgram_misreads_note": "Each known misread observed in a transcript should be added to the `deepgram_misreads` array. The pipeline will tell the LLM to replace any of these with the canonical form.",
     "verification_needed": [
       "regional.people: Suzanne Droubie (Pima County Assessor) — re-verify on pima.gov before relying on",
@@ -75,9 +75,9 @@
   "marana": {
     "people": [
       {"canonical": "Jon Post", "title": "Mayor"},
-      {"canonical": "Roxanne Ziegler", "title": "Vice Mayor; Council Member"},
-      {"canonical": "Patrick Cavanaugh", "title": "Council Member"},
-      {"canonical": "Patti Comerford", "title": "Council Member"},
+      {"canonical": "Roxanne Ziegler", "title": "Vice Mayor; Council Member", "deepgram_misreads": ["Zeigler"]},
+      {"canonical": "Patrick Cavanaugh", "title": "Council Member", "deepgram_misreads": ["Kavanagh"]},
+      {"canonical": "Patti Comerford", "title": "Council Member", "deepgram_misreads": ["Cumaford", "Comaford", "Camerford"]},
       {"canonical": "Herb Kai", "title": "Council Member"},
       {"canonical": "Teri Murphy", "title": "Council Member"},
       {"canonical": "John Officer", "title": "Council Member"},
@@ -92,7 +92,9 @@
       {"canonical": "Ina Road"},
       {"canonical": "Cortaro Road"},
       {"canonical": "Twin Peaks Road"},
+      {"canonical": "Rattlesnake Pass"},
       {"canonical": "Silverbell Road"},
+      {"canonical": "Honea Heights Neighborhood Park", "deepgram_misreads": ["Honey Heights Park", "Honey Heights Neighborhood Park", "Honey Heights"]},
       {"canonical": "Picture Rocks"},
       {"canonical": "Continental Ranch"},
       {"canonical": "Dove Mountain"}
