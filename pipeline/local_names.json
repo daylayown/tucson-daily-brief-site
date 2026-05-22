@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Canonical names and places for Southern Arizona municipalities. Loaded by ai_reporter.py and injected into the news-report generation prompt to correct Deepgram mistranscriptions.",
-    "last_updated": "2026-05-19",
+    "last_updated": "2026-05-21",
     "deepgram_misreads_note": "Each known misread observed in a transcript should be added to the `deepgram_misreads` array. The pipeline will tell the LLM to replace any of these with the canonical form.",
     "verification_needed": [
       "regional.people: Suzanne Droubie (Pima County Assessor) — re-verify on pima.gov before relying on",
@@ -111,7 +111,8 @@
       {"canonical": "Josh Nicolson", "title": "Council Member", "deepgram_misreads": ["Nicholson", "Nichols"]},
       {"canonical": "Elizabeth Robb", "title": "Council Member", "deepgram_misreads": ["Roff"]},
       {"canonical": "Jeff Wilkins", "title": "Town Manager"},
-      {"canonical": "Mike Standish", "title": "Town Clerk"}
+      {"canonical": "Mike Standish", "title": "Town Clerk"},
+      {"canonical": "Steven Zraick", "title": "Town Attorney", "deepgram_misreads": ["Drake", "Strake", "Zrake"]}
     ],
     "places": [
       {"canonical": "Oro Valley Town Hall", "deepgram_misreads": ["Ore Valley Town Hall"]},
