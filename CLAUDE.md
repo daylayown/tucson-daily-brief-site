@@ -527,6 +527,22 @@ Built 2026-05-12 during an editorial review of a Pima County BOS draft that surf
 
   **Volume sizing:** Spotted is currently 1-3 filings/week. Manageable manually. If Spotted expands to building permits, court filings, or campaign finance disclosures (as planned above), volume could go 10× — at which point the section needs a real triage/review tool, not just folders. Size the data model for that eventual scale now.
 
+- **Tracking** — Standing topic pages that aggregate everything TDB knows about a developing story (e.g., the Karla Toledo ICE detention from 2026-05-19), backed by research-agent pulls of external coverage and primary documents. Solves the local-news SEO problem: fragmented daily-brief paragraphs don't rank for "Karla Toledo ICE Tucson," but a canonical `/tracking/karla-toledo` page would. Also a real reader-value problem — no other Tucson outlet does the running-file format.
+
+  **Name:** "Tracking" picked because it's two-syllable, fits the sectional pattern (Meeting Watch / News Reports / Spotted / Tracking), reads honestly as "developing story" rather than overpromising investigative reporting, and matches a query users actually google.
+
+  **Page structure (v1):** TLDR + "Updated: [date]" badge; timeline of dated events; key people; what TDB has covered (links to daily briefs, news reports, meeting-watch entries); external coverage cited and dated; primary documents when research agents find them; open questions / what to watch next.
+
+  **Editorial model:** Human review required on every publish AND every update — this is not the agenda-mining model. A standing canonical page that's wrong stays wrong, so the bar is the news-reports bar, not the previews bar.
+
+  **Source model:** TDB RAG corpus is the spine ("everything TDB has said about Topic X across daily briefs + meeting transcripts + news reports + agenda full references"). Research agents add external coverage (KGUN, AZ Daily Star, KOLD, federal court records, agency press releases) and primary documents (council statements, detention records, FOIA returns) so the page is more than an aggregation of secondhand reporting. For the Toledo example: lead with what TDB uniquely knows about Tucson sanctuary-city policy and TPD's ICE-cooperation posture from meeting coverage, then layer KGUN's reporting and external primary docs underneath.
+
+  **Hard gate: ship after RAG Phase 2 is fully deployed.** Tracking depends on the same retrieval infrastructure as Ask, and there's no point standing up a second consumer of the RAG index before the first one is in production. Don't start building until `ask.html` is live, the Worker is stable, and the incremental cron rebuild is wired.
+
+  **Biggest unresolved design question (decide before building):** maintenance cadence. First-publish is easy; the hard part is week 3 when there are 5 active Tracking pages and 2 of them have new developments. Two options: (a) manual trigger — user decides "refresh the Toledo page today" and runs a regenerator; (b) weekly cron pass that runs "what's new since last update?" against the RAG corpus + a fresh research-agent sweep on each active topic, then surfaces a draft diff via Telegram for human review. (b) is what makes the section feel alive rather than 5 abandoned pages, but it's a bigger build. Pick before writing the generator.
+
+  **Pilot topic:** Karla Toledo's ICE detention (2026-05-19), if it's still developing when Tracking is ready to build. Small enough to be tractable, big enough to test the multi-source / research-agent assembly. Alternative candidate: the Pima County Sheriff Nanos investigation report saga (perjury referral + the May 26 release-the-report vote), which spans multiple meetings already in the corpus.
+
 ### Coverage area
 
 The Tucson metro area broadly: City of Tucson, Pima County, Town of Marana, Town of Oro Valley, and their respective governing bodies, commissions, and public records. Not limited to Tucson city limits.
