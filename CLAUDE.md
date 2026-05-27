@@ -885,10 +885,7 @@ The chat agent ships publicly as the **launch event** of the project's marketing
 4. **Unlisted URL for ~1 week of real-use shakedown**, then public launch as marketing event (r/Tucson post + LinkedIn + local press pitch). Don't make it discoverable until it's tested. Don't flip `SHOW_TOOLS` until shakedown is clean.
 5. **Cron the incremental index rebuild** after the 8 AM agenda check so new daily briefs and meeting previews are queryable within hours.
 
-**Open Phase 2 question (must decide before writing the Worker):** where the SQLite database actually lives in the deployed setup. Cloudflare D1 is SQLite-compatible but doesn't yet support custom extensions like sqlite-vec. Three paths:
-- (a) Keep the DB on a small VPS and have the Worker call out to it (cheapest infra, adds a network hop)
-- (b) Replace sqlite-vec with Cloudflare-native Vectorize (one platform, requires re-embedding + re-implementing the chunk-to-id mapping)
-- (c) Move the whole runtime to Fly.io or Railway (no Worker; small VM with SQLite local). Simpler architecture, slightly more ops overhead.
+**Phase 2 hosting decision (2026-05-25): Fly.io with local SQLite (option C from the original evaluation).** One small Python service wraps `ask.py`; the `index.sqlite` file ships with the deploy. Reasons: zero rewrite of existing `build_index.py` / `ask.py` code; one system to maintain (vs. Worker + VPS); avoids re-implementing the chunk store in Cloudflare Vectorize for a problem (scale, edge latency) TDB doesn't have at expected traffic. Rate limiting lives in the FastAPI app (per-IP bucket, ~20 lines) instead of at the Worker edge. Replaces the earlier Cloudflare Worker plan throughout this section — `ask.html` will POST to the Fly.io app directly, no Worker hop. This is also **Stage 1 of the broader "Move TDB off the laptop" roadmap** (see section below) — chosen as the low-stakes first migration to prove out the cloud-deploy workflow before tackling the heavier cron + live-recording migration.
 
 ### Phase 3+ (eval-driven, defer until Phase 2 has run for a few weeks)
 
@@ -911,6 +908,26 @@ Side project that evolves TDB from aggregation toward original reporting. A livi
 **The editorial thesis from research:** *"Before we measure how fast Tucson responds, we have to measure what Tucson tells us."* Tucson does not publish 311 on its own open-data portal, does not publish code enforcement at all, does not publish permits in bulk, and Tucson Water publishes no operational KPI report (a peer utility — Oro Valley Water — does). The Transparency Tracker leads; responsiveness numbers follow; the desert lens is permanent.
 
 When picking this up cold: read `responsiveness/PLANNING.md` and the `project_responsiveness_index.md` memory entry. Both are durable — the data sources, gotchas, and architecture decisions don't expire fast.
+
+## Roadmap: Move TDB off the laptop
+
+TDB has graduated past "laptop project" status — real readers, paid services (ElevenLabs, Buttondown, API costs), automated pipelines, a subscriber newsletter. A closed lid or a coffee-shop trip shouldn't be able to break it. Plan is to migrate everything off the laptop in **two stages**, not one, so a single failure doesn't cascade across all the moving parts at once.
+
+**Stage 1 — RAG Phase 2 on Fly.io (small, single-purpose).** Ships Ask as its own Fly.io app with `ask.py` + `index.sqlite` packaged together. Proves out the deploy workflow on something low-stakes. Costs ~$5/mo. Laptop pipelines keep running unchanged during this stage. This is the on-deck work — paused mid-conversation 2026-05-25; pick up by reviewing the "Phase 2 hosting decision" note in the RAG section above and the path forward (FastAPI wrapper around `ask.py`, Fly.io deploy, `ask.html` rebuild, per-IP rate limiting).
+
+**Stage 2 — Migrate the cron pipelines + live recordings to a separate, larger host.** Multi-day project. What's currently on the laptop:
+
+| What | Move difficulty | Notes |
+|---|---|---|
+| 6 AM OpenClaw briefing | Medium | Python under the hood; need OpenClaw running on Linux + API key from `environment.d` |
+| 6:10 AM `run_podcast.sh` | Medium | ElevenLabs/YouTube creds on the server, git push from prod (deploy key) |
+| 8 AM `check_agendas.sh` | Medium | Needs `pdftotext` (poppler-utils), git push from prod |
+| Friday 6 PM `run_newsletter.sh` | Easy | Python + Buttondown API; trivially portable |
+| `at` jobs for live recordings | **Hard** | Long-running (2–6 hr), CPU-heavy (ffmpeg + Deepgram WebSocket); Fly.io has no `at` daemon — needs a different scheduling primitive (probably a small persistent worker process that reads the `.scheduled.json` state and wakes itself at the right times) |
+
+The live-recording piece dictates VM sizing — likely $15–25/mo instead of $5 because long ffmpeg/Deepgram sessions need real CPU. Plan: run both laptop and new host in parallel for several days to verify nothing silently breaks before retiring the laptop cron.
+
+**Gate:** Don't start Stage 2 until Stage 1 has been live and stable for at least a couple weeks. Reasons: (a) Stage 1 teaches the Fly.io workflow on something low-stakes, (b) splitting reduces blast radius if a deploy goes wrong, (c) it forces a clear distinction between "the public Ask service" and "the daily content pipelines" — different shapes of system, probably different ops models.
 
 ## Roadmap: Repo Consolidation
 
