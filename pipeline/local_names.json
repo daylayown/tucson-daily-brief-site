@@ -290,6 +290,15 @@
       {
         "canonical": "David L. Udall",
         "title": "Town Clerk; Assistant Town Attorney"
+      },
+      {
+        "canonical": "Jeffrey Pridgett",
+        "title": "Police Chief",
+        "deepgram_misreads": [
+          "Bridgette",
+          "Bridget",
+          "Pridget"
+        ]
       }
     ],
     "places": [
