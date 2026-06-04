@@ -73,6 +73,9 @@ class LiveTranscriber:
         self.speech_detected = False  # Dead air timeout only activates after first speech
         self.pipeline_start_time = 0
         self.current_interim = ""  # For terminal display
+        self.time_offset = 0.0  # Added to word timestamps; advances on each reconnect
+                                # so transcript times stay monotonic across Deepgram
+                                # sessions (Deepgram restarts its audio clock at 0).
 
     def start(self) -> Path:
         """Run the full pipeline. Returns path to saved transcript JSON."""
@@ -211,15 +214,65 @@ class LiveTranscriber:
             print("ERROR: ffmpeg not found. Install ffmpeg.", file=sys.stderr)
             return
 
-        # 3. Connect to Deepgram
+        # 3. Connect to Deepgram and transcribe, reconnecting if Deepgram
+        #    drops while the source stream (ffmpeg) is still alive.
         print("Connecting to Deepgram...")
         api_key = os.environ.get("DEEPGRAM_API_KEY")
         if not api_key:
             print("ERROR: DEEPGRAM_API_KEY not set", file=sys.stderr)
             return
 
-        deepgram = DeepgramClient(api_key=api_key)
+        self._transcribe_loop(DeepgramClient(api_key=api_key))
 
+    def _transcribe_loop(self, deepgram):
+        """Run Deepgram sessions, reconnecting if Deepgram drops the socket
+        while the source stream is still alive.
+
+        Deepgram's live WebSocket occasionally dies with a 1011 error — most
+        often at the very start of a capture, when ffmpeg drains the HLS
+        live-edge buffer faster than real time and briefly floods the socket.
+        Previously the next send_media() raised, _stream_audio() broke out, and
+        the whole pipeline finalized a near-empty transcript and generated a
+        bogus draft (Oro Valley, 2026-06-03). Now we only finalize when the
+        SOURCE ends; if Deepgram drops while ffmpeg is still alive we
+        re-establish the WebSocket and keep going. By the time we reconnect the
+        buffer burst has drained and the feed is back to ~1x real time.
+        """
+        self.pipeline_start_time = time.time()
+        self.last_speech_time = self.pipeline_start_time
+
+        max_reconnects = 20
+        reconnect_backoff = 2  # seconds
+        reconnects = 0
+
+        while not self.shutting_down:
+            reason = self._run_deepgram_session(deepgram)
+
+            if reason != "deepgram_dropped":
+                break  # stream_ended / dead_air / max_duration / user_stop
+
+            reconnects += 1
+            if reconnects > max_reconnects:
+                print(f"\nDeepgram dropped {reconnects} times; giving up reconnect.",
+                      file=sys.stderr)
+                break
+
+            # Keep transcript timestamps monotonic: Deepgram's new socket
+            # restarts its audio clock at 0, so offset by what we have so far.
+            if self.segments:
+                self.time_offset = max(self.time_offset, self.segments[-1].get("end", 0.0))
+
+            print(f"\nDeepgram connection dropped — reconnecting "
+                  f"(attempt {reconnects}/{max_reconnects})...", file=sys.stderr)
+            time.sleep(reconnect_backoff)
+
+    def _run_deepgram_session(self, deepgram) -> str:
+        """Open one Deepgram WebSocket and stream audio until it stops.
+
+        Returns the reason streaming stopped, as set by _stream_audio():
+        'stream_ended', 'deepgram_dropped', 'dead_air', 'max_duration', or
+        'user_stop'. The caller reconnects only on 'deepgram_dropped'.
+        """
         with deepgram.listen.v1.connect(
             model="nova-2",
             language="en-US",
@@ -244,12 +297,9 @@ class LiveTranscriber:
             )
             listener_thread.start()
 
-            now = time.time()
-            self.last_speech_time = now
-            self.pipeline_start_time = now
-
             print("Connected. Listening...\n")
-            if self.min_recording_time > 0:
+            # Only print the dead-air-suppressed note on the first session.
+            if self.min_recording_time > 0 and self.time_offset == 0:
                 hours = self.min_recording_time // 3600
                 minutes = (self.min_recording_time % 3600) // 60
                 if hours:
@@ -257,31 +307,44 @@ class LiveTranscriber:
                 else:
                     print(f"  [Dead air timeout suppressed for first {minutes}m]")
 
-            # 4. Read audio chunks and send to Deepgram
-            self._stream_audio()
+            # Read audio chunks and send to Deepgram
+            reason = self._stream_audio()
 
             # Wait for listener to finish processing
             listener_thread.join(timeout=5)
+            return reason
 
-    def _stream_audio(self):
+    def _stream_audio(self) -> str:
         """Read PCM chunks from ffmpeg and send to Deepgram.
 
         Uses non-blocking reads with select() so that if ffmpeg stalls
         (e.g., corrupt HLS packets), we send silence to Deepgram to keep
         the WebSocket alive and avoid 1011 timeout errors.
+
+        Returns the reason streaming stopped so _transcribe_loop() can decide
+        whether to reconnect:
+          'stream_ended'    — ffmpeg/streamlink exited or no more audio (final)
+          'deepgram_dropped'— send failed while the source is still alive (reconnect)
+          'dead_air'        — no speech past the timeout (final)
+          'max_duration'    — safety cap reached (final)
+          'user_stop'       — Ctrl+C / graceful shutdown (final)
         """
         import select
         SILENCE_CHUNK = b'\x00' * AUDIO_CHUNK_SIZE
         FFMPEG_READ_TIMEOUT = 5  # seconds before sending silence
         ffmpeg_fd = self.ffmpeg_proc.stdout.fileno()
 
+        reason = "stream_ended"
+
         while not self.shutting_down:
-            # Check if ffmpeg/streamlink died
+            # Check if ffmpeg/streamlink died — the source is gone, real end.
             if self.ffmpeg_proc.poll() is not None:
                 print("\nStream ended (ffmpeg process exited).")
+                reason = "stream_ended"
                 break
             if self.streamlink_proc and self.streamlink_proc.poll() is not None:
                 print("\nStream ended (streamlink process exited).")
+                reason = "stream_ended"
                 break
 
             try:
@@ -290,14 +353,25 @@ class LiveTranscriber:
                     chunk = os.read(ffmpeg_fd, AUDIO_CHUNK_SIZE)
                     if not chunk:
                         print("\nStream ended (no more audio data).")
+                        reason = "stream_ended"
                         break
                     self.dg_connection.send_media(chunk)
                 else:
                     # ffmpeg stalled — send silence to keep Deepgram alive
                     self.dg_connection.send_media(SILENCE_CHUNK)
             except Exception as e:
-                if not self.shutting_down:
+                if self.shutting_down:
+                    reason = "user_stop"
+                    break
+                # If ffmpeg is still alive, this was Deepgram dropping us
+                # (e.g. 1011 from the live-edge buffer burst) — signal the
+                # caller to reconnect instead of finalizing the transcript.
+                if self.ffmpeg_proc.poll() is None:
+                    print(f"\nDeepgram send failed ({e}); will reconnect.", file=sys.stderr)
+                    reason = "deepgram_dropped"
+                else:
                     print(f"\nERROR reading/sending audio: {e}", file=sys.stderr)
+                    reason = "stream_ended"
                 break
 
             now = time.time()
@@ -311,6 +385,7 @@ class LiveTranscriber:
                     minutes = int(silence_duration // 60)
                     seconds = int(silence_duration % 60)
                     print(f"\nAuto-stopping: no speech for {minutes}m{seconds}s.")
+                    reason = "dead_air"
                     break
 
             # Max duration safety cap
@@ -318,6 +393,7 @@ class LiveTranscriber:
                 hours = int(elapsed // 3600)
                 minutes = int((elapsed % 3600) // 60)
                 print(f"\nAuto-stopping: max duration reached ({hours}h{minutes}m).")
+                reason = "max_duration"
                 break
 
             # Periodic save
@@ -325,7 +401,10 @@ class LiveTranscriber:
                 self._save_transcript(final=False)
                 self.last_save_time = now
 
-        # Signal Deepgram we're done
+        if self.shutting_down:
+            reason = "user_stop"
+
+        # Signal Deepgram we're done with this session
         if self.dg_connection:
             try:
                 self.dg_connection.send_close_stream()
@@ -334,6 +413,7 @@ class LiveTranscriber:
 
         # Wait briefly for final results to arrive
         time.sleep(2)
+        return reason
 
     def _on_message(self, message, **kwargs):
         """Handle incoming messages from Deepgram."""
@@ -366,6 +446,12 @@ class LiveTranscriber:
                     speakers = [w.speaker for w in alt.words if hasattr(w, 'speaker') and w.speaker is not None]
                     if speakers:
                         speaker = max(set(speakers), key=speakers.count)
+
+                # Deepgram's audio clock restarts at 0 on every (re)connection;
+                # time_offset shifts this session's times so the transcript
+                # stays monotonic across reconnects.
+                start_time += self.time_offset
+                end_time += self.time_offset
 
                 self.segments.append({
                     "start": start_time,
