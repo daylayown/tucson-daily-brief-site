@@ -948,6 +948,38 @@ Pipeline config files (`sources.json`, `TUCSON-BRIEF.md`, openclaw skill referen
 
 Estimated effort: ~30-60 minutes. The path updates across scripts are the fiddliest part.
 
+## Roadmap: Short-Form Video (Shorts / Reels / TikTok)
+
+Auto-generate ~30-second vertical (1080×1920) news videos from existing TDB content and publish to YouTube Shorts, Instagram Reels, and TikTok. Discussed 2026-06-04 as a growth/discovery surface (same strategic logic as the newsletter — a daily site is a poor discovery surface; short-form video is where local audiences actually find you). **Not yet building** — captured here with a build-order gate.
+
+### Feasibility: high. The generation half reuses ~80% of the existing podcast pipeline.
+
+The current podcast video path is minimal: `~/.openclaw/skills/tucson-daily-brief/scripts/generate_video.sh` does *static 1280×720 thumbnail + MP3 → MP4 via ffmpeg*, and `upload_to_youtube.py` already does OAuth + YouTube Data API v3 uploads (category 25, News & Politics). A vertical short is the **same recipe** with three deltas:
+
+1. **Script** — extend `condense_script()` in `generate_podcast.py` to pick *one* story and write a ~30s (~450-char) vertical script (vs. the existing 90s / 5-story condense). One extra Haiku call, pennies.
+2. **Audio** — same ElevenLabs/Voxtral TTS, shorter clip.
+3. **Video** — the only genuinely new work: render at **1080×1920** (branded vertical template + headline text + **burned-in captions**). Captions are the key upgrade — short-form is watched **muted**, so karaoke-style captions drive retention. Timing path we already own: run the generated TTS audio back through **Deepgram** (~$0.0002 for 30s) for word timestamps → build an ASS/SRT file → ffmpeg burns it in. (ElevenLabs can also return character-level timestamps directly.) Stay on raw ffmpeg + ASS for the low-dependency v1; `moviepy`/Remotion only if fancier motion graphics are wanted later.
+
+### Publishing is a gradient — build in this order (each gate de-risks the next):
+
+1. **YouTube Shorts — trivial, already solved.** A Short is just a vertical video ≤3 min via the *same* Data API call already in use; YouTube auto-detects "Short" from aspect ratio + duration (#Shorts in description helps). ~1 day of work reusing existing auth. **Start here.**
+2. **Instagram Reels — feasible, moderate setup.** Needs an IG Business/Creator account + a Meta app with `instagram_content_publish` (requires Meta **app review**) + a publicly-hosted MP4 (the existing **R2 bucket** already solves hosting). Flow: create media container → publish. Rate-limited (~50/day, far above need). The gate is the review, not the code.
+3. **TikTok — feasible, most gated.** TikTok Content Posting API only lets *unaudited* apps push to **drafts**; fully-automated public posting needs passing TikTok's app audit. Pragmatic v1: auto-generate → drop into TikTok drafts → tap "publish" from the phone. Pursue the audit once it's performing.
+
+### Constraints / decisions
+
+- **Editorial review required, not full-auto.** A shareable 30s video that gets a fact wrong is worse than a buried blog paragraph — it's the format optimized for spread. Keep a human-in-the-loop (Telegram-approve, like news reports and the newsletter) at least until calibrated. Consistent with the existing "produced/original content is reviewed" model.
+- **The hard part isn't the tech** — it's (a) the IG/TikTok API onboarding (Meta/TikTok review queues) and (b) visual quality: a static card + captions is a fine v1, but performing on these platforms eventually wants motion or b-roll (a design problem, not engineering). **Avoid AI-generated imagery for news (fabrication risk)** — lean on the official portraits in `people-photos/` (rights already held) or motion typography.
+- **Cost:** negligible compute (ffmpeg free + pennies of TTS/Deepgram per short). Real cost = build time + platform onboarding + the per-short review tap.
+
+### Related near-term task: refresh the podcast/video visual identity
+
+The current YouTube thumbnail (`~/.openclaw/skills/tucson-daily-brief/assets/youtube-thumbnail-1280x720.png`) predates the 2026-05-11 site redesign and no longer matches the **warm-organic Southwest / desert aesthetic** (see `REDESIGN-V2.md` — Fraunces + Newsreader, sand/terracotta/sage palette, sun motif). User wants to redesign it to align with the site. When doing so, **also produce a vertical 1080×1920 variant** so the same visual language carries straight into Shorts/Reels/TikTok — do this design pass once, use both aspect ratios. This is the natural first concrete step toward the short-form pipeline above.
+
+## Roadmap: Podcast on Spotify
+
+**To-do:** Get the Tucson Daily Brief podcast onto Spotify. The podcast already publishes an RSS feed (generated + uploaded to R2 in the `run_podcast.sh` flow) and is live on Apple Podcasts and YouTube. Spotify ingests standard podcast RSS — the work is submitting the existing feed URL through Spotify for Podcasters (formerly Anchor), validating it, and confirming episodes flow automatically thereafter. No pipeline code change expected; it's a one-time submission of the RSS feed already being produced. Verify the feed meets Spotify's requirements (valid `<enclosure>` MP3 URLs, cover art ≥1400×1400, required iTunes tags) before submitting.
+
 ## Deployment
 
 - **Live URL:** `https://tucsondailybrief.com` (custom domain via CNAME)
