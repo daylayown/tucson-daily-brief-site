@@ -172,8 +172,14 @@ fi
 # Git commit and push if anything was published
 if [ "$PUBLISHED" -gt 0 ]; then
     echo "Committing and pushing $PUBLISHED new item(s)..."
-    git add -A
-    git commit -m "Auto-publish meeting preview(s) and public record filing(s) for $(date +%Y-%m-%d)"
+    # Stage only what the agenda + public-record pipelines produce — not
+    # whatever else is in the working tree — so in-progress/manual edits aren't
+    # swept into this auto-commit. agenda-watch/ holds the tracked reference
+    # markdown; the rest are published HTML + rebuilt indexes. Update this list
+    # if a pipeline starts writing new output paths.
+    git add agenda-watch/ meeting-watch/ meeting-watch.html \
+            public-record/ public-record.html index.html briefings.html
+    git commit -m "Auto-publish meeting preview(s) and public record filing(s) for $(date +%Y-%m-%d)" || true
     git push
     echo "Pushed to GitHub Pages."
 fi
