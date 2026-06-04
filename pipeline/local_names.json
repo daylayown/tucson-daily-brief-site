@@ -411,6 +411,19 @@
           "Strake",
           "Zrake"
         ]
+      },
+      {
+        "canonical": "David Gephart",
+        "title": "Chief Financial Officer",
+        "deepgram_misreads": [
+          "Gebhart",
+          "Gebhardt",
+          "Gephard"
+        ]
+      },
+      {
+        "canonical": "Peter Abraham",
+        "title": "Water Utility Director"
       }
     ],
     "places": [
