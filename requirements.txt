@@ -3,3 +3,5 @@ deepgram-sdk
 requests
 sqlite-vec
 voyageai
+fastapi
+uvicorn[standard]

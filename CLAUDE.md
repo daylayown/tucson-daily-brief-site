@@ -16,7 +16,7 @@ Static blog for GitHub Pages — minimal, text-first, Daring Fireball style. No 
 ├── news-reports/                # Published news report HTML files (human-approved)
 ├── public-record.html           # Auto-generated section index (display name: "Spotted"; URL kept for backwards-compat)
 ├── public-record/               # Published HTML files for individual filings
-├── ask.html                     # Coming-soon stub for the RAG-powered Q&A surface (Phase 2 of RAG agent)
+├── ask.html                     # Live RAG-powered Q&A interface (Phase 2); POSTs to Fly app tdb-ask; unlinked until SHOW_TOOLS flips
 ├── responsiveness.html          # Coming-soon stub for the Tucson Responsiveness Index dashboard
 ├── about.html                   # Hand-authored About page — TAS-metaphor framing, linked from the footer site-wide
 ├── ai_reporter.py               # Downstream pipeline: transcript JSON → Claude report → Telegram → publish
@@ -35,10 +35,15 @@ Static blog for GitHub Pages — minimal, text-first, Daring Fireball style. No 
 ├── check_agendas.sh             # Daily cron wrapper: runs all 4 pipelines + public record, auto-publishes, pushes
 ├── schedule_recording.py        # Auto-schedules live AI reporter `at` jobs for discovered meetings
 ├── public_record_liquor.py      # Spotted pipeline: extracts liquor license filings from agenda-watch reference files
-├── rag/                         # RAG knowledge agent — Phase 1 (CLI) live; Phase 2 (web UI) is the next major build
+├── rag/                         # RAG knowledge agent — Phase 1 (CLI) + Phase 2 (web service) both live
 │   ├── build_index.py           # Walks corpus, document-type-aware chunking, embeds via Voyage, writes to sqlite-vec
-│   ├── ask.py                   # CLI: question → retrieval → Sonnet synthesis with citation discipline
-│   └── index.sqlite             # Vector store (gitignored)
+│   ├── ask.py                   # Core: question → retrieval → Sonnet synthesis with citation discipline + date awareness (CLI + imported by server)
+│   ├── server.py                # FastAPI wrapper around ask() — POST /ask, /health, per-IP rate limit, CORS (deployed to Fly app tdb-ask)
+│   ├── requirements-server.txt  # Lean runtime deps for the Fly image
+│   └── index.sqlite             # Vector store (gitignored; baked into the Fly image at deploy)
+├── refresh_ask_index.sh         # Daily 8:45am cron: rebuild index + fly deploy so the live Ask agent stays current
+├── Dockerfile                   # Builds the Ask service image (rag/ + baked index.sqlite) for Fly
+├── fly.toml                     # Fly.io config for the Ask service (app: tdb-ask)
 ├── crossword/                   # The Tucson Mini — weekly subscriber crossword (see section below)
 │   ├── play.html                # Playable shell, reads ?p=slug query param, has noindex meta
 │   ├── crossword.js, style.css  # Vendored game engine (from CtS) + desert-palette restyle
@@ -563,7 +568,7 @@ The homepage at `/` is now a **zoned entry hall** (featured Today's Brief + cros
 - **Meeting Watch** (`meeting-watch.html`, `meeting-watch/`) — AI-generated agenda previews for 4 municipalities (live, auto-published)
 - **News Reports** (`news-reports.html`, `news-reports/`) — AI-drafted, human-reviewed post-meeting news reports (pipeline built, first real recordings scheduled April 7, 2026)
 - **Spotted** (`public-record.html`, `public-record/`) — flagged filings surfaced from agendas; v1 covers liquor license applications across Pima County BOS, City of Tucson, Oro Valley (live as of April 11, 2026). Display name changed from "Public Record" to "Spotted" on 2026-05-11; URL preserved
-- **Ask** (`ask.html`) — stub page for the RAG-powered Q&A surface. Phase 1 (CLI) shipped; Phase 2 (web UI + Cloudflare Worker) is queued
+- **Ask** (`ask.html`) — RAG-powered Q&A surface. Phase 1 (CLI) + Phase 2 (web UI on Fly.io, app `tdb-ask`) both live as of 2026-06-14; page is built but unlinked behind `SHOW_TOOLS=False` for an unlisted shakedown before launch
 - **Tucson Responsiveness Index** (`responsiveness.html`) — stub page for the upcoming dashboard. Planning in `responsiveness/PLANNING.md`; no code yet
 - **The Tucson Mini** (`crossword/`) — weekly Tucson-themed 5×5 mini crossword; subscriber perk for the TDB Weekly newsletter; unlisted (noindex, no public links) (v0.4 live as of May 6, 2026; see "The Tucson Mini" section below)
 - **The Old Pueblo Speaks** — future outreach-based reporting section (see Roadmap above); not yet building
@@ -896,7 +901,7 @@ The chat agent ships publicly as the **launch event** of the project's marketing
 # Logs / status:
 fly logs --app tdb-ask ; fly status --app tdb-ask
 ```
-Note: `fastapi` + `uvicorn[standard]` are needed for local server runs but are only in `rag/requirements-server.txt` (the deploy image), not the repo-root `requirements.txt` — install into `.venv` if running the server locally.
+Note: `fastapi` + `uvicorn[standard]` are in both the repo-root `requirements.txt` (laptop `.venv`) and `rag/requirements-server.txt` (the lean Fly image).
 
 **Shakedown + date-awareness fix (2026-06-14):** A 13-question adversarial pass found grounding strong — clean refusals on out-of-corpus questions (Phoenix mayor, Wildcats football) and false premises (a fictional streetcar derailment, a made-up Romero car-ban plan), a corrected loaded premise on the Nanos "corruption charges" question, and a gracefully-declined prompt injection. The one real failure: no sense of "now" — it served a months-old weather brief as "tomorrow's forecast." **Fixed** by injecting the current Tucson date (`America/Phoenix`, no DST) plus a real-time/staleness instruction into the system prompt at request time (`current_date_note()` in `ask.py`, appended to `SYSTEM_PROMPT`). Verified: the weather question now flags its newest source as stale and points to NWS, "this week" questions lead with the most recent source and admit gaps, and well-covered topics still answer confidently. **Two structural follow-ups deliberately deferred** (discuss before building): (a) exclude ephemeral weather sections from the index — they only generate stale-data traps; (b) recency weighting in retrieval (Phase 3) — retrieval still surfaces mostly older chunks for "latest/this week" questions, so the prompt fix makes the model degrade honestly but doesn't fix ranking. **Also flagged for pre-launch:** the in-process per-IP rate limit resets on every deploy and is per-machine (2 machines) — soft against real abuse; revisit before flipping `SHOW_TOOLS`.
 
@@ -914,7 +919,7 @@ Note: `fastapi` + `uvicorn[standard]` are needed for local server runs but are o
 
 Side project that evolves TDB from aggregation toward original reporting. A living dashboard at `tucsondailybrief.com/responsiveness.html` (currently a coming-soon stub with a sample 3-card preview) that reframes Tucson's civic infrastructure through three lenses no one else combines: how the city responds to resident-reported problems, what the city publishes vs. what it doesn't, and how the desert (heat / water / power) makes both questions structurally different than they'd be in any other US metro.
 
-**Status:** Research complete (M0). Coming-soon stub live at `responsiveness.html` (not yet linked from main nav — gated behind `SHOW_TOOLS=False`). Not yet building the real dashboard. Two queued next-build candidates: this and RAG agent Phase 2 — pick one to attack on the next session.
+**Status:** Research complete (M0). Coming-soon stub live at `responsiveness.html` (not yet linked from main nav — gated behind `SHOW_TOOLS=False`). Not yet building the real dashboard. With RAG agent Phase 2 now shipped (2026-06-14), this is the main remaining queued next-build candidate.
 
 **Canonical planning doc:** `responsiveness/PLANNING.md` — covers the full thesis, four publishable surfaces (live dashboard, weekly explainer, Transparency Tracker, original journalism using accumulated data), the four AI functions (Discovery, Synthesis, Access, Translation) with specific applications under each, build sequence (M1 → M3 → beyond), data source URLs and gotchas, codebase reuse plan, and open decisions.
 
