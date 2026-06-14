@@ -155,6 +155,8 @@ This site is part of a daily pipeline with two stages:
 
 1. **6:00 AM MST** — OpenClaw cron job (`~/.openclaw/cron/jobs.json`) runs the briefing agent (Sonnet 4.6) in an isolated session. The agent reads `TUCSON-BRIEF.md`, fetches sources from `sources.json`, and saves the briefing to `~/.openclaw/workspace/briefings/tucson-brief-YYYY-MM-DD.md`. OpenClaw delivery is set to `"none"` — the agent does not send to Telegram directly.
 
+   **Source-skip mechanism + context-compaction note (2026-06-14):** A source in `sources.json` with `"status": "broken"` OR `"status": "disabled"` is skipped entirely by the agent (rule lives in `TUCSON-BRIEF.md`). `broken` = the feed can't be reached (e.g. Tucson Sentinel, Cloudflare-walled); `disabled` = intentionally paused, still fetchable. Several June briefs ended with a footer note like *"Arizona Daily Star feeds fetched but content unavailable due to context compaction"* — this is the agent honestly reporting that OpenClaw's mid-run context compaction summarized away a heavy feed's raw content before stories could be extracted, so that source contributed ~zero stories those days. The **Arizona Daily Star main feed** (`tucson.com/search/?f=rss&t=article&l=25`) was the main offender: two heavy 25-item Daily Star feeds, and the main one is mostly national/wire/sports with only ~2 of 25 items overlapping the local feed. **Trial fix (2026-06-14):** main feed set `"status": "disabled"`, keeping only **Arizona Daily Star - Local News** (`&c=news/local`) — nearly all hyper-local Tucson coverage. Revert by removing the `status` field. If compaction still drops feeds, the durable fix is an extract-as-you-go instruction in `TUCSON-BRIEF.md` (distill each feed to notes right after fetching, before synthesis).
+
 2. **6:10 AM MST** — System cron triggers `~/.openclaw/skills/tucson-daily-brief/scripts/run_podcast.sh`, which waits for the `.md` file, then runs in this order: sends to Telegram (via `send_telegram.py`) → generates blog post + git push → generates condensed podcast script (via Claude Haiku) → generates podcast audio (ElevenLabs TTS) → uploads RSS/R2 → generates YouTube video → uploads to YouTube. The blog post runs **before** and **independently of** the podcast, so a podcast failure (e.g. ElevenLabs quota exceeded) never blocks the blog. Each distribution step is non-fatal.
 
 Telegram delivery happens **only** through `run_podcast.sh` → `send_telegram.py`, which reads the saved `.md` file. OpenClaw's cron delivery was disabled to prevent duplicate sends of raw agent output.
@@ -828,7 +830,7 @@ Reuse the existing TTS pipeline (`generate_podcast.py` flow). Weekly episode is 
 
 A retrieval-augmented chat agent that answers questions about Tucson using only the TDB corpus, with inline citations to source URLs. Differentiates TDB from every other local outlet — most of which can't have a meaningful conversation about their own archive. The corpus IS the moat; making it queryable is what turns it into a product.
 
-**Status:** Phase 1 live as CLI only (committed `a1d0149`, 2026-05-09). No web UI yet.
+**Status:** Phase 1 (CLI) live since 2026-05-09 (`a1d0149`). **Phase 2 backend + Ask UI shipped 2026-06-14** (`8387bd7`) — the RAG agent is deployed to Fly.io at `https://tdb-ask.fly.dev` and `ask.html` is a working Q&A interface, currently gated behind `SHOW_TOOLS=False` for an unlisted shakedown. See "Phase 2 — public web UI" below for what shipped and what's left (cron index refresh, then flip `SHOW_TOOLS`).
 
 ### Files
 
@@ -877,13 +879,24 @@ A retrieval-augmented chat agent that answers questions about Tucson using only 
 
 ### Phase 2 — public web UI (next, ~2-3 days of focused work)
 
-The chat agent ships publicly as the **launch event** of the project's marketing push. Plan:
+The chat agent ships publicly as the **launch event** of the project's marketing push. Status of the plan (✅ = shipped 2026-06-14, `8387bd7`):
 
-1. **`ask.html` rebuild** — currently a coming-soon stub in the warm-organic visual language. Rebuild it as the live interface: input box + answer area + citation list. Stays JS-light (vanilla; the Worker does the heavy lifting). When the rebuild ships, flip the `SHOW_TOOLS` flag in `generate_post.py` to `True` so the homepage Tools card row and the Tools nav row both surface Ask + Responsiveness across the site.
-2. **Cloudflare Worker** — holds Voyage + Anthropic keys server-side, takes a question via POST, embeds via Voyage, queries the sqlite-vec database (see open question below), calls Sonnet, returns JSON with answer + sources. Free tier handles expected traffic easily.
-3. **Per-IP rate limiting** in the Worker (e.g., 20 questions/hour) to bound abuse.
-4. **Unlisted URL for ~1 week of real-use shakedown**, then public launch as marketing event (r/Tucson post + LinkedIn + local press pitch). Don't make it discoverable until it's tested. Don't flip `SHOW_TOOLS` until shakedown is clean.
-5. **Cron the incremental index rebuild** after the 8 AM agenda check so new daily briefs and meeting previews are queryable within hours.
+1. ✅ **`ask.html` rebuilt** — was a coming-soon stub; now a working Q&A interface (vanilla JS, scoped `<style>` on the locked desert palette): question box + example-question chips + answer card + citation list. The answer's `[N]` markers render as links that jump to the numbered source list; each source links out to its TDB page. Carries a beta disclaimer. POSTs to the Fly service (no Cloudflare Worker — that plan was dropped, see hosting decision below). **Still gated behind `SHOW_TOOLS=False`** — do NOT flip until shakedown is clean.
+2. ✅ **Fly.io service** (`rag/server.py`) — FastAPI wrapper around the existing `ask()` function. Holds Voyage + Anthropic keys as Fly secrets (`fly secrets set`, reused from `environment.d`). `POST /ask` → `{question, k?}` → `{answer, sources}`; `GET /health` for the Fly health check. App name **`tdb-ask`**, deployed via `fly deploy --remote-only`; the prebuilt `index.sqlite` is **baked into the image** (`Dockerfile` copies it in — service is read-only at runtime, no volume). `fly.toml`: `shared-cpu-1x`/512mb, scale-to-zero (`min_machines_running = 0`), HTTPS forced. Image ~107MB.
+3. ✅ **Per-IP rate limiting** in the FastAPI app — in-process sliding window, 20 req/hour (env-tunable via `RATE_LIMIT_*`). CORS locked to `tucsondailybrief.com` (+ localhost for dev); other origins blocked. Input validation: question 1–500 chars, `k` clamped 1–20.
+4. ⏳ **Unlisted shakedown (~1 week)** — in progress. `ask.html` is pushed but unlinked (`SHOW_TOOLS=False`, not in any nav/sitemap), so it's effectively unlisted. After clean shakedown: flip `SHOW_TOOLS=True` in `generate_post.py` (surfaces Ask + Responsiveness in the homepage Tools row and Tools nav site-wide), then public launch (r/Tucson + LinkedIn + local press).
+5. ⏳ **Cron the index refresh — NOT done yet; this is the key open item.** Because `index.sqlite` is baked into the image, the **live Ask answers freeze at deploy-time** until a rebuild+redeploy. The laptop's `rag/build_index.py` still updates the local copy, but the Fly copy is stale until `fly deploy` reships it. Next task: a cron (after the 8 AM agenda check) that runs the incremental `build_index.py` then `fly deploy --remote-only` (or switch to a Fly volume + push the db, avoiding a full image rebuild). Until then, refresh manually with `fly deploy`.
+
+**Local dev / redeploy quickref:**
+```bash
+# Test the server locally against the real index (from rag/):
+../.venv/bin/uvicorn server:app --reload --port 8080
+# Refresh the deployed index after new content lands:
+.venv/bin/python3 rag/build_index.py && fly deploy --remote-only --app tdb-ask
+# Logs / status:
+fly logs --app tdb-ask ; fly status --app tdb-ask
+```
+Note: `fastapi` + `uvicorn[standard]` are needed for local server runs but are only in `rag/requirements-server.txt` (the deploy image), not the repo-root `requirements.txt` — install into `.venv` if running the server locally.
 
 **Phase 2 hosting decision (2026-05-25): Fly.io with local SQLite (option C from the original evaluation).** One small Python service wraps `ask.py`; the `index.sqlite` file ships with the deploy. Reasons: zero rewrite of existing `build_index.py` / `ask.py` code; one system to maintain (vs. Worker + VPS); avoids re-implementing the chunk store in Cloudflare Vectorize for a problem (scale, edge latency) TDB doesn't have at expected traffic. Rate limiting lives in the FastAPI app (per-IP bucket, ~20 lines) instead of at the Worker edge. Replaces the earlier Cloudflare Worker plan throughout this section — `ask.html` will POST to the Fly.io app directly, no Worker hop. This is also **Stage 1 of the broader "Move TDB off the laptop" roadmap** (see section below) — chosen as the low-stakes first migration to prove out the cloud-deploy workflow before tackling the heavier cron + live-recording migration.
 
@@ -913,7 +926,7 @@ When picking this up cold: read `responsiveness/PLANNING.md` and the `project_re
 
 TDB has graduated past "laptop project" status — real readers, paid services (ElevenLabs, Buttondown, API costs), automated pipelines, a subscriber newsletter. A closed lid or a coffee-shop trip shouldn't be able to break it. Plan is to migrate everything off the laptop in **two stages**, not one, so a single failure doesn't cascade across all the moving parts at once.
 
-**Stage 1 — RAG Phase 2 on Fly.io (small, single-purpose).** Ships Ask as its own Fly.io app with `ask.py` + `index.sqlite` packaged together. Proves out the deploy workflow on something low-stakes. Costs ~$5/mo. Laptop pipelines keep running unchanged during this stage. This is the on-deck work — paused mid-conversation 2026-05-25; pick up by reviewing the "Phase 2 hosting decision" note in the RAG section above and the path forward (FastAPI wrapper around `ask.py`, Fly.io deploy, `ask.html` rebuild, per-IP rate limiting).
+**Stage 1 — RAG Phase 2 on Fly.io (small, single-purpose). ✅ DEPLOYED 2026-06-14** (`8387bd7`). Ask runs as its own Fly.io app (`tdb-ask`) with `ask.py` + the baked `index.sqlite` packaged together; FastAPI wrapper (`rag/server.py`), per-IP rate limiting, CORS-locked. The deploy workflow is now proven (remote builder, secrets, health checks, scale-to-zero). Laptop pipelines keep running unchanged. Costs ~$2–5/mo (near $0 idle). **Remaining before this stage is fully "done": the cron that refreshes the deployed index** (see Phase 2 item 5 above — the baked index goes stale until rebuild+redeploy). Per the Stage-2 gate, let this run stable for a couple of weeks before migrating the cron pipelines + live recordings.
 
 **Stage 2 — Migrate the cron pipelines + live recordings to a separate, larger host.** Multi-day project. What's currently on the laptop:
 
