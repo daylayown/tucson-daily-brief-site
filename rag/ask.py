@@ -18,7 +18,9 @@ import json
 import os
 import sqlite3
 import sys
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import anthropic
 import sqlite_vec
@@ -50,6 +52,31 @@ Tone: warm, plain-language, the voice of a local news editor — not a chatbot, 
 If the user's question implies a "what's happening now" framing, weight more recent sources higher than older ones. If the user is asking about a historical thread (a development project, a council decision over time), pull the relevant sources together into a brief narrative.
 
 Never refer to "the sources" or "the documents" generically — write as if speaking to a Tucson reader. Cite with [N] markers, not phrases like "according to source 1"."""
+
+# Tucson is in America/Phoenix — Arizona does not observe DST, so this is a
+# stable UTC-7 regardless of where the server runs (e.g. Fly's UTC machines).
+TUCSON_TZ = ZoneInfo("America/Phoenix")
+
+
+def current_date_note() -> str:
+    """A date-aware instruction appended to the system prompt at request time.
+
+    The retrieved sources are dated but the model has no clock, so without this
+    it will answer "tomorrow's weather" from a months-old brief and present it
+    as current. Anchoring it to today's date lets it judge staleness and weight
+    recency for "latest"/"this week" questions.
+    """
+    today = datetime.now(TUCSON_TZ)
+    return (
+        f"Today's date is {today:%A, %B %-d, %Y}. You do not have real-time data — "
+        "every source you see is dated, and some may be old. For time-sensitive "
+        'questions (weather, prices, "today"/"tomorrow", game scores, anything that '
+        "changes day to day), look at the date of your most relevant source: if it "
+        "isn't within a day or two of today, say plainly that your most recent "
+        "information is from that date and may be out of date rather than presenting "
+        'it as current. For "latest"/"lately"/"this week"/"recently" questions, lead '
+        "with the most recent sources and weight them most heavily."
+    )
 
 
 def load_env_file(path: Path, varname: str) -> None:
@@ -139,7 +166,7 @@ def ask(question: str, k: int = DEFAULT_K) -> dict:
     msg = client.messages.create(
         model=ANSWER_MODEL,
         max_tokens=MAX_TOKENS,
-        system=SYSTEM_PROMPT,
+        system=SYSTEM_PROMPT + "\n\n" + current_date_note(),
         messages=[{"role": "user", "content": user_prompt}],
     )
     answer = "".join(block.text for block in msg.content if block.type == "text").strip()
