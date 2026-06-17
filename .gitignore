@@ -7,3 +7,4 @@ agenda-watch/.scheduled.json
 crossword/puzzles/.latest.txt
 newsletter/drafts/
 rag/index.sqlite
+data/
