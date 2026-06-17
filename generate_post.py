@@ -351,10 +351,10 @@ _STREAMS = [
     ("meetings", "Meeting Watch", "meeting-watch.html"),
     ("reports", "News Reports", "news-reports.html"),
     ("record", "Spotted", "public-record.html"),
+    ("ask", "Ask", "ask.html"),
 ]
 
 _TOOLS = [
-    ("ask", "Ask", "ask.html"),
     ("responsiveness", "Responsiveness", "responsiveness.html"),
 ]
 
