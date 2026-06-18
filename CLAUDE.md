@@ -929,6 +929,18 @@ Side project that evolves TDB from aggregation toward original reporting. A livi
 
 When picking this up cold: read `responsiveness/PLANNING.md` and the `project_responsiveness_index.md` memory entry. Both are durable — the data sources, gotchas, and architecture decisions don't expire fast.
 
+## Roadmap: Coverage Expansion (Sahuarita, school districts, Vail) + first original feature
+
+Researched and verified 2026-06-18 (feasibility scans). **Full reference: `COVERAGE-EXPANSION.md`.** **Gate:** nothing starts until the in-flight work (TEP poller, dashboard auto-refresh, Instagram build) is settled. Priority order: **Flock article → Sahuarita → school districts.**
+
+- **Sahuarita Town Council — the clean "fifth municipality."** Only incorporated town in the SE corridor (Vail, Green Valley, Corona de Tucson are all unincorporated → no councils; Vail rejected incorporation in 2023). Agendas on **eScribe** (`pub-sahuarita.escribemeetings.com`, new portal vendor but Marana/OV-shaped scrape) + **YouTube** livestream (reuses existing transcription path). Lift: moderate, one new scraper + a `STREAM_SOURCES` entry.
+
+- **School-district board coverage — the sleeper expansion (new content line).** Under-covered, high-stakes. The whole metro consolidates onto **two agenda platforms**: one **Diligent Community** scraper covers TUSD + Vail + Sahuarita + Tanque Verde (~63K students, incl. the two biggest); one **BoardBook** scraper covers Amphitheater + Marana + Catalina Foothills + Flowing Wells (~31K); +NovusAGENDA for Sunnyside. Two scrapers ≈ 8 of 9 major districts — *lower* lift than the municipal pipeline. **Pilot: Vail USD** (Diligent + YouTube, ties to the Vail Chamber relationship). Note: "Oro Valley schools" = Amphitheater district; there is no standalone OV district. Extend `pipeline/local_names.json` with board members + superintendents.
+
+- **Vail itself is not a municipal add** — no town government. Its civic surface is (a) Pima County BOS District 4, *already* in the pipeline (editorial tagging only), and (b) the Vail School District (above). Fire districts (no video) are lowest priority.
+
+- **First original-journalism feature: "Southern Arizona Debated Flock Cameras"** (write-ready brief in `COVERAGE-EXPANSION.md` Part 2). Non-advocacy, human-reviewed, anchored in TDB's own meeting transcripts with external reporting layered underneath. **Framing landmine:** Tucson/TPD uses Verkada, NOT Flock — the "Tucson Flock" debate is the separate City of South Tucson, which cancelled its contract Feb 17 2026. The regional spine: South Tucson pulls back while Oro Valley (drones) and U of A (62 cams, $870K) expand, against no AZ ALPR law + SB 1070 non-sanctuary posture. Best accountability thread: UA PD said it doesn't share with feds but ran searches for the U.S. Marshals Service (EFF records). Brief includes outline, records-request list, and a confirm-before-publish checklist.
+
 ## Roadmap: Move TDB off the laptop
 
 TDB has graduated past "laptop project" status — real readers, paid services (ElevenLabs, Buttondown, API costs), automated pipelines, a subscriber newsletter. A closed lid or a coffee-shop trip shouldn't be able to break it. Plan is to migrate everything off the laptop in **two stages**, not one, so a single failure doesn't cascade across all the moving parts at once.
