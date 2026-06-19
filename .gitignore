@@ -8,3 +8,4 @@ crossword/puzzles/.latest.txt
 newsletter/drafts/
 rag/index.sqlite
 data/
+in-depth/*-draft.md

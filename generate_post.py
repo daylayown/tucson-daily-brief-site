@@ -21,6 +21,7 @@ POSTS_DIR = SITE_DIR / "posts"
 MEETINGS_DIR = SITE_DIR / "meeting-watch"
 REPORTS_DIR = SITE_DIR / "news-reports"
 PUBLIC_RECORD_DIR = SITE_DIR / "public-record"
+INDEPTH_DIR = SITE_DIR / "in-depth"
 
 # Feature flag: surface the Tools (Ask, Responsiveness Index) on the site.
 # Flip to True once at least one tool ships. When False:
@@ -351,6 +352,7 @@ _STREAMS = [
     ("meetings", "Meeting Watch", "meeting-watch.html"),
     ("reports", "News Reports", "news-reports.html"),
     ("record", "Spotted", "public-record.html"),
+    ("indepth", "In Depth", "in-depth.html"),
     ("ask", "Ask", "ask.html"),
 ]
 
@@ -589,6 +591,36 @@ def collect_latest_filing() -> dict | None:
     }
 
 
+def collect_latest_indepth() -> dict | None:
+    """Scan in-depth/ for the newest published feature (date from <meta published>)."""
+    if not INDEPTH_DIR.exists():
+        return None
+    candidates = []
+    for f in INDEPTH_DIR.glob("*.html"):
+        content = f.read_text()
+        m = re.search(r'<meta name="published" content="(\d{4}-\d{2}-\d{2})">', content)
+        if not m:
+            continue
+        candidates.append((datetime.strptime(m.group(1), "%Y-%m-%d"), f, content))
+    if not candidates:
+        return None
+    candidates.sort(key=lambda x: x[0], reverse=True)
+    dt, f, content = candidates[0]
+    title = _article_h1(content) or f.stem
+    lede = ""
+    lede_match = re.search(
+        r'<article[^>]*>.*?<h1>.+?</h1>\s*<p><strong>(.+?)</strong></p>',
+        content, re.DOTALL)
+    if lede_match:
+        lede = _unescape_and_truncate(lede_match.group(1))
+    return {
+        "date": dt,
+        "title": title,
+        "lede": lede,
+        "href": f"in-depth/{f.stem}.html",
+    }
+
+
 # ---------------------------------------------------------------------------
 # Homepage and full-archive (briefings.html) rendering
 # ---------------------------------------------------------------------------
@@ -657,7 +689,8 @@ def _render_recent_item(p: dict) -> str:
 def render_homepage(posts: list[dict],
                     latest_meeting: dict | None,
                     latest_report: dict | None,
-                    latest_filing: dict | None) -> str:
+                    latest_filing: dict | None,
+                    latest_indepth: dict | None = None) -> str:
     """Render the new zoned homepage in the warm-organic design language."""
     today = datetime.now()
 
@@ -693,6 +726,8 @@ def render_homepage(posts: list[dict],
         cards.append(_render_stream_card("News Reports", format_date_short(latest_report["date"]), latest_report))
     if latest_filing:
         cards.append(_render_stream_card("Spotted", format_date_short(latest_filing["date"]), latest_filing))
+    if latest_indepth:
+        cards.append(_render_stream_card("In Depth", format_date_short(latest_indepth["date"]), latest_indepth))
 
     if cards:
         cross_block = f"""<section class="cross-section">
@@ -849,9 +884,10 @@ def rebuild_homepage() -> None:
     latest_meeting = collect_latest_meeting()
     latest_report = collect_latest_report()
     latest_filing = collect_latest_filing()
+    latest_indepth = collect_latest_indepth()
 
     (SITE_DIR / "index.html").write_text(
-        render_homepage(posts, latest_meeting, latest_report, latest_filing)
+        render_homepage(posts, latest_meeting, latest_report, latest_filing, latest_indepth)
     )
     (SITE_DIR / "briefings.html").write_text(render_briefings_index(posts))
     print(f"  Rebuilt: index.html (homepage) + briefings.html ({len(posts)} briefing(s))")
