@@ -253,8 +253,8 @@ DEMO = [
          meta_text="tucsondailybrief.com"),
     dict(slug="news-mountain-lions-2026-06-21", theme="light",
          kicker="Around Town",
-         headline="The Desert Museum’s rescued mountain lion brothers finally have names",
-         source="June 21, 2026",
+         headline="Meet Moonbead and Pretzel",
+         dek="The Desert Museum’s two rescued mountain lion brothers finally have names — chosen by kids from Beads of Courage.",
          meta_text="tucsondailybrief.com"),
 ]
 
