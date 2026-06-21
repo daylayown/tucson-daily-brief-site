@@ -251,6 +251,11 @@ DEMO = [
          headline="Tucson ranks 4th-most dangerous U.S. metro for pedestrians",
          source="June 20, 2026",
          meta_text="tucsondailybrief.com"),
+    dict(slug="news-mountain-lions-2026-06-21", theme="light",
+         kicker="Around Town",
+         headline="The Desert Museum’s rescued mountain lion brothers finally have names",
+         source="June 21, 2026",
+         meta_text="tucsondailybrief.com"),
 ]
 
 if __name__ == "__main__":
