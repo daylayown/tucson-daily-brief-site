@@ -150,7 +150,12 @@ def md_to_html(text: str) -> str:
             i += 1
             continue
 
-        if re.match(r"^[\U0001f300-\U0001faff☀-➿️]", line) and not line.startswith("**"):
+        # Section headers are short, emoji-prefixed labels (e.g. "🏛️ Government").
+        # An emoji-prefixed line that contains bold markdown is an inline callout
+        # (e.g. "⚠️ **Extreme Heat Watch…**"), NOT a section header — let it fall
+        # through to the paragraph branch so the **bold** is converted properly.
+        if (re.match(r"^[\U0001f300-\U0001faff☀-➿️]", line)
+                and "**" not in line):
             html_parts.append(f"<h2>{escape(line)}</h2>")
             i += 1
             continue
@@ -451,6 +456,13 @@ def render_post(date: datetime, body_html: str) -> str:
 # Cross-section data collection (for the homepage cross-stream cards)
 # ---------------------------------------------------------------------------
 
+def _is_weather_label(s: str) -> bool:
+    """True for weather forecast day-labels/temps (e.g. 'Today (Mon...):', '108°F'),
+    which must never be chosen as a brief's featured headline."""
+    s = s.strip()
+    return (not s) or s.endswith(":") or ("°" in s)
+
+
 def collect_existing_posts() -> list[dict]:
     """Scan posts/ directory for existing HTML files and extract metadata."""
     posts = []
@@ -463,11 +475,18 @@ def collect_existing_posts() -> list[dict]:
         dt = datetime.strptime(match.group(1), "%Y-%m-%d")
         content = f.read_text()
         lede_match = re.search(r'<p class="post-lede"[^>]*>(.+?)</p>', content)
-        if not lede_match:
-            strong_match = re.search(r"<strong>(.+?)</strong>", content)
-            lede = strong_match.group(1).rstrip(".") if strong_match else ""
-        else:
+        if lede_match:
             lede = lede_match.group(1)
+        else:
+            # First real headline — skip weather day-labels/temps, which lead the
+            # brief on days with an active weather alert.
+            lede = ""
+            for sm in re.finditer(r"<strong>(.+?)</strong>", content):
+                cand = sm.group(1).strip()
+                if _is_weather_label(cand):
+                    continue
+                lede = cand.rstrip(".")
+                break
         posts.append({"date": dt, "slug": post_slug(dt), "lede": lede})
     posts.sort(key=lambda p: p["date"], reverse=True)
     return posts
