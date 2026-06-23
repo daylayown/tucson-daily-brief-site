@@ -148,18 +148,23 @@ def build_video(pngs, out_path, music=None):
     subprocess.run(cmd, check=True, capture_output=True)
 
 
-def render_clip(slug):
-    clip = CLIPS[slug]
-    series = SERIES[clip["series"]]
+def render_from_config(slug, series_key, script):
+    """Render an arbitrary clip (used by the automated generator)."""
+    series = SERIES[series_key]
     theme = THEMES[series["theme"]]
-    script = clip["script"]
-    print(f"[{slug}] rendering {len(script)} scenes ({clip['series']}) ...")
+    print(f"[{slug}] rendering {len(script)} scenes ({series_key}) ...")
     pngs = [render_scene_png(i, s, theme) for i, s in enumerate(script)]
     out = os.path.join(CARDS_DIR, f"short-{slug}.mp4")
     build_video(pngs, out, music=series["music"])
     dur = len(script) * SCENE_DUR - (len(script) - 1) * XFADE
     sz = os.path.getsize(out) / (1024 * 1024)
     print(f"  done -> {out}  (~{dur:.1f}s, {sz:.1f} MB, {VW}x{VH})")
+    return out
+
+
+def render_clip(slug):
+    clip = CLIPS[slug]
+    return render_from_config(slug, clip["series"], clip["script"])
 
 
 if __name__ == "__main__":
