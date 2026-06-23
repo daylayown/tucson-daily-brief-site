@@ -256,6 +256,17 @@ DEMO = [
          headline="Meet Moonbead and Pretzel",
          dek="The Desert Museum’s two rescued mountain lion brothers finally have names — chosen by kids from Beads of Courage.",
          meta_text="tucsondailybrief.com"),
+    # --- 2026-06-23: heat-warning + behind-the-scenes weather (2-slide carousel)
+    dict(slug="heat-warning-2026-06-23", theme="terracotta",
+         kicker="Extreme Heat Warning",
+         headline="109° today. Take it seriously.",
+         dek="An Extreme Heat Warning is in effect across metro Tucson through 8 PM Wednesday. Limit outdoor activity to early morning or evening, hydrate, and never leave people or pets in a parked car.",
+         meta_text="swipe to see how we know →"),
+    dict(slug="behind-weather-2026-06-23", theme="light",
+         kicker="How we work",
+         headline="Where our weather comes from",
+         dek="Every morning we pull the forecast straight from the National Weather Service’s free public API — pinned to one spot downtown (32.22, -110.97, right by Hotel Congress). The government’s own data, no TV-weather middleman.",
+         meta_text="tucsondailybrief.com"),
 ]
 
 if __name__ == "__main__":
