@@ -48,16 +48,27 @@ SYSTEM = (
     "crime, tragedy, business/development, or anything controversial or sad."
 )
 
-PROMPT = """From these candidate Tucson stories (last {days} days), pick the SINGLE best
-light/feel-good one for an "Only in Tucson" vertical short, then write the on-screen
-beat script.
+PROMPT = """Today is {today}. From these candidate Tucson stories (last {days} days), pick the
+SINGLE best light/feel-good one for an "Only in Tucson" vertical short, then write the
+on-screen beat script.
 
 CANDIDATES:
 {candidates}
 
+SELECTION PRIORITY:
+- STRONGLY PREFER timeless / evergreen feel-good — wildlife, desert nature, charming
+  local quirks, heartwarming human-interest — content that's still delightful weeks later.
+- AVOID event promotions, calendars, sales, or anything tied to a specific day/week/season
+  UNLESS its date is within 2 days of today (these go stale fast and may be auto-posted later).
+
 HARD RULES:
 - Use ONLY facts present in the chosen story. Never invent, exaggerate, or overclaim.
   No specific number/date/name unless it's in the story text. If unsure, stay vague.
+- NO un-sourced hype words ("nobody expected", "impossible", "shocking", "unbelievable",
+  "changed everything"). Describe what actually happened; let the facts carry it.
+- Don't drop important caveats that change the meaning (cost, "proposed/planned", limits).
+- Do NOT imply a timeframe ("this week", "today", "right now", "is here", "this weekend")
+  unless the chosen story's date is within 2 days of today; otherwise keep it timeless.
 - Each beat is LARGE on-screen text: ~4-12 words, max ~70 characters. Short.
 - Beat 1 = the HOOK (a delightful curiosity-gap opener).
 - Middle beats deliver the story simply and warmly. 3-4 beats total.
@@ -139,6 +150,10 @@ def main():
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--no-dedup", action="store_true",
                     help="don't exclude previously-used stories")
+    ap.add_argument("--publish", action="store_true",
+                    help="upload the rendered clip to YouTube Shorts")
+    ap.add_argument("--privacy", default="public",
+                    choices=["public", "unlisted", "private"])
     args = ap.parse_args()
 
     used = set() if args.no_dedup else load_used()
@@ -151,7 +166,8 @@ def main():
     listing = "\n".join(
         f"[{i}] ({c['date']}, {c['section']}) {c['headline']} — {c['text']}"
         for i, c in enumerate(cands))
-    out = call_haiku(PROMPT.format(days=args.days, candidates=listing))
+    today = datetime.now().strftime("%Y-%m-%d")
+    out = call_haiku(PROMPT.format(today=today, days=args.days, candidates=listing))
 
     if out.get("id", -1) < 0 or not out.get("beats"):
         sys.exit("Haiku found no genuinely light/feel-good story in this window.")
@@ -189,6 +205,12 @@ def main():
     if not args.no_dedup:
         used.add(slugify(chosen["headline"]))
         save_used(used)
+
+    if args.publish:
+        import publish_youtube_short as pub
+        desc = pub.build_description(out.get("caption", ""), out.get("hashtags", []))
+        tags = [h.lstrip("#") for h in out.get("hashtags", [])] or ["Tucson"]
+        pub.upload(mp4, out.get("title", "Only in Tucson"), desc, tags, args.privacy)
 
 
 if __name__ == "__main__":

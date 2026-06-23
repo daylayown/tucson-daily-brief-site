@@ -58,25 +58,27 @@ def get_credentials():
     return creds
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("video")
-    ap.add_argument("--privacy", default="public",
-                    choices=["public", "unlisted", "private"])
-    args = ap.parse_args()
-    if not os.path.exists(args.video):
-        sys.exit(f"ERROR: video not found: {args.video}")
+def build_description(caption, hashtags):
+    """Assemble a Shorts description from a caption + hashtags (+ #Shorts)."""
+    tags_line = " ".join(hashtags)
+    if "#shorts" not in tags_line.lower():
+        tags_line = (tags_line + " #Shorts").strip()
+    return f"{caption}\n\n{tags_line}".strip()
 
+
+def upload(video, title, description, tags, privacy="public"):
+    """Upload a vertical video as a YouTube Short. Returns the video id."""
+    if not os.path.exists(video):
+        raise FileNotFoundError(video)
     yt = build("youtube", "v3", credentials=get_credentials())
     body = {
-        "snippet": {"title": TITLE, "description": DESCRIPTION,
-                    "tags": TAGS, "categoryId": CATEGORY_NEWS},
-        "status": {"privacyStatus": args.privacy,
-                   "selfDeclaredMadeForKids": False},
+        "snippet": {"title": title[:100], "description": description,
+                    "tags": tags, "categoryId": CATEGORY_NEWS},
+        "status": {"privacyStatus": privacy, "selfDeclaredMadeForKids": False},
     }
-    size_mb = os.path.getsize(args.video) / (1024 * 1024)
-    print(f"Uploading Short ({size_mb:.1f} MB, {args.privacy})\n  {TITLE}")
-    media = MediaFileUpload(args.video, mimetype="video/mp4", resumable=True,
+    size_mb = os.path.getsize(video) / (1024 * 1024)
+    print(f"Uploading Short ({size_mb:.1f} MB, {privacy})\n  {title}")
+    media = MediaFileUpload(video, mimetype="video/mp4", resumable=True,
                             chunksize=4 * 1024 * 1024)
     req = yt.videos().insert(part="snippet,status", body=body, media_body=media)
     resp = None
@@ -87,6 +89,25 @@ def main():
     vid = resp["id"]
     print(f"\n=== PUBLISHED ===\nhttps://www.youtube.com/watch?v={vid}\n"
           f"Shorts: https://www.youtube.com/shorts/{vid}")
+    return vid
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("video")
+    ap.add_argument("--privacy", default="public",
+                    choices=["public", "unlisted", "private"])
+    ap.add_argument("--meta", help="sidecar JSON (title/caption/hashtags) from generate_short")
+    args = ap.parse_args()
+
+    if args.meta:
+        m = json.loads(Path(args.meta).read_text())
+        title = m["title"]
+        description = build_description(m["caption"], m.get("hashtags", []))
+        tags = [h.lstrip("#") for h in m.get("hashtags", [])]
+    else:
+        title, description, tags = TITLE, DESCRIPTION, TAGS
+    upload(args.video, title, description, tags, args.privacy)
 
 
 if __name__ == "__main__":
