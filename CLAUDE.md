@@ -68,6 +68,7 @@ Static blog for GitHub Pages — minimal, text-first, Daring Fireball style. No 
 ├── MEETING-WATCH-PIPELINE.md    # Full reference docs for the meeting watch system
 ├── crime.md                     # Research notes (2026-05-19) — FBI NIBRS reporting gap for TPD; downstream aggregators showing "0 violent crimes" for Tucson
 ├── crime-tpd-data.md            # Research notes (2026-05-19) — TPD's own published crime data 2019–2025, clearance-rate methodology gap, peer-city comparison
+├── OV-DATA-FEASIBILITY.md       # Feasibility scan (2026-06-23) — what Oro Valley structured data is machine-collectible (GIS dev cases, vote minutes, FBI crime API, water/budget PDFs)
 ├── CNAME                        # Custom domain: tucsondailybrief.com
 ├── .nojekyll                    # Tells GitHub Pages to skip Jekyll
 ├── .gitignore                   # Excludes __pycache__/, .venv/, transcripts/, etc.
@@ -950,6 +951,36 @@ Researched and verified 2026-06-18 (feasibility scans). **Full reference: `COVER
 - **Vail itself is not a municipal add** — no town government. Its civic surface is (a) Pima County BOS District 4, *already* in the pipeline (editorial tagging only), and (b) the Vail School District (above). Fire districts (no video) are lowest priority.
 
 - **First original-journalism feature: "Southern Arizona Debated Flock Cameras"** (write-ready brief in `COVERAGE-EXPANSION.md` Part 2). Non-advocacy, human-reviewed, anchored in TDB's own meeting transcripts with external reporting layered underneath. **Framing landmine:** Tucson/TPD uses Verkada, NOT Flock — the "Tucson Flock" debate is the separate City of South Tucson, which cancelled its contract Feb 17 2026. The regional spine: South Tucson pulls back while Oro Valley (drones) and U of A (62 cams, $870K) expand, against no AZ ALPR law + SB 1070 non-sanctuary posture. Best accountability thread: UA PD said it doesn't share with feds but ran searches for the U.S. Marshals Service (EFF records). Brief includes outline, records-request list, and a confirm-before-publish checklist.
+
+## Roadmap: Oro Valley Structured-Data Layer
+
+Feasibility-scanned 2026-06-23. **Full reference: `OV-DATA-FEASIBILITY.md`.** Thesis: RAG/Ask made TDB's *text* queryable; the next leap is turning the messy civic record into *structured data* and monitoring it (extraction → structured store → monitor/Ask). Oro Valley is the wedge — under-covered but small/tractable enough that an AI pipeline can become the system of record, and the structured data unlocks the next-gen AI tools below. **Gate:** don't start until the in-flight social/short-form-video work settles (per [[feedback_resist_feature_creep]]); the next big project is short-form video, not this.
+
+**Cross-cutting gotcha:** `orovalleyaz.gov` is behind an **Akamai WAF** — bots get 403 unless they spoof a full Chrome header set (UA + Accept + Referer + Sec-Fetch-*) or use a headless browser. The clean WAF-free paths (prefer these): `gismap.orovalleyaz.gov` (GIS), Swagit→Granicus minutes redirect, FBI Crime Data Explorer API, Laserfiche `edoc` download.
+
+Priority order (verdicts + sources in the doc):
+1. ⭐ **OV Development Watch — EASY, build first.** OV's own public anonymous **ArcGIS REST** server exposes a `CED-Planning/Development_Cases` layer (rezonings/GPAs/variances) as queryable JSON — `gismap.orovalleyaz.gov/gismap/rest/services`. Poll + diff on `CaseNumber`/`last_edited_date`; same shape as the Spotted/agenda miners. No auth, no WAF.
+2. **OV Council Vote Tracker — EASY–MODERATE.** Official minutes PDFs (member-level: named OPPOSED/ABSTAINING + roll call → each member's vote derivable, not just tallies) via the Swagit→Granicus redirect `orovalleyaz.new.swagit.com/videos/{id}/minutes` → `pdftotext` → regex the fixed template. Reuses the existing OV transcription pipeline; feeds the **Vote & Promise Tracker** tool. Spot-check ~5–10 split votes first. Scan returned a current names roster to add to `pipeline/local_names.json` (confirm post-Aug-4-2026 primary).
+3. **OV Crime + the TPD-contrast story — EASY (FBI CDE API).** `api.usa.gov/crime/fbi/sapi` (free key, ORI-keyed JSON) for OV trends; AZ DPS TOPS PDFs supplement. Confirmed story: TPD was the only US agency >250K pop that failed to report to the FBI in 2022 while OV PD reported cleanly — verify OV's ORI + per-year completeness in CDE before publishing.
+4. **Water tracker — MODERATE.** Annual Report (production by source, per-well groundwater levels) + Rates Analysis PDFs; on-brand desert/water but annual cadence, image-table extraction needs an LLM pass. WAF headers required.
+5. **Budget summaries — MODERATE; vendor data BLOCKED.** ACFR/adopted-budget PDFs parse with existing `pdftotext` muscle (dept-level budget-vs-actual). The high-value vendor check register is **not published** — records request only. `openbooks.az.gov` is a dead end for OV (stub).
+
+## Roadmap: Spanish-Language TDB (bilingual, social-first)
+
+Discussed 2026-06-23. **The single strongest "set us further apart" move on the table.** The Tucson metro has a large, under-served Spanish-speaking population; AI translation makes a bilingual product near-free at the margin; no other local outlet does real bilingual *civic* coverage. It's differentiation + civic mission + reuses everything already built.
+
+- **Focus = social / short-form, NOT a parallel website (user's call, 2026-06-23).** Local Spanish speakers over-index on TikTok / IG / YouTube Shorts, so the highest-leverage play is **Spanish-language short-form video + image cards**, not a full es-mirror of the site. This dovetails directly with the **next big project (short-form video automation)** and the `social/` card pipeline — generate Spanish captions/cards/scripts alongside the English ones in the same pipeline.
+- **Build shape:** add a translation/transcreation step (Claude — translate *and* localize tone, not literal MT) to the caption + short-form-script generators. Same Telegram one-tap review gate. A bilingual **Ask** (accept Spanish questions, answer in Spanish from the same corpus) is a natural later extension since the RAG infra is already live.
+- **Quality bar:** translation must be reviewed, not raw MT — civic terms, official names, and place names need care (per [[feedback_ai_content_quality_bar]]). User has working Spanish (and Portuguese) to spot-check.
+- **Gate:** ride on the short-form-video build; don't stand up a separate Spanish track before the English short-form pipeline exists.
+
+## Roadmap: AI-forward tools beyond RAG (net-new ideas, 2026-06-23)
+
+Captured from a strategy discussion. These extend the "structured data + AI" thesis; several depend on the OV data layer above. (Distinct from already-documented roadmap items: Tracking pages, FOIA Lead Spotter, Budget Analysis, Community Input Analysis, Cross-referencing, Deep Read.)
+
+- **Semantic alerts ("watch this for me").** Reader saves a standing question (a neighborhood, a council member, a topic); the system re-runs it against new content on a cron and pushes matches. Literally saved RAG queries — direct extension of the Ask infra; the retention/subscription hook that turns Ask into a habit.
+- **Council Vote & Promise Tracker.** From transcripts/minutes already captured: AI extracts (a) every vote → "how did Member X vote, what's the pattern," and (b) **commitments** officials make ("we'll revisit in 90 days") and surfaces when they come due or quietly die. Almost impossible manually; trivial for an agent watching transcripts. Depends on the OV vote-data work (#2 above).
+- **Anomaly detection on structured data.** Once OV crime/permit/budget data flows, an AI pass flags outliers (a crime-category spike, an unusual sole-source contract, a permit anomaly). Where the data-collection and AI-tooling threads converge.
 
 ## Roadmap: Move TDB off the laptop
 
