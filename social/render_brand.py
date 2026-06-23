@@ -103,9 +103,41 @@ def _banner_html(w, h):
 </body></html>"""
 
 
+def _podcast_html(w, h):
+    """Landscape 16:9 podcast video frame / YouTube thumbnail — centered lockup."""
+    return f"""<!DOCTYPE html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="{FONTS_HREF}">
+<style>
+  *{{margin:0;padding:0;box-sizing:border-box}}
+  html,body{{width:{w}px;height:{h}px}}
+  body{{background:{T['bg']};position:relative;overflow:hidden;
+        font-family:'Newsreader',serif;-webkit-font-smoothing:antialiased;
+        display:flex;align-items:center;justify-content:center}}
+  body::before{{content:"";position:absolute;inset:0;
+    background:radial-gradient(70vh 70vh at 80% 10%, {T['glow']} 0%, transparent 62%);}}
+  .lock{{position:relative;z-index:1;display:flex;flex-direction:column;
+         align-items:center;gap:0}}
+  .sun{{width:17vh;height:17vh;margin-bottom:4vh}}
+  .sun svg{{width:100%;height:100%}}
+  .wm{{font-family:'Fraunces',serif;
+       font-variation-settings:'opsz' 144,'wght' 600,'WONK' 1;
+       font-size:13.5vh;line-height:0.92;color:{T['ink']};letter-spacing:-0.012em}}
+  .eyebrow{{font-family:'Newsreader',serif;font-weight:600;color:{T['kicker']};
+            font-size:3.4vh;letter-spacing:0.32em;text-transform:uppercase;
+            margin-top:3.4vh;padding-left:0.32em;white-space:nowrap}}
+</style></head><body>
+  <div class="lock">
+    <div class="sun">{SUN_SVG.replace("{COLOR}", T['ink'])}</div>
+    <div class="wm">Tucson Daily Brief</div>
+    <div class="eyebrow">Daily News Podcast</div>
+  </div>
+</body></html>"""
+
+
 if __name__ == "__main__":
     print("rendering brand assets ...")
     _render_at("brand-cover-3000", _square_html(3000, 3000), 3000, 3000, scale=1)
     _render_at("brand-avatar-1080", _square_html(1080, 1080), 1080, 1080, scale=2)
     _render_at("brand-banner-2048x1152", _banner_html(2048, 1152), 2048, 1152, scale=1)
+    _render_at("brand-podcast-1280x720", _podcast_html(1280, 720), 1280, 720, scale=2)
     print("done.")
