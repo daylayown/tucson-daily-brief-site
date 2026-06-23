@@ -25,11 +25,11 @@ XFADE = 0.5                  # crossfade seconds
 FPS = 30
 T = THEMES["terracotta"]     # "Only in Tucson" = warm terracotta identity
 
-# Background music: royalty-free track, looped + faded under the video.
-# Default is a CC-BY placeholder (attribute Kevin MacLeod in the description);
-# swap to a no-attribution Pixabay desert track for production. None = silent.
+# Background music: own AI-generated track (ElevenLabs Music, commercial-licensed,
+# no attribution / no Content-ID). Per-series themes live in assets/music/.
+# None = silent.
 MUSIC = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                     "assets/music/carefree-kevinmacleod.mp3")
+                     "assets/music/tdb-only-in-tucson.mp3")
 MUSIC_VOLUME = 0.7
 
 # --- the clip script (LLM-produced in the real pipeline) ---

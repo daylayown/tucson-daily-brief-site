@@ -19,6 +19,7 @@ Researched 2026-06-23 (parallel platform-automation scans + audience landscape).
 
 **Craft decisions (locked):**
 - **Text-only motion first** (animated card system; no TTS) — works muted, cheapest, fastest, sidesteps "AI voice reads the news" weirdness. Add VO later, mainly for "Desert 101."
+- **Music = own AI-generated tracks** (ElevenLabs Music, `POST /v1/music`, `model_v2`, `force_instrumental`). Commercial-licensed on the paid plan, **no attribution, no Content-ID claims** — the whole point (not about owning copyright, which AI output can't have). Trained on licensed data, so no Suno/Udio-style training-data lawsuit cloud. Strategy: a **small reusable per-series library** (one warm theme for "Only in Tucson", one tense theme for "Buried in the Agenda") = sonic brand identity, not per-video gen. Tracks in `social/assets/music/` (gitignored). NOTE: the ElevenLabs API key needs the `music_generation` scope (the TTS key didn't have it by default).
 - **Cadence: NOT chained to daily news** — ~1 reactive clip (a feel-good or agenda find when one lands) + a **bank of batched evergreen "Desert 101"**. Removes the daily-pressure failure mode.
 - Visual toolkit: motion typography + owned/stock desert b-roll + **maps** (great for "Opening Soon"/location items) + `people-photos/` portraits + data-viz. **No AI-generated imagery** (fabrication risk).
 - **Bilingual:** lead Spanish cuts with "Only in Tucson" + "Opening Soon" + "Desert 101" (broad, not time-locked — travel furthest with the Spanish audience).
