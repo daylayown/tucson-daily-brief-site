@@ -25,6 +25,13 @@ XFADE = 0.5                  # crossfade seconds
 FPS = 30
 T = THEMES["terracotta"]     # "Only in Tucson" = warm terracotta identity
 
+# Background music: royalty-free track, looped + faded under the video.
+# Default is a CC-BY placeholder (attribute Kevin MacLeod in the description);
+# swap to a no-attribution Pixabay desert track for production. None = silent.
+MUSIC = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                     "assets/music/carefree-kevinmacleod.mp3")
+MUSIC_VOLUME = 0.7
+
 # --- the clip script (LLM-produced in the real pipeline) ---
 SLUG = "only-in-tucson-moonbead"
 SCRIPT = [
@@ -91,11 +98,14 @@ def render_scene_png(idx, scene):
     return png
 
 
-def build_video(pngs, out_path):
+def build_video(pngs, out_path, music=None):
     n = len(pngs)
+    total = n * SCENE_DUR - (n - 1) * XFADE
     cmd = ["ffmpeg", "-y"]
     for p in pngs:
         cmd += ["-loop", "1", "-framerate", str(FPS), "-t", str(SCENE_DUR), "-i", p]
+    if music and os.path.exists(music):
+        cmd += ["-stream_loop", "-1", "-i", music]   # loop music to cover the video
     # chain xfade crossfades; offset_k = k*(SCENE_DUR - XFADE)
     fc, cur = "", "[0:v]"
     for k in range(1, n):
@@ -104,7 +114,13 @@ def build_video(pngs, out_path):
         fc += f"{cur}[{k}:v]xfade=transition=fade:duration={XFADE}:offset={off}{out};"
         cur = out
     fc += "[vout]format=yuv420p[v]"
-    cmd += ["-filter_complex", fc, "-map", "[v]", "-r", str(FPS),
+    maps = ["-map", "[v]"]
+    if music and os.path.exists(music):
+        fade_out = round(total - 1.5, 3)
+        fc += (f";[{n}:a]volume={MUSIC_VOLUME},afade=t=in:st=0:d=1.0,"
+               f"afade=t=out:st={fade_out}:d=1.5[a]")
+        maps += ["-map", "[a]", "-c:a", "aac", "-b:a", "192k", "-shortest"]
+    cmd += ["-filter_complex", fc, *maps, "-r", str(FPS),
             "-c:v", "libx264", "-preset", "medium", "-movflags", "+faststart",
             out_path]
     subprocess.run(cmd, check=True, capture_output=True)
@@ -116,7 +132,7 @@ if __name__ == "__main__":
     pngs = [render_scene_png(i, s) for i, s in enumerate(SCRIPT)]
     out = os.path.join(CARDS_DIR, f"short-{SLUG}.mp4")
     print("stitching video ...")
-    build_video(pngs, out)
+    build_video(pngs, out, music=MUSIC)
     dur = len(SCRIPT) * SCENE_DUR - (len(SCRIPT) - 1) * XFADE
     sz = os.path.getsize(out) / (1024 * 1024)
     print(f"done -> {out}  (~{dur:.1f}s, {sz:.1f} MB, {VW}x{VH})")
