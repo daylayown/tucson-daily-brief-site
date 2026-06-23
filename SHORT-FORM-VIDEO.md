@@ -15,6 +15,8 @@ Researched 2026-06-23 (parallel platform-automation scans + audience landscape).
 1. **🌵 "Only in Tucson"** (TOP / discovery engine) — feel-good, wildlife, identity, desert wonder. The most *shareable* content; grows the audience. *Example (real):* "Two orphaned mountain lion cubs. Tucson kids got to name them." → Moonbead & Pretzel, chosen by Beads of Courage kids → "Only in Tucson. Follow for the good stuff."
 2. **🏛️ "Buried in the Agenda"** (BOTTOM / signature) — the stuff only the agenda-mining/Spotted pipeline catches; built-in curiosity gap, impossible to copy. *Example (real):* "Your town just made police bodycam footage 5× more expensive to see." → animate **$25/video → $46/hour** → "We read every agenda so you don't have to."
 
+**LAUNCH SEQUENCING (decided 2026-06-23):** front-load the **first several videos with "Only in Tucson"** (feel-good) to build an audience before introducing the harder civic content — accountability content lands better *to* a following than into the void. "Buried in the Agenda" is **built and ready** (`buried-ov-bodycam` clip + dark theme + tense track) but **held/unpublished** until there's a following. (First published Short: the Moonbead & Pretzel "Only in Tucson" clip, YouTube `EE8-zlcCxjI`, 2026-06-23.)
+
 **Bench series (add later, same templates):** "Desert 101" (evergreen, batchable explainers — e.g. "your tap water traveled 300 miles to get here"; the dry-day insurance), "Opening Soon" (food/business from Spotted + brief, map-zoom), "What They Decided" (council accountability recaps from meeting coverage; flagship once vote-tracker data exists).
 
 **Craft decisions (locked):**
