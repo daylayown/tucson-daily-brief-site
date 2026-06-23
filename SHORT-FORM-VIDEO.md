@@ -2,6 +2,29 @@
 
 Researched 2026-06-23 (parallel platform-automation scans + audience landscape). Goal: auto-generate ~30s vertical (1080×1920) news clips from existing TDB content and publish across the major short-form surfaces, with a Telegram one-tap review gate. Companion to the "Roadmap: Short-Form Video" section in `CLAUDE.md` and `project_social_promo_strategy` memory.
 
+## Content strategy — LOCKED 2026-06-23
+
+**Do NOT mirror the podcast.** A 5-story roundup fails on short-form for three reasons: (1) the platform rewards *one* sharp idea, not a roundup; (2) short-form is a *discovery* surface (reaching people who've never heard of TDB), not retention; (3) it should lead with TDB's *moat* (original civic finds), not commodity wire headlines. This also aligns with the long-term pivot away from the aggregation layer — short-form showcases the original journalism, not the brief.
+
+**Model: a funnel of named recurring series.** Named segments build habit/recognition and make production a fill-in-the-template job. Three tiers, rotated (you don't pick one tier — you rotate):
+- **TOP — reach/discovery** (new audience): feel-good, identity, desert wonder.
+- **MIDDLE — utility** (reason to follow): explainers, what's opening, heat/safety.
+- **BOTTOM — moat/trust** (what makes TDB different): the civic finds only the pipeline catches.
+
+**LAUNCH LINEUP (locked): a two-series rotation bracketing the funnel —**
+1. **🌵 "Only in Tucson"** (TOP / discovery engine) — feel-good, wildlife, identity, desert wonder. The most *shareable* content; grows the audience. *Example (real):* "Two orphaned mountain lion cubs. Tucson kids got to name them." → Moonbead & Pretzel, chosen by Beads of Courage kids → "Only in Tucson. Follow for the good stuff."
+2. **🏛️ "Buried in the Agenda"** (BOTTOM / signature) — the stuff only the agenda-mining/Spotted pipeline catches; built-in curiosity gap, impossible to copy. *Example (real):* "Your town just made police bodycam footage 5× more expensive to see." → animate **$25/video → $46/hour** → "We read every agenda so you don't have to."
+
+**Bench series (add later, same templates):** "Desert 101" (evergreen, batchable explainers — e.g. "your tap water traveled 300 miles to get here"; the dry-day insurance), "Opening Soon" (food/business from Spotted + brief, map-zoom), "What They Decided" (council accountability recaps from meeting coverage; flagship once vote-tracker data exists).
+
+**Craft decisions (locked):**
+- **Text-only motion first** (animated card system; no TTS) — works muted, cheapest, fastest, sidesteps "AI voice reads the news" weirdness. Add VO later, mainly for "Desert 101."
+- **Cadence: NOT chained to daily news** — ~1 reactive clip (a feel-good or agenda find when one lands) + a **bank of batched evergreen "Desert 101"**. Removes the daily-pressure failure mode.
+- Visual toolkit: motion typography + owned/stock desert b-roll + **maps** (great for "Opening Soon"/location items) + `people-photos/` portraits + data-viz. **No AI-generated imagery** (fabrication risk).
+- **Bilingual:** lead Spanish cuts with "Only in Tucson" + "Opening Soon" + "Desert 101" (broad, not time-locked — travel furthest with the Spanish audience).
+
+**First prototype:** an **"Only in Tucson"** clip — highest odds of landing, lowest risk, teaches what the muted-caption format needs before spending differentiation capital on the agenda series. Then establish "Buried in the Agenda" as the recurring signature.
+
 ## Decision: build our own thin publish layer; skip paid schedulers
 
 Hosted schedulers (Ayrshare/Blotato/Upload-Post) sell **convenience** — they're pre-approved platform apps, so you skip every app review. But the value is the *approvals*, not the code (which is just OAuth + an HTTP POST per platform). **For a single set of self-owned accounts, most platforms require no review at all**, so a homegrown adapter layer covers nearly everything for $0. We build our own "Blotato." (Self-hosted OSS schedulers like Postiz/Mixpost do NOT help — you'd still register your own dev apps and face every review.)
