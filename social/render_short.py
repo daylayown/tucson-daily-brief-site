@@ -50,6 +50,11 @@ def _esc(s):
 def scene_html(scene):
     n = len(scene["text"])
     size = 132 if scene.get("big") else (118 if n <= 40 else 104 if n <= 70 else 88)
+    # CTA sign-off: keep it on one line (avoids an orphaned trailing emoji).
+    nowrap = ""
+    if scene.get("cta"):
+        size = 96
+        nowrap = "white-space:nowrap;"
     eyebrow = ""
     if scene.get("eyebrow"):
         eyebrow = (f'<div class="eyebrow">{SUN_SVG.replace("{COLOR}", T["sun"])}'
@@ -73,7 +78,7 @@ def scene_html(scene):
     text-transform:uppercase;color:{T['kicker']}}}
   .text{{position:relative;z-index:1;font-family:'Fraunces',serif;
     font-variation-settings:'opsz' 144,'wght' 600,'SOFT' 0,'WONK' 1;
-    color:{T['ink']};line-height:1.07;letter-spacing:-0.012em;font-size:{size}px}}
+    color:{T['ink']};line-height:1.07;letter-spacing:-0.012em;font-size:{size}px;{nowrap}}}
   .footer{{position:absolute;bottom:150px;left:110px;right:110px;
     border-top:4px solid {T['rule']};padding-top:34px;
     font-family:'Fraunces',serif;font-variation-settings:'opsz' 60,'wght' 600,'WONK' 1;
