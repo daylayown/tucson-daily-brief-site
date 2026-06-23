@@ -69,6 +69,7 @@ Static blog for GitHub Pages — minimal, text-first, Daring Fireball style. No 
 ├── crime.md                     # Research notes (2026-05-19) — FBI NIBRS reporting gap for TPD; downstream aggregators showing "0 violent crimes" for Tucson
 ├── crime-tpd-data.md            # Research notes (2026-05-19) — TPD's own published crime data 2019–2025, clearance-rate methodology gap, peer-city comparison
 ├── OV-DATA-FEASIBILITY.md       # Feasibility scan (2026-06-23) — what Oro Valley structured data is machine-collectible (GIS dev cases, vote minutes, FBI crime API, water/budget PDFs)
+├── SHORT-FORM-VIDEO.md          # Platform automation map + DIY-adapter plan (2026-06-23) — YouTube/IG/FB auto-publishable for $0, TikTok = future; generation pipeline reuses ~80% of podcast flow
 ├── CNAME                        # Custom domain: tucsondailybrief.com
 ├── .nojekyll                    # Tells GitHub Pages to skip Jekyll
 ├── .gitignore                   # Excludes __pycache__/, .venv/, transcripts/, etc.
@@ -1040,7 +1041,15 @@ Image-card promo pipeline for the bespoke **`@tucsondailybrief`** Instagram (Bus
 
 ## Roadmap: Short-Form Video (Shorts / Reels / TikTok)
 
-Auto-generate ~30-second vertical (1080×1920) news videos from existing TDB content and publish to YouTube Shorts, Instagram Reels, and TikTok. Discussed 2026-06-04 as a growth/discovery surface (same strategic logic as the newsletter — a daily site is a poor discovery surface; short-form video is where local audiences actually find you). **Not yet building** — captured here with a build-order gate.
+Auto-generate ~30-second vertical (1080×1920) news videos from existing TDB content and publish to YouTube Shorts, Instagram Reels, and TikTok. Discussed 2026-06-04 as a growth/discovery surface (same strategic logic as the newsletter — a daily site is a poor discovery surface; short-form video is where local audiences actually find you). **This is the user's next big project** (decided 2026-06-23). **Full platform-automation map + build plan: `SHORT-FORM-VIDEO.md`.**
+
+**Key conclusions (2026-06-23 platform-automation research):**
+- **Build our own thin publish layer — skip paid schedulers** (Ayrshare/Blotato/etc. are a convenience tax; their value is pre-approved app status, not code, and a single self-owned account needs almost no approvals). The reusable work is the platform-agnostic *generation* pipeline; publishing is just OAuth-per-platform adapters.
+- **Auto-publishable for $0, no app review, own accounts:** **YouTube Shorts** (confirmed ship-now — existing project is audited, public uploads verified via oEmbed; `videos.insert` is the same call), **Instagram Reels** + **Facebook Reels** (Standard Access on own Meta app; needs R2-hosted public MP4 — verify the no-review path live), **Bluesky** (app password, zero gate; no account yet).
+- **TikTok = future project, not the starting line.** User has no TikTok account / has never used the app. Unaudited apps are forced to private; public posting needs TikTok's Content Posting audit (~1–4 wks) OR draft-and-tap. Plan: make an account → post manually to learn the platform → audit only if it performs.
+- **Audience:** YouTube/IG/TikTok are the three that matter; Hispanic adults over-index on IG (62%) + TikTok (57%) + YouTube, validating social-first Spanish; WhatsApp is a distinct Spanish channel (~2.5× over-index) for later.
+- **Bilingual from day one:** the script + caption step should emit transcreated Spanish alongside English — that's how the social-first Spanish TDB ships.
+- **Caveat found:** the YouTube channel `@tucsondailybrief` is **not phone-verified** → custom thumbnails 403 (podcast videos use an auto-frame; the thumbnail asset isn't applied). Verify the channel in Studio; low stakes for Shorts.
 
 ### Feasibility: high. The generation half reuses ~80% of the existing podcast pipeline.
 
