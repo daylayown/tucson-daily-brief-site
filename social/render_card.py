@@ -71,6 +71,17 @@ THEMES = {
         "sun": "#c75b39",
         "meta": "#5c4a3f",
     },
+    # Dark "investigative" desert — for the Buried in the Agenda series.
+    "dark": {
+        "bg": "#251c17",
+        "glow": "rgba(199,91,57,0.22)",
+        "ink": "#faf4e8",
+        "kicker": "#d97048",
+        "accent": "#d97048",
+        "rule": "rgba(250,244,232,0.22)",
+        "sun": "#d97048",
+        "meta": "#c7b9a4",
+    },
 }
 
 PAGE = """<!DOCTYPE html>
