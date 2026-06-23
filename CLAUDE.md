@@ -16,7 +16,7 @@ Static blog for GitHub Pages — minimal, text-first, Daring Fireball style. No 
 ├── news-reports/                # Published news report HTML files (human-approved)
 ├── public-record.html           # Auto-generated section index (display name: "Spotted"; URL kept for backwards-compat)
 ├── public-record/               # Published HTML files for individual filings
-├── ask.html                     # Live RAG-powered Q&A interface (Phase 2); POSTs to Fly app tdb-ask; unlinked until SHOW_TOOLS flips
+├── ask.html                     # Live RAG-powered Q&A interface (Phase 2); POSTs to Fly app tdb-ask; linked in main streams nav as of 2026-06-23
 ├── responsiveness.html          # Coming-soon stub for the Tucson Responsiveness Index dashboard
 ├── about.html                   # Hand-authored About page — TAS-metaphor framing, linked from the footer site-wide
 ├── ai_reporter.py               # Downstream pipeline: transcript JSON → Claude report → Telegram → publish
@@ -56,6 +56,12 @@ Static blog for GitHub Pages — minimal, text-first, Daring Fireball style. No 
 │   └── drafts/                  # Generated markdown drafts (gitignored, human-reviewed before send)
 ├── responsiveness/              # Tucson Responsiveness Index — planning only, not yet building
 │   └── PLANNING.md              # Canonical thesis, M1 scope (SeeClickFix 311 + TPD CFS), build sequence
+├── social/                      # Instagram/Threads promo image-card renderers (see "Social Media Cards" section)
+│   ├── render_card.py           # Core: build_card() -> headless Chromium 2x screenshot -> 1080x1350 PNG; terracotta + light themes; built-in card configs
+│   ├── render_feature_carousel.py # Multi-slide swipeable "what sets us apart" carousel (cover -> feature slides -> CTA)
+│   ├── render_crossword_card.py # Numbered 5x5 Tucson Mini grid + clues, promoting the Sunday newsletter perk
+│   ├── render_story.py          # 1080x1920 IG Story asset (sticker-safe open bottom third)
+│   └── cards/                   # Generated PNG output (gitignored; tooling is committed, renders are working state)
 ├── REDESIGN.md                  # Information architecture redesign — Direction B (zoned homepage), shipped 2026-05-11
 ├── REDESIGN-V2.md               # Visual language redesign — warm-organic Southwest editorial, shipped 2026-05-11
 ├── redesign-preview.html        # Self-contained reference demo of the v2 visual language (single file, embedded CSS)
@@ -76,6 +82,8 @@ Static blog for GitHub Pages — minimal, text-first, Daring Fireball style. No 
 3. Writes an editorial-style HTML post (Fraunces display date, drop cap, magazine-style section heads) to `posts/YYYY-MM-DD.html`
 4. Calls `rebuild_homepage()` which scans all posts in `posts/` AND the newest entry in `meeting-watch/`, `news-reports/`, `public-record/`, then rebuilds **both** `index.html` (zoned homepage) and `briefings.html` (full daily archive). The homepage's cross-stream cards surface the latest items from every section so a new daily brief, new meeting preview, new news report, or new Spotted filing all refresh the homepage.
 5. Is idempotent — running it twice with the same input overwrites cleanly, no duplicates
+
+**Weather-alert-led briefs (fixed 2026-06-23, commit `2c6827d`):** On days with an active NWS alert, the 6 AM agent leads the brief with the Weather section + a `⚠️ **Alert headline.**` callout. This surfaced two bugs, both fixed in `generate_post.py`: (1) `md_to_html` treated *any* emoji-prefixed line as a section header (`<h2>`), so the alert line became a heading with literal `**` asterisks — now an emoji line containing `**` falls through to the paragraph branch and renders the bold properly (real section headers like `🏛️ Government` never contain bold markdown, so they're unaffected); (2) `collect_existing_posts` picked the first `<strong>` as the homepage featured headline, which on weather-led days was a forecast day-label ("Today (Monday, June 22):") — it now skips weather labels (via `_is_weather_label()`: text ending in `:` or containing `°`) and uses the first real headline (e.g. the heat-warning text). Sanity-check the homepage featured card on any weather-alert day.
 
 Usage:
 ```
@@ -129,7 +137,7 @@ The current visual language is **warm-organic Southwest editorial**, shipped 202
 
 **Section nav, footer, masthead** are centralized in `generate_post.py` constants. The masthead kicker reads "From the Old Pueblo" — ties to the "The Old Pueblo Speaks" outreach section under the Roadmap. Footer links (in order): About (`about.html`), Apple Podcasts, YouTube, LinkedIn, Email. X and Bluesky were removed 2026-05-15 — user prefers personal social media (besides LinkedIn) not be connected to the site.
 
-**Feature flag: `SHOW_TOOLS`** in `generate_post.py`. Currently `False`. When `False`, the homepage Tools card row AND the Tools nav row (Ask, Responsiveness) are both hidden site-wide. Stub pages at `/ask.html` and `/responsiveness.html` still exist and work; they just aren't linked from the main nav until this flag flips. Flip to `True` once at least one tool ships and is ready to surface.
+**Feature flag: `SHOW_TOOLS`** in `generate_post.py`. Currently `False`. **Note (2026-06-23): `Ask` has been promoted into the main streams nav (`_STREAMS`) and is now linked site-wide UNCONDITIONALLY — it is no longer gated.** `SHOW_TOOLS` now only gates (a) the secondary Tools nav row, which contains just **Responsiveness**, and (b) the homepage Tools *card* row (where Ask still shows a "Coming soon" card). So the live nav is: Briefings · Meeting Watch · News Reports · Spotted · In Depth · Ask. Flip `SHOW_TOOLS=True` once the Responsiveness dashboard ships.
 
 **Public Record → "Spotted" display rename.** The section's user-facing name is **Spotted** (in the nav, page titles, eyebrows, post-meta). The URL stayed `public-record.html` and the directory stayed `public-record/` so existing links and bookmarks don't break. Internal references in code (file names, Python module names, CSS class `public-record-filing`, etc.) all keep the original `public-record` terminology — only display text changed.
 
@@ -570,7 +578,7 @@ The homepage at `/` is now a **zoned entry hall** (featured Today's Brief + cros
 - **Meeting Watch** (`meeting-watch.html`, `meeting-watch/`) — AI-generated agenda previews for 4 municipalities (live, auto-published)
 - **News Reports** (`news-reports.html`, `news-reports/`) — AI-drafted, human-reviewed post-meeting news reports (pipeline built, first real recordings scheduled April 7, 2026)
 - **Spotted** (`public-record.html`, `public-record/`) — flagged filings surfaced from agendas; v1 covers liquor license applications across Pima County BOS, City of Tucson, Oro Valley (live as of April 11, 2026). Display name changed from "Public Record" to "Spotted" on 2026-05-11; URL preserved
-- **Ask** (`ask.html`) — RAG-powered Q&A surface. Phase 1 (CLI) + Phase 2 (web UI on Fly.io, app `tdb-ask`) both live as of 2026-06-14; page is built but unlinked behind `SHOW_TOOLS=False` for an unlisted shakedown before launch
+- **Ask** (`ask.html`) — RAG-powered Q&A surface. Phase 1 (CLI) + Phase 2 (web UI on Fly.io, app `tdb-ask`) both live as of 2026-06-14. **Now publicly linked in the main streams nav site-wide as of 2026-06-23** (promoted out of the `SHOW_TOOLS`-gated Tools row into `_STREAMS`); the shakedown period is effectively over for the nav link
 - **Tucson Responsiveness Index** (`responsiveness.html`) — stub page for the upcoming dashboard. Planning in `responsiveness/PLANNING.md`; no code yet
 - **The Tucson Mini** (`crossword/`) — weekly Tucson-themed 5×5 mini crossword; subscriber perk for the TDB Weekly newsletter; unlisted (noindex, no public links) (v0.4 live as of May 6, 2026; see "The Tucson Mini" section below)
 - **The Old Pueblo Speaks** — future outreach-based reporting section (see Roadmap above); not yet building
@@ -981,6 +989,23 @@ Pipeline config files (`sources.json`, `TUCSON-BRIEF.md`, openclaw skill referen
 - Any other skill references that have accumulated
 
 Estimated effort: ~30-60 minutes. The path updates across scripts are the fiddliest part.
+
+## Social Media Cards (Instagram + Threads)
+
+Image-card promo pipeline for the bespoke **`@tucsondailybrief`** Instagram (Business account, avatar `~/tdb-fb-profile.png` reused from the FB Page) + the linked **Threads** account (logs in via IG; same handle). Built starting 2026-06-20. The "video and image" promo track is IG + Threads; **LinkedIn is a separate track** (written, journalism-industry audience — don't cross the wires). Strategy + history live in the `project_social_promo_strategy` memory.
+
+**Tooling (`social/`, committed; `social/cards/` output is gitignored):**
+- `render_card.py` — core renderer. `build_card(theme, kicker, headline, dek, source, meta_text)` returns HTML; `render(slug, html)` shells out to `chromium --headless=new` at 2× device scale, screenshots, then ImageMagick `convert` downscales to a crisp **1080×1350** (IG portrait 4:5). Two themes on the locked desert palette: `terracotta` (identity/statement/alert cards, matches the avatar) and `light` (bone bg, for news headlines + explainers). A `DEMO` list at the bottom holds the dated card configs that have shipped.
+- `render_feature_carousel.py` — multi-slide swipeable carousel (`SLIDES` config). Terracotta cover → light feature slides → terracotta CTA, with `N / total` counters and a "swipe →" affordance on the cover. Used for the "what sets us apart" week (Meeting Watch / Spotted / News Reports / **Ask** / **Podcast** → "Read it. Hear it. Ask it." closer).
+- `render_crossword_card.py` — renders a numbered 5×5 **Tucson Mini** grid (real puzzle structure, blocks + clue numbers) + a few unmistakably-Tucson clues, to promote the Sunday newsletter's free-crossword perk. `SHOW_LETTERS=False` shows the classic empty "solve me" grid.
+- `render_story.py` — **1080×1920** IG Story asset (9:16). Bottom third left intentionally open so a poll / question / link sticker can be dropped on it in-app without covering text.
+
+**Conventions / lessons:**
+- **No fabrication on public cards** (per the `feedback_ai_content_quality_bar` memory): verify any factual claim before it goes on a card. Example — the 2026-06-23 "where our weather comes from" card cited the NWS point `api.weather.gov/points/32.2217,-110.9694` (downtown Tucson / Hotel Congress) only after confirming it in `~/.openclaw/skills/tucson-daily-brief/references/sources.json`.
+- **Source attribution lives in the caption, not on the card** — user found the outlet name on the card too busy (2026-06-21); news cards show just the date.
+- **Stories vs. posts are different cultures**: posts = polished/permanent (carousels, statements); Stories = casual/24h, driven by interactive stickers (polls highest-completion) + the link sticker (the route to drive traffic to tucsondailybrief.com).
+- **Getting cards to the phone**: user sets up IG/Threads from iPhone; email the PNG to `yesdeleon@gmail.com` or drop in iCloud/Drive, then save to Photos.
+- **Auto-posting is deferred** until the format is proven; when built, start with the **Bluesky** adapter (only gatekeeper-free channel — open AT Protocol + app password). Threads/IG need a Meta app + app review. See `project_social_promo_strategy` for the full platform-difficulty map (Threads≠Bluesky protocol; Mastodon=ActivityPub). The generation pipeline (card render + a future Sonnet caption step → Telegram one-tap approve) is the reusable part across all platforms.
 
 ## Roadmap: Short-Form Video (Shorts / Reels / TikTok)
 
