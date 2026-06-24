@@ -515,6 +515,22 @@
         "title": "Pima County Sheriff"
       },
       {
+        "canonical": "Joe Snell",
+        "title": "President & CEO, The Chamber of Southern Arizona",
+        "deepgram_misreads": [
+          "Todd Snell"
+        ]
+      },
+      {
+        "canonical": "Laurie Kierstead-Joseph",
+        "title": "Assistant Vice Chancellor, Adult Basic Education, Pima Community College",
+        "deepgram_misreads": [
+          "Lori Kirstead Joseph",
+          "Lori Kierstead Joseph",
+          "Laurie Kirstead Joseph"
+        ]
+      },
+      {
         "canonical": "Laura Conover",
         "title": "Pima County Attorney"
       },
