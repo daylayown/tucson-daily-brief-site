@@ -283,6 +283,11 @@ DEMO = [
          headline="Tucson approves an independent review of police license-plate readers",
          source="June 23, 2026",
          meta_text="tucsondailybrief.com"),
+    dict(slug="news-alpr-howweknow-2026-06-23", theme="terracotta",
+         kicker="How we know",
+         headline="We sat in on the whole meeting.",
+         dek="Our AI reporter transcribed the full City Council meeting, then a working journalist reviewed and fact-checked the report before we published it. No press release, no secondhand summary — straight from the source.",
+         meta_text="tucsondailybrief.com"),
 ]
 
 if __name__ == "__main__":
