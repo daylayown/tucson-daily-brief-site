@@ -9,3 +9,6 @@ newsletter/drafts/
 rag/index.sqlite
 data/
 in-depth/*-draft.md
+
+# Around Town development-watch state
+around-town/.dev_state.json

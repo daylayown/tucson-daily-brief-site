@@ -224,10 +224,9 @@ a { color: var(--accent); }
   border-top: 1px solid var(--rule);
   border-bottom: 1px solid var(--rule);
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: var(--gap-s) var(--gap-m);
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--gap-s);
 }
 
 .streams-nav,
@@ -252,6 +251,29 @@ a { color: var(--accent); }
 .streams-nav a { color: var(--accent); }
 .streams-nav .active { color: var(--ink); cursor: default; }
 
+/* Contextual second row — children of the active hub (e.g. Local Meeting
+   Previews / Reports under Local Government). Subordinate to the top row:
+   smaller, lighter, with a left accent rule that ties it to the hub above. */
+.subsection-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-s) var(--gap-m);
+  align-items: baseline;
+  font-size: var(--t-kicker);
+  letter-spacing: 0.05em;
+  padding-left: var(--gap-s);
+  border-left: 2px solid var(--accent);
+}
+.subsection-nav a, .subsection-nav .active {
+  font-family: var(--serif);
+  font-weight: 500;
+  text-decoration: none;
+  position: relative;
+  padding-bottom: 3px;
+}
+.subsection-nav a { color: var(--accent); }
+.subsection-nav .active { color: var(--ink); cursor: default; }
+
 .tools-nav a, .tools-nav .active {
   color: var(--tool);
   font-style: italic;
@@ -259,6 +281,7 @@ a { color: var(--accent); }
 .tools-nav .active { cursor: default; }
 
 .streams-nav a::after,
+.subsection-nav a::after,
 .tools-nav a::after {
   content: "";
   position: absolute;
@@ -270,6 +293,7 @@ a { color: var(--accent); }
 }
 
 .streams-nav a:hover::after,
+.subsection-nav a:hover::after,
 .tools-nav a:hover::after { right: 0; }
 
 .tools-nav::before {
@@ -838,6 +862,85 @@ a { color: var(--accent); }
   padding: var(--gap-l) 0;
 }
 
+/* ─── Around Town combined feed — tagged items ─── */
+
+.at-item .at-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--gap-xs);
+}
+
+.at-tag {
+  display: inline-block;
+  font-family: var(--serif);
+  font-size: var(--t-kicker);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  line-height: 1.4;
+  padding: 2px 10px;
+  border-radius: 100px;
+  color: var(--bone);
+  white-space: nowrap;
+}
+.at-tag--new-business { background: var(--accent); }
+.at-tag--development  { background: var(--sage); }
+
+/* ─── Homepage "What you'll find here" section guide ─── */
+
+.guide { padding: var(--gap-xl) 0; }
+.guide__head { margin-bottom: var(--gap-l); }
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: var(--gap-m);
+}
+.guide-item {
+  display: block;
+  padding: var(--gap-m);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  background: var(--bg-elevated);
+  text-decoration: none;
+  transition: transform 200ms ease, border-color 200ms ease;
+}
+.guide-item:hover { transform: translateY(-3px); border-color: var(--accent); }
+.guide-item__title {
+  font-family: var(--display);
+  font-variation-settings: "opsz" 28, "SOFT" 30, "WONK" 0;
+  font-weight: 600;
+  font-size: 1.15rem;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+.guide-item__desc {
+  font-size: var(--t-small);
+  color: var(--ink-muted);
+  line-height: 1.5;
+}
+
+/* ─── Hub landing pages — archive-link row ─── */
+
+.hub-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-s) var(--gap-l);
+  margin-top: var(--gap-l);
+}
+.hub-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--display);
+  font-variation-settings: "opsz" 24, "WONK" 0;
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--accent);
+  text-decoration: none;
+}
+.hub-links a:hover { gap: 12px; }
+.hub-links a svg { transition: transform 200ms ease; }
+
 /* ─── Individual daily brief pages ─── */
 
 .brief-header {
@@ -1320,6 +1423,7 @@ article.post-page p.source {
 @media (max-width: 880px) {
   .featured__grid,
   .cross-grid,
+  .guide-grid,
   .tools-grid,
   .subscribe__panel,
   .dash-grid {

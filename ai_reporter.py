@@ -498,7 +498,7 @@ def render_report_post(title: str, date: datetime, body_html: str) -> str:
 
 <main>
 <div class="container container--reading">
-<a class="back-link" href="../news-reports.html">{ARROW_LEFT_SVG} All news reports</a>
+<a class="back-link" href="../news-reports.html">{ARROW_LEFT_SVG} All Local Meeting Reports</a>
 
 <article id="report-{slug}" class="post-page">
 <p class="post-meta">{escape_html(title)}</p>
@@ -534,7 +534,7 @@ def render_report_index(posts: list[dict]) -> str:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>News Reports &mdash; Tucson Daily Brief</title>
+<title>Local Meeting Reports &mdash; Tucson Daily Brief</title>
 <link rel="stylesheet" href="style.css">
 {ANALYTICS_HTML}
 </head>
@@ -549,8 +549,8 @@ def render_report_index(posts: list[dict]) -> str:
 <main>
 <div class="container container--editorial">
 <div style="padding-top:var(--gap-xl);margin-bottom:var(--gap-l)">
-<h2 class="section-head">News Reports</h2>
-<p class="section-intro">AI-drafted, human-reviewed coverage of government meetings across the Tucson metro. Every report sees an editor before it&rsquo;s published.</p>
+<h2 class="section-head">Local Meeting Reports</h2>
+<p class="section-intro">After each meeting: AI-drafted, human-reviewed coverage of what local government bodies across the Tucson metro actually decided. Every report sees an editor before it&rsquo;s published.</p>
 </div>
 
 <div style="margin-bottom:var(--gap-xl)">{SUBSCRIBE_PANEL_HTML}</div>

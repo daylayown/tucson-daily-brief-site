@@ -98,7 +98,7 @@ def extract_title(article_md: str) -> str:
     for line in article_md.split("\n"):
         if line.strip().startswith("# ") and not line.strip().startswith("## "):
             return re.sub(r"\*\*|\*", "", line.strip()[2:]).strip()
-    return "In Depth"
+    return "Deep Dives"
 
 
 def extract_lede(article_md: str) -> str:
@@ -135,10 +135,10 @@ def render_indepth_post(title: str, date: datetime, body_html: str, slug: str) -
 
 <main>
 <div class="container container--reading">
-<a class="back-link" href="../in-depth.html">{ARROW_LEFT_SVG} All In Depth</a>
+<a class="back-link" href="../in-depth.html">{ARROW_LEFT_SVG} All Deep Dives</a>
 
 <article id="indepth-{slug}" class="post-page">
-<p class="post-meta">In Depth &middot; {date.strftime('%B %-d, %Y')}</p>
+<p class="post-meta">Deep Dives &middot; {date.strftime('%B %-d, %Y')}</p>
 {body_html}
 </article>
 </div>
@@ -169,7 +169,7 @@ def render_indepth_index(items: list[dict]) -> str:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>In Depth &mdash; Tucson Daily Brief</title>
+<title>Deep Dives &mdash; Tucson Daily Brief</title>
 <link rel="stylesheet" href="style.css">
 {ANALYTICS_HTML}
 </head>
@@ -184,7 +184,7 @@ def render_indepth_index(items: list[dict]) -> str:
 <main>
 <div class="container container--editorial">
 <div style="padding-top:var(--gap-xl);margin-bottom:var(--gap-l)">
-<h2 class="section-head">In Depth</h2>
+<h2 class="section-head">Deep Dives</h2>
 <p class="section-intro">Standalone features on the issues that matter most across Southern Arizona &mdash; reported from TDB&rsquo;s own archive of meetings, filings, and records, with the wider context layered in. Human-reviewed, every one.</p>
 </div>
 

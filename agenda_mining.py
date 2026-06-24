@@ -520,7 +520,7 @@ def render_meeting_post(title: str, date: datetime, body_html: str) -> str:
 
 <main>
 <div class="container container--reading">
-<a class="back-link" href="../meeting-watch.html">{ARROW_LEFT_SVG} All meeting previews</a>
+<a class="back-link" href="../meeting-watch.html">{ARROW_LEFT_SVG} All Local Meeting Previews</a>
 
 <article id="meeting-{slug}" class="post-page">
 <p class="post-meta">{title}</p>
@@ -556,7 +556,7 @@ def render_meeting_index(posts: list[dict]) -> str:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Meeting Watch &mdash; Tucson Daily Brief</title>
+<title>Local Meeting Previews &mdash; Tucson Daily Brief</title>
 <link rel="stylesheet" href="style.css">
 {ANALYTICS_HTML}
 </head>
@@ -571,8 +571,8 @@ def render_meeting_index(posts: list[dict]) -> str:
 <main>
 <div class="container container--editorial">
 <div style="padding-top:var(--gap-xl);margin-bottom:var(--gap-l)">
-<h2 class="section-head">Meeting Watch</h2>
-<p class="section-intro">AI-assisted previews of government meetings across Tucson, Pima County, Marana, and Oro Valley. Auto-published the morning agendas drop.</p>
+<h2 class="section-head">Local Meeting Previews</h2>
+<p class="section-intro">Before each meeting: AI-assisted previews of what&rsquo;s on the agenda for local government bodies across Tucson, Pima County, Marana, and Oro Valley. Auto-published the morning agendas drop.</p>
 </div>
 
 <div style="margin-bottom:var(--gap-xl)">{SUBSCRIBE_PANEL_HTML}</div>

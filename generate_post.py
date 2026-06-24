@@ -21,6 +21,7 @@ POSTS_DIR = SITE_DIR / "posts"
 MEETINGS_DIR = SITE_DIR / "meeting-watch"
 REPORTS_DIR = SITE_DIR / "news-reports"
 PUBLIC_RECORD_DIR = SITE_DIR / "public-record"
+AROUND_TOWN_DIR = SITE_DIR / "around-town"   # development cases (rezonings/GPAs/variances)
 INDEPTH_DIR = SITE_DIR / "in-depth"
 
 # Feature flag: surface the Tools (Ask, Responsiveness Index) on the site.
@@ -349,43 +350,94 @@ def post_header_html() -> str:
 </header>"""
 
 
-# Section nav slots — used to mark the current page (no link) and adjust paths
-# `active` values: "" (homepage), "briefings", "meetings", "reports", "record",
-# "ask", "responsiveness"
-_STREAMS = [
-    ("briefings", "Briefings", "briefings.html"),
-    ("meetings", "Meeting Watch", "meeting-watch.html"),
-    ("reports", "News Reports", "news-reports.html"),
-    ("record", "Spotted", "public-record.html"),
-    ("indepth", "In Depth", "in-depth.html"),
-    ("ask", "Ask", "ask.html"),
+# ---------------------------------------------------------------------------
+# Section nav — five top-level hubs, some with a contextual second row.
+#
+# The site ships NO JavaScript, so hubs are landing pages + a contextual
+# sub-row (not dropdowns). `_NAV` is the single source of truth:
+#   (key, label, href, children)  — children is None for a plain section/tool,
+#   or a list of (key, label, href) for a hub.
+#
+# `active` (passed by every renderer) marks the current page. It may be a
+# top-level key OR a child key OR an alias (see `_NAV_ALIASES`). The resolver
+# lights up the matching top-level item and, if the active page is a hub child,
+# renders the hub's children as a second row.
+#
+# Display names changed in the 2026-06-24 IA reorg; URLs/dirs/active-keys were
+# preserved (same trick as the Public Record → Spotted rename) so nothing
+# breaks. See IA-REORG.md.
+# ---------------------------------------------------------------------------
+_NAV = [
+    ("briefings", "Daily Briefs", "briefings.html", None),
+    ("local-government", "Local Government", "local-government.html", [
+        ("meetings", "Local Meeting Previews", "meeting-watch.html"),
+        ("reports", "Local Meeting Reports", "news-reports.html"),
+    ]),
+    ("around-town", "Around Town", "around-town.html", None),
+    ("indepth", "Deep Dives", "in-depth.html", None),
+    ("ask", "ChatTDB", "ask.html", None),
 ]
+
+# Pages that aren't first-class nav items but belong under a hub. Maps an
+# `active` key → (top_level_key, sub_key_or_None) so e.g. the still-live
+# public-record.html and individual filing pages light up "Around Town".
+_NAV_ALIASES = {
+    "record": ("around-town", None),
+}
 
 _TOOLS = [
     ("responsiveness", "Responsiveness", "responsiveness.html"),
 ]
 
 
+def _resolve_active(active: str) -> tuple[str | None, str | None]:
+    """Return (top_level_key, sub_key) for the active page, or (None, None)."""
+    for key, _label, _href, children in _NAV:
+        if active == key:
+            return key, None
+        if children:
+            for ck, _cl, _ch in children:
+                if active == ck:
+                    return key, ck
+    if active in _NAV_ALIASES:
+        return _NAV_ALIASES[active]
+    return None, None
+
+
 def section_nav_html(active: str = "", path_prefix: str = "") -> str:
     """Render the section nav. `active` marks the current page (rendered as
-    plain text). `path_prefix` is "" for site root or "../" for nested pages.
-    The Tools row is gated by the SHOW_TOOLS flag."""
-    def link_or_text(key, label, href):
-        if key == active:
+    plain text, no link). `path_prefix` is "" for site root or "../" for nested
+    pages. A contextual second row appears only when the active page lives under
+    a hub. The Tools row is gated by the SHOW_TOOLS flag."""
+    top_active, sub_active = _resolve_active(active)
+
+    def link_or_text(key, label, href, is_active):
+        if is_active:
             return f'<span class="active">{label}</span>'
         return f'<a href="{path_prefix}{href}">{label}</a>'
 
-    streams = " &middot; ".join(link_or_text(*s) for s in _STREAMS)
+    streams = " &middot; ".join(
+        link_or_text(k, l, h, k == top_active) for k, l, h, _c in _NAV
+    )
+
+    # Contextual sub-row: the active hub's children (if it has any).
+    sub_row = ""
+    for k, _l, _h, children in _NAV:
+        if k == top_active and children:
+            subs = " &middot; ".join(
+                link_or_text(ck, cl, ch, ck == sub_active) for ck, cl, ch in children
+            )
+            sub_row = f'\n<div class="subsection-nav">{subs}</div>'
+            break
 
     if SHOW_TOOLS:
-        tools = " &middot; ".join(link_or_text(*t) for t in _TOOLS)
-        tools_row = f'<div class="tools-nav">{tools}</div>'
+        tools = " &middot; ".join(link_or_text(*t, t[0] == active) for t in _TOOLS)
+        tools_row = f'\n<div class="tools-nav">{tools}</div>'
     else:
         tools_row = ""
 
     return f"""<nav class="section-nav">
-<div class="streams-nav">{streams}</div>
-{tools_row}
+<div class="streams-nav">{streams}</div>{sub_row}{tools_row}
 </nav>"""
 
 
@@ -427,7 +479,7 @@ def render_post(date: datetime, body_html: str) -> str:
 
 <main>
 <div class="container container--reading">
-<a class="back-link" href="{back_href}">{ARROW_LEFT_SVG} All briefings</a>
+<a class="back-link" href="{back_href}">{ARROW_LEFT_SVG} All Daily Briefs</a>
 
 <article id="{slug}" class="brief">
 <header class="brief-header">
@@ -581,33 +633,49 @@ def collect_latest_report() -> dict | None:
     }
 
 
-def collect_latest_filing() -> dict | None:
-    """Scan public-record/ for the newest filing."""
-    if not PUBLIC_RECORD_DIR.exists():
-        return None
-    candidates = []
-    for f in PUBLIC_RECORD_DIR.glob("liquor-*.html"):
+def _collect_at_dir(directory: Path, href_prefix: str, kind: str, kind_label: str) -> list[dict]:
+    """Collect Around Town items from one source dir (filings or development).
+    Both render a `.filing-subtitle` lede + an <article> <h1>, so extraction is
+    uniform. Date comes from the YYYY-MM-DD in the filename."""
+    items = []
+    if not directory.exists():
+        return items
+    pattern = "liquor-*.html" if kind == "new-business" else "*.html"
+    for f in directory.glob(pattern):
         m = re.search(r"(\d{4}-\d{2}-\d{2})", f.stem)
         if not m:
             continue
         dt = datetime.strptime(m.group(1), "%Y-%m-%d")
-        candidates.append((dt, f))
-    if not candidates:
-        return None
-    candidates.sort(reverse=True)
-    dt, f = candidates[0]
-    content = f.read_text()
-    title = _article_h1(content) or f.stem
-    lede = ""
-    lede_match = re.search(r'<p class="filing-subtitle">(.+?)</p>', content)
-    if lede_match:
-        lede = _unescape_and_truncate(lede_match.group(1))
-    return {
-        "date": dt,
-        "title": title,
-        "lede": lede,
-        "href": f"public-record/{f.stem}.html",
-    }
+        content = f.read_text()
+        title = _article_h1(content) or f.stem
+        lede = ""
+        lede_match = re.search(r'<p class="filing-subtitle">(.+?)</p>', content)
+        if lede_match:
+            lede = _unescape_and_truncate(lede_match.group(1))
+        items.append({
+            "date": dt,
+            "title": title,
+            "lede": lede,
+            "href": f"{href_prefix}/{f.stem}.html",
+            "kind": kind,
+            "kind_label": kind_label,
+        })
+    return items
+
+
+def collect_around_town_items() -> list[dict]:
+    """Merged Around Town feed: new-business/liquor filings (public-record/) +
+    development cases (around-town/), newest first."""
+    items = (_collect_at_dir(PUBLIC_RECORD_DIR, "public-record", "new-business", "New business")
+             + _collect_at_dir(AROUND_TOWN_DIR, "around-town", "development", "Development"))
+    items.sort(key=lambda x: x["date"], reverse=True)
+    return items
+
+
+def collect_latest_filing() -> dict | None:
+    """Newest item across all of Around Town (filings + development)."""
+    items = collect_around_town_items()
+    return items[0] if items else None
 
 
 def collect_latest_indepth() -> dict | None:
@@ -672,17 +740,15 @@ Read today&rsquo;s brief {ARROW_SVG}
 
 
 def _render_stream_card(label: str, when: str, item: dict) -> str:
-    """A cross-stream card: eyebrow with section + date, big title, optional lede."""
-    lede_html = f'<p class="card__lede">{escape(item["lede"])}</p>' if item.get("lede") else ""
+    """A cross-stream card: just the section label + the headline.
+    (`when`/date and the story lede are intentionally omitted — both read as
+    clutter on these cards; the section label + headline carry the card.)"""
     return f"""<article class="card">
 <p class="card__eyebrow">
 {SUNRAY_SVG}
 <span>{label}</span>
-<span class="dot"></span>
-<span>{when}</span>
 </p>
 <h3 class="card__title"><a href="{item["href"]}">{escape(item["title"])}</a></h3>
-{lede_html}
 </article>"""
 
 
@@ -705,6 +771,39 @@ def _render_recent_item(p: dict) -> str:
 </li>"""
 
 
+# A plain-language map of the site for first-time visitors. Mirrors the fuller
+# guide on about.html.
+_SECTION_GUIDE = [
+    ("Daily Briefs", "briefings.html",
+     "Every morning&rsquo;s synthesis of Tucson news &mdash; city, county, courts, business &mdash; in one place."),
+    ("Local Government", "local-government.html",
+     "What your council is deciding: previewed before each meeting, reported after."),
+    ("Around Town", "around-town.html",
+     "New businesses, filings, rezonings and development &mdash; what&rsquo;s opening and changing near you."),
+    ("Deep Dives", "in-depth.html",
+     "Standalone feature stories on the issues that matter most across Southern Arizona."),
+    ("ChatTDB", "ask.html",
+     "Ask anything about Tucson &mdash; answers drawn from, and citing, TDB&rsquo;s own reporting."),
+]
+
+
+def _render_section_guide() -> str:
+    items = "\n".join(
+        f'<a class="guide-item" href="{href}">'
+        f'<h3 class="guide-item__title">{name}</h3>'
+        f'<p class="guide-item__desc">{desc}</p></a>'
+        for name, href, desc in _SECTION_GUIDE
+    )
+    return f"""<section class="guide">
+<div class="container container--editorial">
+<div class="guide__head"><h2 class="section-head">What you&rsquo;ll find here</h2></div>
+<div class="guide-grid">
+{items}
+</div>
+</div>
+</section>"""
+
+
 def render_homepage(posts: list[dict],
                     latest_meeting: dict | None,
                     latest_report: dict | None,
@@ -724,13 +823,13 @@ def render_homepage(posts: list[dict],
             recent_block = f"""<section class="recent">
 <div class="container container--editorial">
 <div class="recent__head">
-<h2 class="section-head">Recent briefings</h2>
+<h2 class="section-head">Recent Daily Briefs</h2>
 </div>
 <ul class="recent__list">
 {recent_items}
 </ul>
 <p class="recent__see-all">
-<a href="briefings.html">See all daily briefings {ARROW_SVG}</a>
+<a href="briefings.html">See all Daily Briefs {ARROW_SVG}</a>
 </p>
 </div>
 </section>"""
@@ -740,13 +839,13 @@ def render_homepage(posts: list[dict],
     cards = []
     if latest_meeting:
         when = "Tomorrow" if latest_meeting["date"].date() == (today.date() + timedelta(days=1)) else format_date_short(latest_meeting["date"])
-        cards.append(_render_stream_card("Meeting Watch", when, latest_meeting))
+        cards.append(_render_stream_card("Local Meeting Previews", when, latest_meeting))
     if latest_report:
-        cards.append(_render_stream_card("News Reports", format_date_short(latest_report["date"]), latest_report))
+        cards.append(_render_stream_card("Local Meeting Reports", format_date_short(latest_report["date"]), latest_report))
     if latest_filing:
-        cards.append(_render_stream_card("Spotted", format_date_short(latest_filing["date"]), latest_filing))
+        cards.append(_render_stream_card("Around Town", format_date_short(latest_filing["date"]), latest_filing))
     if latest_indepth:
-        cards.append(_render_stream_card("In Depth", format_date_short(latest_indepth["date"]), latest_indepth))
+        cards.append(_render_stream_card("Deep Dives", format_date_short(latest_indepth["date"]), latest_indepth))
 
     if cards:
         cross_block = f"""<section class="cross-section">
@@ -805,6 +904,7 @@ def render_homepage(posts: list[dict],
 <main>
 {featured_block}
 {cross_block}
+{_render_section_guide()}
 {tools_block}
 {subscribe_block}
 {recent_block}
@@ -837,7 +937,7 @@ def render_briefings_index(posts: list[dict]) -> str:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Daily Briefings &mdash; Tucson Daily Brief</title>
+<title>Daily Briefs &mdash; Tucson Daily Brief</title>
 <link rel="stylesheet" href="style.css">
 {ANALYTICS_HTML}
 </head>
@@ -852,7 +952,7 @@ def render_briefings_index(posts: list[dict]) -> str:
 <main>
 <div class="container container--editorial">
 <div style="padding-top:var(--gap-xl);margin-bottom:var(--gap-l)">
-<h2 class="section-head">Daily briefings</h2>
+<h2 class="section-head">Daily Briefs</h2>
 <p class="section-intro">Every day&rsquo;s synthesis of Tucson, Pima County, and Arizona news, newest first.</p>
 </div>
 
@@ -896,9 +996,133 @@ def rebuild_all_briefs(source_dir: str | Path) -> None:
     print(f"  Regenerated {count} daily-brief HTML page(s)")
 
 
+# ---------------------------------------------------------------------------
+# Hub landing pages — Local Government, Around Town (no-JS: pages, not dropdowns)
+# ---------------------------------------------------------------------------
+
+def render_local_government(latest_meeting: dict | None,
+                            latest_report: dict | None) -> str:
+    """Local Government hub: previews (before) + reports (after), with the
+    latest of each surfaced as a card and links to the full archives."""
+    cards = []
+    if latest_meeting:
+        cards.append(_render_stream_card("Local Meeting Previews",
+                                         format_date_short(latest_meeting["date"]),
+                                         latest_meeting))
+    if latest_report:
+        cards.append(_render_stream_card("Local Meeting Reports",
+                                         format_date_short(latest_report["date"]),
+                                         latest_report))
+    cards_block = f'<div class="cross-grid">{"".join(cards)}</div>' if cards else ""
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Local Government &mdash; Tucson Daily Brief</title>
+<link rel="stylesheet" href="style.css">
+{ANALYTICS_HTML}
+</head>
+<body>
+
+{site_header_html()}
+
+<div class="container">
+{section_nav_html(active="local-government")}
+</div>
+
+<main>
+<div class="container container--editorial">
+<div style="padding-top:var(--gap-xl);margin-bottom:var(--gap-l)">
+<h2 class="section-head">Local Government</h2>
+<p class="section-intro">What your local government is deciding &mdash; before and after. Ahead of each meeting we preview what&rsquo;s on the agenda; afterward we report what was decided. Coverage spans Tucson, Pima County, Marana, and Oro Valley.</p>
+</div>
+
+{cards_block}
+
+<p class="hub-links">
+<a href="meeting-watch.html">All Local Meeting Previews {ARROW_SVG}</a>
+<a href="news-reports.html">All Local Meeting Reports {ARROW_SVG}</a>
+</p>
+
+<div style="margin-top:var(--gap-xl)">{SUBSCRIBE_PANEL_HTML}</div>
+</div>
+</main>
+
+<div class="container">
+{footer_html()}
+</div>
+
+{SCROLL_TRIGGER_JS}
+</body>
+</html>
+"""
+
+
+def _render_at_item(it: dict) -> str:
+    """One row in the Around Town combined feed, tagged by kind."""
+    return f"""<li class="at-item">
+<div class="at-meta">
+<span class="post-date">{format_date_short(it["date"])}</span>
+<span class="at-tag at-tag--{it["kind"]}">{it["kind_label"]}</span>
+</div>
+<a href="{it["href"]}">{escape(it["title"])}</a>
+<p class="post-lede">{escape(it["lede"])}</p>
+</li>"""
+
+
+def render_around_town(items: list[dict]) -> str:
+    """Around Town combined feed: new-business filings + development cases."""
+    lis = ("\n".join(_render_at_item(it) for it in items) if items
+           else '<li class="empty">Nothing yet &mdash; check back soon.</li>')
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Around Town &mdash; Tucson Daily Brief</title>
+<link rel="stylesheet" href="style.css">
+{ANALYTICS_HTML}
+</head>
+<body>
+
+{site_header_html()}
+
+<div class="container">
+{section_nav_html(active="around-town")}
+</div>
+
+<main>
+<div class="container container--editorial">
+<div style="padding-top:var(--gap-xl);margin-bottom:var(--gap-l)">
+<h2 class="section-head">Around Town</h2>
+<p class="section-intro">What&rsquo;s opening, building, and changing near you &mdash; new businesses and liquor filings, plus rezonings and development cases &mdash; pulled automatically from public records, most of which never get reported on. Each item is tagged <strong>New business</strong> or <strong>Development</strong>.</p>
+</div>
+
+<div style="margin-bottom:var(--gap-xl)">{SUBSCRIBE_PANEL_HTML}</div>
+
+<ul class="post-list at-list">
+{lis}
+</ul>
+</div>
+</main>
+
+<div class="container">
+{footer_html()}
+</div>
+
+{SCROLL_TRIGGER_JS}
+</body>
+</html>
+"""
+
+
 def rebuild_homepage() -> None:
-    """Rebuild index.html (zoned homepage) and briefings.html (full archive).
-    Callable from any pipeline that publishes new content."""
+    """Rebuild index.html (zoned homepage), briefings.html (full archive), and
+    the two hub pages (local-government.html, around-town.html). Callable from
+    any pipeline that publishes new content."""
     posts = collect_existing_posts()
     latest_meeting = collect_latest_meeting()
     latest_report = collect_latest_report()
@@ -909,7 +1133,13 @@ def rebuild_homepage() -> None:
         render_homepage(posts, latest_meeting, latest_report, latest_filing, latest_indepth)
     )
     (SITE_DIR / "briefings.html").write_text(render_briefings_index(posts))
-    print(f"  Rebuilt: index.html (homepage) + briefings.html ({len(posts)} briefing(s))")
+    (SITE_DIR / "local-government.html").write_text(
+        render_local_government(latest_meeting, latest_report)
+    )
+    (SITE_DIR / "around-town.html").write_text(
+        render_around_town(collect_around_town_items())
+    )
+    print(f"  Rebuilt: index.html + briefings.html + local-government.html + around-town.html ({len(posts)} briefing(s))")
 
 
 # ---------------------------------------------------------------------------

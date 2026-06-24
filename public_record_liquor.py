@@ -324,10 +324,10 @@ def render_filing_html(data: dict, source_meta: dict, meeting_date: str) -> str:
 
 <main>
 <div class="container container--reading">
-<a class="back-link" href="../public-record.html">{ARROW_LEFT_SVG} All spotted filings</a>
+<a class="back-link" href="../around-town.html">{ARROW_LEFT_SVG} All of Around Town</a>
 
 <article class="post-page public-record-filing">
-<p class="post-meta">Spotted &middot; Liquor License Filing</p>
+<p class="post-meta">Around Town &middot; New business &middot; Liquor License Filing</p>
 <h1>{escape_html(business)}</h1>
 <p class="filing-subtitle">Series {escape_html(series)} {escape_html(license_type)} &middot; {escape_html(action_type)}</p>
 
@@ -376,7 +376,7 @@ def render_index_html(filings: list[dict]) -> str:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Spotted &mdash; Tucson Daily Brief</title>
+<title>New Businesses &amp; Filings &mdash; Around Town &mdash; Tucson Daily Brief</title>
 <link rel="stylesheet" href="style.css">
 {ANALYTICS_HTML}
 </head>
@@ -391,8 +391,8 @@ def render_index_html(filings: list[dict]) -> str:
 <main>
 <div class="container container--editorial">
 <div style="padding-top:var(--gap-xl);margin-bottom:var(--gap-l)">
-<h2 class="section-head">Spotted</h2>
-<p class="section-intro">New restaurants, bars, businesses, and filings going through public review &mdash; most of which never get reported on. We pull them automatically from the agendas of Pima County BOS, Tucson Mayor &amp; Council, and Oro Valley Town Council. Spot one near you? <a href="mailto:nicholas@daylayown.org">Let us know</a>.</p>
+<h2 class="section-head">New Businesses &amp; Filings</h2>
+<p class="section-intro">New restaurants, bars, businesses, and filings going through public review &mdash; most of which never get reported on. We pull them automatically from the agendas of Pima County BOS, Tucson Mayor &amp; Council, and Oro Valley Town Council. This is part of <a href="around-town.html">Around Town</a> &mdash; see development &amp; rezonings there too. Spot one near you? <a href="mailto:nicholas@daylayown.org">Let us know</a>.</p>
 </div>
 
 <div style="margin-bottom:var(--gap-xl)">{SUBSCRIBE_PANEL_HTML}</div>
