@@ -25,6 +25,8 @@ import json
 import os
 import re
 import sys
+import time
+import urllib.error
 import urllib.request
 from datetime import date, datetime, timedelta
 from pathlib import Path
@@ -198,6 +200,12 @@ def build_content_block(daily_briefs, news_reports, public_record, upcoming_meet
     return "\n".join(parts)
 
 
+# Retry transient failures (connection resets, timeouts, 429/5xx). Flaky wifi
+# (MT7925 driver, see CLAUDE.md / network notes) can reset a connection mid-request,
+# which previously killed the whole unattended cron run on a single blip.
+MAX_RETRIES = 4
+
+
 def call_claude(prompt: str, api_key: str) -> str | None:
     body = json.dumps({
         "model": CLAUDE_MODEL,
@@ -214,16 +222,29 @@ def call_claude(prompt: str, api_key: str) -> str | None:
         },
         method="POST",
     )
-    try:
-        with urllib.request.urlopen(req, timeout=180) as resp:
-            result = json.loads(resp.read())
-            content = result.get("content", [])
-            if content and content[0].get("type") == "text":
-                return content[0]["text"]
-            return None
-    except Exception as e:
-        print(f"  ERROR: Claude API call failed: {e}", file=sys.stderr)
-        return None
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            with urllib.request.urlopen(req, timeout=180) as resp:
+                result = json.loads(resp.read())
+                content = result.get("content", [])
+                if content and content[0].get("type") == "text":
+                    return content[0]["text"]
+                return None
+        except urllib.error.HTTPError as e:
+            # 4xx (except 429 rate-limit) are our fault — don't retry.
+            if e.code != 429 and 400 <= e.code < 500:
+                print(f"  ERROR: Claude API call failed (HTTP {e.code}, not retrying): {e}", file=sys.stderr)
+                return None
+            last_err = f"HTTP {e.code}"
+        except Exception as e:
+            last_err = str(e)
+        if attempt < MAX_RETRIES:
+            backoff = 2 ** (attempt - 1) + 0.1 * attempt  # 1.1s, 2.2s, 4.3s
+            print(f"  WARN: Claude API call failed ({last_err}); retry {attempt}/{MAX_RETRIES - 1} in {backoff:.1f}s", file=sys.stderr)
+            time.sleep(backoff)
+        else:
+            print(f"  ERROR: Claude API call failed after {MAX_RETRIES} attempts: {last_err}", file=sys.stderr)
+    return None
 
 
 def next_sunday(today: date) -> date:
