@@ -196,6 +196,33 @@ View at: https://tucsondailybrief.com/around-town.html"
     PUBLISHED=$((PUBLISHED + DEV_COUNT))
 fi
 
+# --- Around Town: Marana development projects (ArcGIS poll) ---
+# Polls Marana's public ArcGIS DS_Current_Projects_Live layer, diffs against
+# prior state (around-town/.dev_state_marana.json), and publishes new/changed
+# projects under around-town/. Idempotent; non-fatal on failure. Feeds the same
+# combined Around Town feed.
+echo "Checking Marana development projects..."
+DEV_OUTPUT_MA=$(python3 dev_watch_marana.py 2>&1) || true
+echo "$DEV_OUTPUT_MA"
+DEV_COUNT_MA=$(echo "$DEV_OUTPUT_MA" | grep -oP 'Published/updated \K\d+' | tail -1)
+DEV_COUNT_MA=${DEV_COUNT_MA:-0}
+
+if [ "$DEV_COUNT_MA" -gt 0 ]; then
+    NOTIFY_MSG="🏗️ $DEV_COUNT_MA new/updated Marana development project(s)
+
+New commercial, residential, or land-use projects have been surfaced from Marana's development records and auto-published to Around Town.
+
+View at: https://tucsondailybrief.com/around-town.html"
+
+    TMPFILE=$(mktemp /tmp/dev-notify-ma-XXXXX.md)
+    echo "$NOTIFY_MSG" > "$TMPFILE"
+    if [ -f "$SEND_TELEGRAM" ]; then
+        python3 "$SEND_TELEGRAM" "$TMPFILE" || echo "WARNING: Around Town (Marana) Telegram notification failed (non-fatal)"
+    fi
+    rm -f "$TMPFILE"
+    PUBLISHED=$((PUBLISHED + DEV_COUNT_MA))
+fi
+
 # Git commit and push if anything was published
 if [ "$PUBLISHED" -gt 0 ]; then
     echo "Committing and pushing $PUBLISHED new item(s)..."

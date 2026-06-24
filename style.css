@@ -1225,6 +1225,25 @@ article.post-page p.source {
 
 .filing-facts dd { color: var(--ink); margin-left: 0; margin-top: 2px; }
 
+.filing-image {
+  margin: var(--gap-l) 0;
+}
+
+.filing-image img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--rule);
+  background: var(--bone);
+}
+
+.filing-image figcaption {
+  margin-top: 8px;
+  color: var(--ink-quiet);
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
 .filing-disclosure {
   background: var(--sand);
   border: 1px dashed var(--dust);

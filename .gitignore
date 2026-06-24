@@ -12,3 +12,4 @@ in-depth/*-draft.md
 
 # Around Town development-watch state
 around-town/.dev_state.json
+around-town/.dev_state_marana.json
