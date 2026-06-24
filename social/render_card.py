@@ -278,6 +278,11 @@ DEMO = [
          headline="Where our weather comes from",
          dek="Every morning we pull the forecast straight from the National Weather Service’s free public API — pinned to one spot downtown (32.22, -110.97, right by Hotel Congress). The government’s own data, no TV-weather middleman.",
          meta_text="tucsondailybrief.com"),
+    dict(slug="news-alpr-2026-06-23", theme="light",
+         kicker="City Council",
+         headline="Tucson approves an independent review of police license-plate readers",
+         source="June 23, 2026",
+         meta_text="tucsondailybrief.com"),
 ]
 
 if __name__ == "__main__":
