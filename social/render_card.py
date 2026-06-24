@@ -288,6 +288,17 @@ DEMO = [
          headline="We sat in on the whole meeting.",
          dek="Our AI reporter transcribed the full City Council meeting, then a working journalist reviewed and fact-checked the report before we published it. No press release, no secondhand summary — straight from the source.",
          meta_text="tucsondailybrief.com"),
+    dict(slug="news-pima-budget-2026-06-23", theme="light",
+         kicker="Board of Supervisors",
+         headline="Pima County’s $1.8B budget adds bonuses for its lowest-paid workers",
+         source="June 23, 2026",
+         meta_text="tucsondailybrief.com"),
+    # Reusable "how we know" card — generic, pairs with any News Report carousel.
+    dict(slug="news-howweknow", theme="terracotta",
+         kicker="How we know",
+         headline="We sat in on the whole meeting.",
+         dek="Our AI reporter transcribed the full meeting, then a working journalist reviewed and fact-checked the report before we published it. No press release, no secondhand summary — straight from the source.",
+         meta_text="tucsondailybrief.com"),
 ]
 
 if __name__ == "__main__":
