@@ -70,6 +70,7 @@ Static blog for GitHub Pages — minimal, text-first, Daring Fireball style. No 
 ├── crime-tpd-data.md            # Research notes (2026-05-19) — TPD's own published crime data 2019–2025, clearance-rate methodology gap, peer-city comparison
 ├── OV-DATA-FEASIBILITY.md       # Feasibility scan (2026-06-23) — what Oro Valley structured data is machine-collectible (GIS dev cases, vote minutes, FBI crime API, water/budget PDFs)
 ├── SHORT-FORM-VIDEO.md          # Platform automation map + DIY-adapter plan (2026-06-23) — YouTube/IG/FB auto-publishable for $0, TikTok = future; generation pipeline reuses ~80% of podcast flow
+├── TUCSONENBREVE.md             # Plan (2026-06-24) for the Spanish-language fork at tucsonenbreve.com — translate canonical md → language-aware renderers → separate Pages repo
 ├── CNAME                        # Custom domain: tucsondailybrief.com
 ├── .nojekyll                    # Tells GitHub Pages to skip Jekyll
 ├── .gitignore                   # Excludes __pycache__/, .venv/, transcripts/, etc.
@@ -970,7 +971,11 @@ Priority order (verdicts + sources in the doc):
 4. **Water tracker — MODERATE.** Annual Report (production by source, per-well groundwater levels) + Rates Analysis PDFs; on-brand desert/water but annual cadence, image-table extraction needs an LLM pass. WAF headers required.
 5. **Budget summaries — MODERATE; vendor data BLOCKED.** ACFR/adopted-budget PDFs parse with existing `pdftotext` muscle (dept-level budget-vs-actual). The high-value vendor check register is **not published** — records request only. `openbooks.az.gov` is a dead end for OV (stub).
 
-## Roadmap: Spanish-Language TDB (bilingual, social-first)
+## Roadmap: Spanish-Language TDB → "Tucson en Breve" full fork
+
+**Evolved 2026-06-24 → the vision is now a full Spanish sister site at `tucsonenbreve.com`, not just social. Full plan: `TUCSONENBREVE.md`.** A parallel Spanish fork that mirrors TDB's content via LLM auto-translation (translate canonical markdown → language-aware renderers → separate GitHub Pages repo, same desert-palette CSS, Spanish UI strings + a civic-terminology glossary; names/places reuse `pipeline/local_names.json`). Forks the brief, news reports, meeting watch, Spotted, In Depth, podcast (Spanish TTS), short-form (Spanish cuts → @tucsonenbreve socials), and newsletter; **defers Ask/RAG, the crossword, and the Responsiveness Index.** Spanish short-form cuts are likely the first visible deliverable (the bilingual-Shorts idea — but as *separate cuts*, not both languages crammed on one card). Status: planning only. The notes below are the earlier social-first framing, now subsumed by the full-fork plan.
+
+### Earlier social-first framing (2026-06-23, subsumed by the fork plan above)
 
 Discussed 2026-06-23. **The single strongest "set us further apart" move on the table.** The Tucson metro has a large, under-served Spanish-speaking population; AI translation makes a bilingual product near-free at the margin; no other local outlet does real bilingual *civic* coverage. It's differentiation + civic mission + reuses everything already built.
 
