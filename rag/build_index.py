@@ -307,6 +307,43 @@ def chunk_public_record(html: str, date_iso: str) -> list[dict]:
     return [{"section_title": title, "chunk_index": 0, "content": body}]
 
 
+def chunk_around_town_dev(html: str, date_iso: str) -> list[dict]:
+    """Around Town development case: title, subtitle, fact list, AI summary, and
+    the 'From the case record' description — all into one chunk. Same filing
+    markup as public-record, plus the case-record paragraph; excludes the
+    disclosure/meta footer after the <hr>."""
+    article = extract_article(html)
+
+    title_m = re.search(r"<h1>(.+?)</h1>", article, re.DOTALL)
+    title = strip_tags(title_m.group(1)) if title_m else ""
+
+    sub_m = re.search(r'<p class="filing-subtitle">(.+?)</p>', article, re.DOTALL)
+    subtitle = strip_tags(sub_m.group(1)) if sub_m else ""
+
+    facts: list[str] = []
+    for dt, dd in re.findall(r"<dt>(.+?)</dt>\s*<dd>(.+?)</dd>", article, re.DOTALL):
+        facts.append(f"{strip_tags(dt)}: {strip_tags(dd)}")
+
+    # Body = every <p> between </dl> and the <hr> (AI summary + case-record line)
+    body_parts: list[str] = []
+    mid = re.search(r"</dl>(.*?)<hr>", article, re.DOTALL)
+    if mid:
+        for p in re.findall(r"<p[^>]*>(.+?)</p>", mid.group(1), re.DOTALL):
+            t = strip_tags(p)
+            if t:
+                body_parts.append(t)
+
+    body = title
+    if subtitle:
+        body += f" — {subtitle}"
+    if facts:
+        body += "\n\n" + "\n".join(facts)
+    if body_parts:
+        body += "\n\n" + "\n\n".join(body_parts)
+
+    return [{"section_title": title, "chunk_index": 0, "content": body}]
+
+
 def chunk_agenda_full(md: str, date_iso: str) -> list[dict]:
     """Full agenda reference: skip the procedural preamble, then fixed-window chunks
     over the substantive content."""
@@ -394,6 +431,12 @@ def walk_corpus():
             date = file_date(p.name)
             yield p, "public_record", f"{BASE_URL}/public-record/{p.name}", date, chunk_public_record
 
+    at = SITE_DIR / "around-town"
+    if at.exists():
+        for p in sorted(at.glob("*.html")):
+            date = file_date(p.name)
+            yield p, "around_town_dev", f"{BASE_URL}/around-town/{p.name}", date, chunk_around_town_dev
+
     aw = SITE_DIR / "agenda-watch"
     if aw.exists():
         for p in sorted(aw.glob("*-full.md")):
@@ -409,7 +452,8 @@ DOC_TYPE_LABELS = {
     "news_report": "News report",
     "meeting_watch": "Meeting preview",
     "agenda_full": "Full agenda reference",
-    "public_record": "Public record filing",
+    "public_record": "Around Town filing (new business)",
+    "around_town_dev": "Around Town development case",
 }
 
 

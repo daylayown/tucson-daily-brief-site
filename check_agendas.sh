@@ -169,6 +169,33 @@ View at: https://tucsondailybrief.com/public-record.html"
     PUBLISHED=$((PUBLISHED + PR_COUNT))
 fi
 
+# --- Around Town: Oro Valley development cases (ArcGIS poll) ---
+# Polls Oro Valley's public ArcGIS Development_Cases layer, diffs against prior
+# state (around-town/.dev_state.json), and publishes new/changed cases under
+# around-town/. Idempotent; non-fatal on failure. Feeds the combined Around
+# Town feed (rebuilt internally via rebuild_homepage).
+echo "Checking Oro Valley development cases..."
+DEV_OUTPUT=$(python3 dev_watch_orovalley.py 2>&1) || true
+echo "$DEV_OUTPUT"
+DEV_COUNT=$(echo "$DEV_OUTPUT" | grep -oP 'Published/updated \K\d+' | tail -1)
+DEV_COUNT=${DEV_COUNT:-0}
+
+if [ "$DEV_COUNT" -gt 0 ]; then
+    NOTIFY_MSG="🏗️ $DEV_COUNT new/updated Oro Valley development case(s)
+
+New rezonings, variances, or development plans have been surfaced from Oro Valley's planning records and auto-published to Around Town.
+
+View at: https://tucsondailybrief.com/around-town.html"
+
+    TMPFILE=$(mktemp /tmp/dev-notify-XXXXX.md)
+    echo "$NOTIFY_MSG" > "$TMPFILE"
+    if [ -f "$SEND_TELEGRAM" ]; then
+        python3 "$SEND_TELEGRAM" "$TMPFILE" || echo "WARNING: Around Town Telegram notification failed (non-fatal)"
+    fi
+    rm -f "$TMPFILE"
+    PUBLISHED=$((PUBLISHED + DEV_COUNT))
+fi
+
 # Git commit and push if anything was published
 if [ "$PUBLISHED" -gt 0 ]; then
     echo "Committing and pushing $PUBLISHED new item(s)..."
@@ -178,7 +205,9 @@ if [ "$PUBLISHED" -gt 0 ]; then
     # markdown; the rest are published HTML + rebuilt indexes. Update this list
     # if a pipeline starts writing new output paths.
     git add agenda-watch/ meeting-watch/ meeting-watch.html \
-            public-record/ public-record.html index.html briefings.html
+            public-record/ public-record.html \
+            around-town/ around-town.html local-government.html \
+            index.html briefings.html
     git commit -m "Auto-publish meeting preview(s) and public record filing(s) for $(date +%Y-%m-%d)" || true
     git push
     echo "Pushed to GitHub Pages."

@@ -38,7 +38,8 @@ DOC_TYPE_LABELS = {
     "news_report": "News report",
     "meeting_watch": "Meeting preview",
     "agenda_full": "Full agenda reference",
-    "public_record": "Public record filing",
+    "public_record": "Around Town filing (new business)",
+    "around_town_dev": "Around Town development case",
 }
 
 SYSTEM_PROMPT = """You are an assistant for Tucson Daily Brief, a local news site covering the Tucson, Arizona metro area — the City of Tucson, Pima County, Marana, Oro Valley, Green Valley, and surrounding communities.
