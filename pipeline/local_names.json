@@ -186,6 +186,17 @@
           "Milian",
           "Millan"
         ]
+      },
+      {
+        "canonical": "Aeric Koerner",
+        "title": "Analysis Administrator, Tucson Police Department",
+        "deepgram_misreads": [
+          "Eric Kerner",
+          "Aeric Kerner",
+          "Eric Koerner",
+          "Erik Kerner",
+          "Doctor Eric Kerner"
+        ]
       }
     ],
     "places": [
