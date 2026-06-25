@@ -182,13 +182,90 @@ PAGE = """<!DOCTYPE html>
 </body></html>"""
 
 
+# Centered emblem lockup: big desert sun over a Fraunces wordmark + small caps
+# sub-line. For a faux "logo" (e.g. a LinkedIn share image) where post text does
+# the explaining — no kicker/dek/footer.
+LOGO_PAGE = """<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="__FONTS__">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { width:__W__px; height:__H__px; }
+  body {
+    background:__BG__; color:__INK__;
+    font-family:'Newsreader',Georgia,serif;
+    -webkit-font-smoothing:antialiased;
+    position:relative; overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+  }
+  body::before {
+    content:""; position:absolute; inset:0;
+    background:radial-gradient(760px 760px at 50% 40%, __GLOW__ 0%, transparent 64%);
+    pointer-events:none;
+  }
+  .lockup {
+    position:relative; z-index:1;
+    display:flex; flex-direction:column; align-items:center; text-align:center;
+  }
+  .mark { line-height:0; margin-bottom:48px; }
+  .mark svg { width:208px; height:208px; }
+  .wordmark {
+    font-family:'Fraunces',serif;
+    font-variation-settings:'opsz' 144,'wght' 600,'SOFT' 0,'WONK' 1;
+    font-size:__WSIZE__px;
+    letter-spacing:-0.02em;
+    color:__INK__;
+    line-height:1;
+  }
+  .sub {
+    margin-top:40px;
+    font-family:'Newsreader',serif;
+    font-weight:600;
+    font-size:30px;
+    letter-spacing:0.34em;
+    text-transform:uppercase;
+    color:__KICKER__;
+  }
+</style></head>
+<body>
+  <div class="lockup">
+    <div class="mark">__SUN__</div>
+    <div class="wordmark">__WORDMARK__</div>
+    __SUB__
+  </div>
+</body></html>"""
+
+
 def _esc(s):
     return _html.escape(s, quote=False)
 
 
+def build_logo(*, theme="terracotta", wordmark="ChatTDB",
+               sub="Tucson Daily Brief", size=(1200, 1200), wsize=170):
+    """Return HTML for a centered emblem 'logo' lockup (sun + wordmark + sub)."""
+    w, h = size
+    t = THEMES[theme]
+    sub_html = f'<div class="sub">{_esc(sub)}</div>' if sub else ""
+    out = LOGO_PAGE
+    repl = {
+        "__FONTS__": FONTS_HREF, "__W__": str(w), "__H__": str(h),
+        "__BG__": t["bg"], "__GLOW__": t["glow"], "__INK__": t["ink"],
+        "__KICKER__": t["kicker"], "__WSIZE__": str(wsize),
+        "__SUN__": SUN_SVG.replace("{COLOR}", t["sun"]),
+        "__WORDMARK__": _esc(wordmark), "__SUB__": sub_html,
+    }
+    for k, v in repl.items():
+        out = out.replace(k, v)
+    return out
+
+
 def build_card(*, theme="light", kicker, headline, dek=None, source=None,
-               meta_text="tucsondailybrief.com", hsize=None):
-    """Return the HTML string for one card."""
+               meta_text="tucsondailybrief.com", hsize=None, size=None):
+    """Return the HTML string for one card. `size=(w,h)` overrides the default
+    1080x1350 IG-portrait canvas (e.g. (1200,1200) for a LinkedIn square)."""
+    w, h = size or (W, H)
     t = THEMES[theme]
     if hsize is None:
         n = len(headline)
@@ -207,7 +284,7 @@ def build_card(*, theme="light", kicker, headline, dek=None, source=None,
 
     out = PAGE
     repl = {
-        "__FONTS__": FONTS_HREF, "__W__": str(W), "__H__": str(H),
+        "__FONTS__": FONTS_HREF, "__W__": str(w), "__H__": str(h),
         "__BG__": t["bg"], "__GLOW__": t["glow"], "__INK__": t["ink"],
         "__KICKER__": t["kicker"], "__ACCENT__": t["accent"], "__RULE__": t["rule"],
         "__META__": t["meta"], "__HSIZE__": str(hsize),
@@ -220,8 +297,10 @@ def build_card(*, theme="light", kicker, headline, dek=None, source=None,
     return out
 
 
-def render(slug, html_str):
-    """Render an HTML string to social/cards/<slug>.png at 1080x1350."""
+def render(slug, html_str, size=None):
+    """Render an HTML string to social/cards/<slug>.png. `size=(w,h)` overrides
+    the default 1080x1350 canvas (must match the size passed to build_card)."""
+    w, h = size or (W, H)
     os.makedirs(CARDS_DIR, exist_ok=True)
     html_path = os.path.join(CARDS_DIR, f"{slug}.html")
     big_path = os.path.join(CARDS_DIR, f"{slug}.2x.png")
@@ -233,15 +312,15 @@ def render(slug, html_str):
         "chromium", "--headless=new", "--no-sandbox", "--disable-gpu",
         "--hide-scrollbars", "--default-background-color=00000000",
         f"--force-device-scale-factor={SCALE}",
-        f"--window-size={W},{H}",
+        f"--window-size={w},{h}",
         "--virtual-time-budget=7000",
         f"--screenshot={big_path}",
         f"file://{html_path}",
     ], check=True, capture_output=True)
 
-    # downscale 2x -> exact IG spec with high-quality filter
+    # downscale 2x -> exact spec with high-quality filter
     subprocess.run([
-        "convert", big_path, "-resize", f"{W}x{H}", "-strip",
+        "convert", big_path, "-resize", f"{w}x{h}", "-strip",
         "-quality", "92", final_path,
     ], check=True, capture_output=True)
     os.remove(big_path)
@@ -293,6 +372,18 @@ DEMO = [
          headline="Pima County’s $1.8B budget adds bonuses for its lowest-paid workers",
          source="June 23, 2026",
          meta_text="tucsondailybrief.com"),
+    # --- 2026-06-24: ChatTDB.com launch — promote the RAG/Ask tool by its new domain
+    dict(slug="chattdb-2026-06-24", theme="terracotta",
+         kicker="Now live",
+         headline="ChatTDB",
+         dek="A free AI that answers real questions about the Old Pueblo — how the council voted, what’s opening, who filed for a liquor license — built on everything Tucson Daily Brief has ever reported. No sign-up, no app.",
+         meta_text="ChatTDB.com"),
+    # LinkedIn square (1200x1200) — crop-proof on desktop+mobile; same message.
+    dict(slug="chattdb-linkedin-2026-06-24", theme="terracotta", size=(1200, 1200),
+         kicker="Now live",
+         headline="ChatTDB",
+         dek="A free AI that answers real questions about the Old Pueblo — how the council voted, what’s opening, who filed for a liquor license — built on everything Tucson Daily Brief has ever reported. No sign-up, no app.",
+         meta_text="ChatTDB.com"),
     # Reusable "how we know" card — generic, pairs with any News Report carousel.
     dict(slug="news-howweknow", theme="terracotta",
          kicker="How we know",
@@ -304,6 +395,7 @@ DEMO = [
 if __name__ == "__main__":
     for c in DEMO:
         slug = c.pop("slug")
+        size = c.pop("size", None)
         print(f"rendering {slug} ...")
-        render(slug, build_card(**c))
+        render(slug, build_card(size=size, **c), size=size)
     print("done.")

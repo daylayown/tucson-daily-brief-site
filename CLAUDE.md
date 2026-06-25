@@ -971,6 +971,24 @@ Priority order (verdicts + sources in the doc):
 4. **Water tracker — MODERATE.** Annual Report (production by source, per-well groundwater levels) + Rates Analysis PDFs; on-brand desert/water but annual cadence, image-table extraction needs an LLM pass. WAF headers required.
 5. **Budget summaries — MODERATE; vendor data BLOCKED.** ACFR/adopted-budget PDFs parse with existing `pdftotext` muscle (dept-level budget-vs-actual). The high-value vendor check register is **not published** — records request only. `openbooks.az.gov` is a dead end for OV (stub).
 
+## Roadmap: Marana Structured-Data Layer
+
+Feasibility-scanned 2026-06-24 (4 parallel research agents; recovered from a mid-run PC crash). **Full reference: `MARANA-DATA-FEASIBILITY.md`** + the `project_marana_data_layer` memory. Same thesis as the OV layer above — Marana is the second municipality to get one. Marana is fast-growing and under-covered, and most of its civic data lives behind clean (non-WAF) ArcGIS/API surfaces.
+
+**Cross-cutting gotcha (INVERSE of OV's Akamai):** `www.maranaaz.gov` returns **403 to a full Chrome UA but 200 with no/minimal UA**; direct `files/assets/...` PDF URLs download fine. The clean WAF-free paths (prefer these): `portal.maranaaz.gov` (own ArcGIS server), `services1.arcgis.com/IZmVB517nWCTFBQy` (Marana AGOL org), `gisdata.pima.gov` (Marana zoning + parcels), FBI CDE API. `openbooks.az.gov` is Cloudflare-walled (needs a real UA).
+
+Priority order (verdicts + exact endpoints/fields in the doc):
+1. ✅ **Marana Development Watch — SHIPPED 2026-06-24 (`9120a30`).** `dev_watch_marana.py`, polling `portal.maranaaz.gov/.../Hosted/DS_Current_Projects_Live/FeatureServer/0`. 60 projects seeded into Around Town; wired into `check_agendas.sh` (own Telegram notice) + RAG (auto). Quirks handled: no edit-timestamp (content-hash diff), sparse date/number (case# recovered from the Cloudinary img path), and — because the feed shows each card's date — the ~20 undated projects are **skipped, not dated "today"** (no fabricated dates, no wall). State: `around-town/.dev_state_marana.json` (gitignored).
+2. ⭐ **Marana Crime + the TPD-contrast story — EASY, build next.** FBI CDE JSON API, **Marana PD ORI `AZ0100900`** confirmed, clean NIBRS 2018–2024 (no gap). `api.usa.gov/crime/fbi/cde/summarized/agency/AZ0100900/{violent-crime|property-crime|homicide}?from=MM-YYYY&to=MM-YYYY&API_KEY=…` (date format MM-YYYY). Ships a chartable feed **and** the story — "Marana reported every year; Tucson PD didn't, 2021–23." Establishes the crime-poller pattern OV wants too.
+3. **Commercial permits / business licenses — EASY–MODERATE.** Same Marana GIS `Hosted/` folder: `COMMERCIAL_BLDG_PERMITS`, `Business_License_2023` (a "what's opening" feed, near-identical poller to the dev watch). **Verify first:** is `Business_License_2023` live or a frozen 2023 snapshot? Liquor must come from the *state* DLLC — Marana's clerk page publishes no registry.
+4. **AZ DPS TOPS PDF — MODERATE.** Crime cross-check (`curl -k` — broken TLS chain); adds DPS clearance rate, corroborates FBI.
+5. **Budget/ACFR/AG-schedule PDFs — MODERATE.** Dept-level `pdftotext` parse; AG Schedules A–G are standardized state forms (one extractor works across municipalities). Vendor check-register **not published** (records request only).
+6. **Water — MODERATE.** Raftelis rate study + consumer-confidence reports; on-brand desert beat, annual cadence.
+
+**3 open questions the crash interrupted (verify before building those feeds):** (a) the Marana "Financial Transparency Dashboard" vendor/API — could be the expenditure explorer openbooks isn't; (b) the DLLC pending-applications endpoint — would it give a real liquor "new filings" feed?; (c) `Business_License_2023` currency + whether ADOT publishes a Marana crash-data slice.
+
+**Tiny side task:** add Marana council members + Marana PD command staff to `pipeline/local_names.json` (helps the meeting-reporter + RAG get names right).
+
 ## Roadmap: Spanish-Language TDB → "Tucson en Breve" full fork
 
 **Evolved 2026-06-24 → the vision is now a full Spanish sister site at `tucsonenbreve.com`, not just social. Full plan: `TUCSONENBREVE.md`.** A parallel Spanish fork that mirrors TDB's content via LLM auto-translation (translate canonical markdown → language-aware renderers → separate GitHub Pages repo, same desert-palette CSS, Spanish UI strings + a civic-terminology glossary; names/places reuse `pipeline/local_names.json`). Forks the brief, news reports, meeting watch, Spotted, In Depth, podcast (Spanish TTS), short-form (Spanish cuts → @tucsonenbreve socials), and newsletter; **defers Ask/RAG, the crossword, and the Responsiveness Index.** Spanish short-form cuts are likely the first visible deliverable (the bilingual-Shorts idea — but as *separate cuts*, not both languages crammed on one card). Status: planning only. The notes below are the earlier social-first framing, now subsumed by the full-fork plan.
