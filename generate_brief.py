@@ -507,10 +507,11 @@ def main():
 
     now = datetime.now(TZ)
     brief_date = datetime.strptime(args.date, "%Y-%m-%d").date() if args.date else now.date()
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=args.hours)
+    now_utc = datetime.now(timezone.utc)
     today_human = brief_date.strftime("%B %-d, %Y")
 
-    print(f"Generating Tucson Daily Brief for {brief_date} (window: last {args.hours}h)", file=sys.stderr)
+    print(f"Generating Tucson Daily Brief for {brief_date} "
+          f"(default window: last {args.hours}h; per-source 'window_hours' honored)", file=sys.stderr)
     sources = load_sources()
 
     by_source = []          # [(name, [items])] in tier order
@@ -525,10 +526,15 @@ def main():
             continue
         if stype == "api_json":
             continue        # weather handled separately
+        # Per-source recency window: low-cadence, high-value sources (e.g. AZPM)
+        # can set "window_hours" in sources.json to a longer lookback than the
+        # default so their bursty posts still get caught.
+        src_hours = src.get("window_hours", args.hours)
+        src_cutoff = now_utc - timedelta(hours=src_hours)
         if stype == "rss":
-            items, err = fetch_rss(src, cutoff)
+            items, err = fetch_rss(src, src_cutoff)
         elif stype == "bluesky":
-            items, err = fetch_bluesky(src, cutoff)
+            items, err = fetch_bluesky(src, src_cutoff)
         else:
             continue
         if err:
@@ -538,7 +544,8 @@ def main():
         items = dedupe(items)
         by_source.append((name, items))
         fetched.append((name, len(items)))
-        print(f"  ok    {name}: {len(items)} item(s) in window", file=sys.stderr)
+        win = f" [window {src_hours}h]" if src_hours != args.hours else ""
+        print(f"  ok    {name}: {len(items)} item(s) in window{win}", file=sys.stderr)
 
     weather_block, weather_errs = fetch_weather(sources)
     failed.extend(weather_errs)
