@@ -51,6 +51,12 @@ from zoneinfo import ZoneInfo
 import feedparser
 import requests
 
+# A handful of gov feeds use "insecure_tls" (broken cert chain); silence the
+# per-request InsecureRequestWarning those verify=False fetches would emit.
+requests.packages.urllib3.disable_warnings(
+    requests.packages.urllib3.exceptions.InsecureRequestWarning
+)
+
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
@@ -140,8 +146,12 @@ def clean_text(s):
 # ---------------------------------------------------------------------------
 
 def fetch_rss(src, cutoff):
+    # A few government feeds (e.g. Pima County Attorney) serve a valid feed over
+    # an incomplete TLS chain; "insecure_tls": true skips verification for them.
+    verify = not src.get("insecure_tls", False)
     try:
-        resp = requests.get(src["url"], headers=HTTP_HEADERS, timeout=FETCH_TIMEOUT)
+        resp = requests.get(src["url"], headers=HTTP_HEADERS,
+                            timeout=FETCH_TIMEOUT, verify=verify)
         resp.raise_for_status()
     except Exception as e:
         return [], f"fetch error: {e}"
