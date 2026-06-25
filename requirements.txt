@@ -5,3 +5,4 @@ sqlite-vec
 voyageai
 fastapi
 uvicorn[standard]
+feedparser
