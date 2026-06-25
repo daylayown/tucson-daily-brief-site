@@ -62,7 +62,11 @@ requests.packages.urllib3.disable_warnings(
 # ---------------------------------------------------------------------------
 
 HOME = Path.home()
-SOURCES_JSON = HOME / ".openclaw/skills/tucson-daily-brief/references/sources.json"
+# sources.json is version-controlled in this repo (pipeline/sources.json). The
+# legacy ~/.openclaw/.../references/sources.json path is now a symlink to it, so
+# any remaining OpenClaw reference still resolves, but this script reads the repo
+# copy directly (script-relative) and no longer depends on ~/.openclaw existing.
+SOURCES_JSON = Path(__file__).resolve().parent / "pipeline" / "sources.json"
 EDITOR_TIPS = HOME / ".openclaw/workspace/EDITOR-TIPS.md"
 BRIEFINGS_DIR = HOME / ".openclaw/workspace/briefings"
 
