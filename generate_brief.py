@@ -67,7 +67,13 @@ HOME = Path.home()
 # any remaining OpenClaw reference still resolves, but this script reads the repo
 # copy directly (script-relative) and no longer depends on ~/.openclaw existing.
 SOURCES_JSON = Path(__file__).resolve().parent / "pipeline" / "sources.json"
-EDITOR_TIPS = HOME / ".openclaw/workspace/EDITOR-TIPS.md"
+# EDITOR-TIPS.md is likewise version-controlled here (pipeline/EDITOR-TIPS.md); the
+# legacy ~/.openclaw/workspace/EDITOR-TIPS.md path is now a symlink to it. The original
+# TUCSON-BRIEF.md editorial rules (retired with the OpenClaw agent) are preserved for
+# reference at pipeline/TUCSON-BRIEF.md — the live rules are in SYNTHESIS_PROMPT below.
+EDITOR_TIPS = Path(__file__).resolve().parent / "pipeline" / "EDITOR-TIPS.md"
+# Output dir consumed downstream by run_podcast.sh (resolve_brief). Left under
+# ~/.openclaw/workspace by design: a pipeline contract, not version-controlled config.
 BRIEFINGS_DIR = HOME / ".openclaw/workspace/briefings"
 
 CLAUDE_MODEL = "claude-sonnet-4-6"

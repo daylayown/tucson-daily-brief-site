@@ -1044,24 +1044,19 @@ The live-recording piece dictates VM sizing — likely $15–25/mo instead of $5
 
 **Things to research / decide before building:** (1) context budget — can one Sonnet call hold ~11 fetched feeds, or do we distill each feed to notes first (cheap per-feed pass) then synthesize? (the extract-as-you-go idea, now forced by Python rather than hoped-for from an agent); (2) faithfully porting the `TUCSON-BRIEF.md` editorial logic into a prompt + the EDITOR-TIPS include-through date handling; (3) whether any OpenClaw skill features are actually used beyond cron+agent-turn (audit `~/.openclaw/` — believed to be nothing else); (4) feed-fetch robustness (Cloudflare-walled sources, the `status: broken/disabled` mechanism) reimplemented in Python with proper headers/timeouts. **Not yet building — research first.** Likely a ~1-day build given the synthesis prompt already exists in `TUCSON-BRIEF.md`.
 
-## Roadmap: Repo Consolidation
+## Repo Consolidation (brief-pipeline config — ✅ DONE 2026-06-26)
 
-Pipeline config files (`sources.json`, `TUCSON-BRIEF.md`, openclaw skill references) currently live under `~/.openclaw/` and are not version controlled. Plan is to consolidate them into this repo so everything is in one git history.
+The brief pipeline's config files now live in the repo under `pipeline/` and are version-controlled, so one `git log` tells the full story. Pattern used throughout: **move the file into `pipeline/`, leave a symlink at the old `~/.openclaw/` path** so any stale reference still resolves, and point the script at the repo copy directly.
 
-**Preferred approach:** Single repo. The site and pipeline are tightly coupled — `sources.json` feeds the agent that produces the markdown that `generate_post.py` turns into HTML. One repo means one `git log` tells the full story.
+**Consolidated:**
+- `pipeline/sources.json` — news source config (moved 2026-06-25, `095a20a`). Old `~/.openclaw/skills/tucson-daily-brief/references/sources.json` → symlink.
+- `pipeline/EDITOR-TIPS.md` — hand-submitted editor leads read by `generate_brief.py` each run (moved 2026-06-26). Old `~/.openclaw/workspace/EDITOR-TIPS.md` → symlink. `generate_brief.py` reads the repo copy script-relative.
+- `pipeline/TUCSON-BRIEF.md` — the original briefing-agent editorial rules, **now reference-only** (the OpenClaw agent is retired; the live rules are ported into `SYNTHESIS_PROMPT` in `generate_brief.py`). Kept for provenance. Old `~/.openclaw/workspace/TUCSON-BRIEF.md` → symlink.
+- Editorial rules themselves: already embedded in `generate_brief.py`'s `SYNTHESIS_PROMPT` (no separate rules file needed).
 
-**Work involved:**
-- Move/symlink relevant files from `~/.openclaw/skills/tucson-daily-brief/` and `~/.openclaw/workspace/TUCSON-BRIEF.md` into this repo (e.g. under `config/` or `pipeline/`)
-- Update hardcoded `~/.openclaw/` paths in: `TUCSON-BRIEF.md`, `check_agendas.sh`, `run_podcast.sh`, openclaw cron config (`~/.openclaw/cron/jobs.json`), and the skill's `references/` pointer
-- Verify `.gitignore` covers sensitive files (API keys are already in `environment.d`, not in the repo)
-- Test that the 6:00 AM and 8:00 AM cron pipelines still run end-to-end
-
-**Key files to bring in:**
-- `~/.openclaw/skills/tucson-daily-brief/references/sources.json` — news source config
-- `~/.openclaw/workspace/TUCSON-BRIEF.md` — editorial instructions for the briefing agent
-- Any other skill references that have accumulated
-
-Estimated effort: ~30-60 minutes. The path updates across scripts are the fiddliest part.
+**Deliberately left under `~/.openclaw/` (not consolidated, by design):**
+- `BRIEFINGS_DIR` (`~/.openclaw/workspace/briefings/`) — the brief **output** dir, a pipeline *contract* with `run_podcast.sh` (`resolve_brief`), not version-controlled config. Relocating it would mean a coordinated change to `run_podcast.sh` for no consolidation benefit.
+- `send_telegram.py` (`~/.openclaw/skills/tucson-daily-brief/scripts/`) — shared notify utility referenced by **four other pipelines** (`check_agendas.sh`, `ai_reporter.py`, `schedule_recording.py`, `poll_tucson_water.py`). Bringing it in is a broader, separate task touching those pipelines — a reasonable future follow-up, but out of scope for the brief consolidation.
 
 ## Social Media Cards (Instagram + Threads)
 
