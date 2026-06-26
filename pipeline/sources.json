@@ -255,12 +255,12 @@
 
     "tier_4_weather_safety": [
       {
-        "name": "NWS Tucson - Active Alerts (Pima County)",
+        "name": "NWS Tucson - Active Alerts (downtown point)",
         "type": "api_json",
-        "url": "https://api.weather.gov/alerts/active?zone=AZZ504",
+        "url": "https://api.weather.gov/alerts/active?point=32.2217,-110.9694",
         "category": "weather",
         "priority": "high",
-        "notes": "Zone AZZ504 = 'Tucson Metro Area including Tucson/Green Valley/Marana/Vail' (NWS Tucson office). CORRECTED 2026-06-25 — was AZZ540, which is 'Buckeye/Avondale' (NWS Phoenix/Maricopa) and pulled Phoenix alerts, not Tucson. Returns JSON by default. For ATOM/RSS format, use https://alerts.weather.gov/cap/wwaatmget.php?x=AZC019 (Pima County FIPS). Check for active warnings, watches, advisories."
+        "notes": "Query by POINT (downtown Tucson, 32.2217,-110.9694 — same point as the forecast source), NOT by a single zone. CORRECTED 2026-06-26: previously ?zone=AZZ504 (the public forecast zone), which structurally misses fire-weather products — Red Flag Warnings are issued for FIRE WEATHER zones (Tucson = AZZ150-154), a different zone set than public zones. The 2026-06-26 Red Flag Warning returned 0 results under zone=AZZ504 but is caught by the point query. A point query resolves ALL zones covering the spot (public + county + fire), so it catches heat warnings, flood watches, AND red flags in one call. (History: zone was also wrong before 2026-06-25 — AZZ540 = Phoenix/Buckeye.) For ATOM/RSS, alerts.weather.gov/cap/wwaatmget.php?x=AZC019 (Pima FIPS)."
       },
       {
         "name": "NWS Tucson - Forecast Discussion",
