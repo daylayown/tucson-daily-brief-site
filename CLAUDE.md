@@ -989,6 +989,34 @@ Priority order (verdicts + exact endpoints/fields in the doc):
 
 **Tiny side task:** add Marana council members + Marana PD command staff to `pipeline/local_names.json` (helps the meeting-reporter + RAG get names right).
 
+## Roadmap: City of Tucson Structured-Data Layer
+
+Feasibility-scanned **2026-06-26** (4 parallel research agents; reconstructed after a PC crash wiped the original unsaved search — captured this time). **Full reference: `TUCSON-DATA-FEASIBILITY.md`** + the `project_tucson_data_layer` memory. Third municipality after OV + Marana. **Guiding principle (user):** use AI to collect/analyze/re-present the civic data governments already publish, in *any* format that makes Southern AZ legible (not just articles/charts/podcasts — maps, dashboards, short-form video, social cards, alerts, RAG answers, trackers).
+
+**Headline:** Tucson is the *most* data-open municipality (opposite of its OnBase-PDF agenda reputation). Two **authless, no-WAF ArcGIS REST hosts** — `mapdata.tucsonaz.gov/arcgis/rest/services` + `gis.tucsonaz.gov/arcgis/rest/services` (reconcile canonical host at build; layer IDs matched across agents) — drop straight into the `dev_watch_*.py` poll-and-diff pattern.
+
+**Cross-cutting gotchas:** WAF *inversion* vs OV — `www.tucsonaz.gov` CMS 403s a Chrome UA but serves 200 to a **blank UA** (incl. `/files/` PDFs); GIS REST hosts no WAF. Bare `TPD`/`PublicSafety`/`HCD` folders are token-secured (empty to anon) — public data re-exposed under `PublicMaps/OpenData_*`. NOT Socrata; budget = OpenGov (no API). DCAT catalog at `gisdata.tucsonaz.gov/api/feed/dcat-us/1.1.json`.
+
+Priority order (endpoints/verdicts in the doc):
+1. ⭐ **Tucson Development Watch + "What's Opening"** — EASY, build first. Permits + Certificates of Occupancy (`PermitsCode/MapServer` /81, /99) + business licenses (/3 EconomicDevelopment, 93K rows + weekly CSV). Clone the OV/Marana dev-watch poller → Around Town.
+2. ⭐ **Crime/police + the FBI-gap story** — EASY, highest editorial value. Summarized UCR table (`services3.../Tucson_Police_Reported_Crimes/FeatureServer/8`, 256K rows current to this month = the policeanalysis.tucsonaz.gov PowerBI source) + geolocated incidents/CFS/OIS/traffic (`OpenData_PublicSafety/MapServer`). FBI CDE confirms TPD ORI `AZ0100300`'s 2021 NIBRS all-null gap. `clearance_verbose` makes the 97.56%/57.45% clearance gap (crime-tpd-data.md) computable.
+3. **311 / Responsiveness M1** — EASY. `seeclickfix.com/api/v2/issues?place_url=tucson` (live, status transitions → open→closed latency). Unblocks `responsiveness/PLANNING.md`.
+4. **Code enforcement** — EASY. `PermitsCode/MapServer/103` (last-60-days; Tucson publishes it — a gap in most metros). Accountability feed.
+5. Opportunistic: transit GTFS-RT live map (`GTFS-RT.suntran.com`), AirNow AQI, pavement-quality, water/flood maps.
+6. Story-driven (not feeds): **Fire data GAP** (no operational TFD data anywhere — a Transparency-Tracker story), budget ACFR PDFs, vendor check register (records-request-only).
+
+**Gate per [[feedback_resist_feature_creep]]:** next big project is still short-form video; capture here, don't start building mid-stream without a user go-ahead. **Side task:** add City of Tucson officials to `pipeline/local_names.json`.
+
+## Roadmap: Southern AZ School-District Coverage (data + meetings)
+
+Feasibility-scanned **2026-06-26** (4 parallel agents, endpoints fetched live). **Full reference: `SCHOOL-DATA-FEASIBILITY.md`** + the `project_school_data_layer` memory + `COVERAGE-EXPANSION.md` Part 1C (meeting-coverage plan, now verified/corrected). Covers the 9 Tucson-metro K-12 districts. School boards are the most under-covered governance beat; this is a strong new content line.
+
+**EASY data wins (no WAF/headless):** (1) ⭐ **Auditor General "School District Spending" XLSX** — one statewide file, all districts, classroom-% + per-category $ + teacher salary → "where your district's money goes" + classroom-$ ranking. (2) ⭐ **ADE Report Cards undocumented JSON API** (`azreportcards.azed.gov/api/DataApi/...`, no key) for assessment/grad/enrollment/EL/absenteeism trends + **A-F grades** XLSX on `azsbe.az.gov`. (3) ⭐ **Urban Institute Education Data API** (`educationdata.urban.org`, no key) for CCD enrollment, F-33 per-pupil finance, CRDC discipline-by-race. **Gotcha:** `www.azed.gov` is a Cloudflare *JS-challenge* wall (header spoofing FAILS) — avoid by using the API + azsbe. Dropout rate = gap (walled-only). Elections (override/bond + board races) = Pima County CSV via CivicPlus (MODERATE); SOS never carries school results.
+
+**Meeting coverage:** 8 of 9 districts via TWO scrapers — **Diligent** (TUSD, Vail, Sahuarita, Tanque Verde) + **BoardBook** (Amphitheater 2065, Marana 1780, Catalina Foothills 1202, Flowing Wells 1607). **Corrections:** TUSD portal = `tusd1-schooldesk.community.highbond.com` (not govboard); **Sunnyside = BoardDocs `susd12`, NOT NovusAGENDA** (hardest, 403s bots). **Video:** 6 YouTube live feeds (Vail, Marana, Amphi, Sahuarita, Sunnyside, Flowing Wells) → `run_live_reporter.sh`; TUSD = Livestream.com HLS (`--direct`); Tanque Verde none.
+
+**Pilot = Vail USD** (Diligent + YouTube → preview + post-meeting report day one; Vail Chamber warm launch). **Signature originals:** ESA vouchers vs enrollment-decline (biggest AZ ed story, thinly covered), annual "dollars in the classroom," CRDC discipline-equity, override/bond accountability. **Editorial:** higher sensitivity (culture-war-adjacent) → human-review gate on all meeting reports, never surface student-level data (FERPA). **Gate per [[feedback_resist_feature_creep]]:** capture only; the user hinted 2026-06-26 the gate may soften given how strong the civic-data findings are — pairs with the Tucson/OV/Marana data layers as a coherent "AI civic-data" push. **Side task:** add board members + superintendents to `pipeline/local_names.json`.
+
 ## Roadmap: Spanish-Language TDB → "Tucson en Breve" full fork
 
 **Evolved 2026-06-24 → the vision is now a full Spanish sister site at `tucsonenbreve.com`, not just social. Full plan: `TUCSONENBREVE.md`.** A parallel Spanish fork that mirrors TDB's content via LLM auto-translation (translate canonical markdown → language-aware renderers → separate GitHub Pages repo, same desert-palette CSS, Spanish UI strings + a civic-terminology glossary; names/places reuse `pipeline/local_names.json`). Forks the brief, news reports, meeting watch, Spotted, In Depth, podcast (Spanish TTS), short-form (Spanish cuts → @tucsonenbreve socials), and newsletter; **defers Ask/RAG, the crossword, and the Responsiveness Index.** Spanish short-form cuts are likely the first visible deliverable (the bilingual-Shorts idea — but as *separate cuts*, not both languages crammed on one card). Status: planning only. The notes below are the earlier social-first framing, now subsumed by the full-fork plan.
