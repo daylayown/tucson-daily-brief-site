@@ -384,6 +384,17 @@ DEMO = [
          headline="ChatTDB",
          dek="A free AI that answers real questions about the Old Pueblo — how the council voted, what’s opening, who filed for a liquor license — built on everything Tucson Daily Brief has ever reported. No sign-up, no app.",
          meta_text="ChatTDB.com"),
+    # --- 2026-06-27: second Marana data center filing (2-slide: news + how-we-found-it)
+    dict(slug="datacenter-marana-2026-06-27", theme="light",
+         kicker="Development · Marana",
+         headline="A second data center is proposed in Marana",
+         dek="A filing to rezone land off Marana Road for a “technology campus and data center” landed in November — separate from the 600-acre Beale project the Town Council already approved. It’s early, and nothing’s been decided.",
+         meta_text="swipe → how we found it"),
+    dict(slug="datacenter-howweknow-2026-06-27", theme="terracotta",
+         kicker="How we found it",
+         headline="Our system found it first.",
+         dek="Tucson Daily Brief automatically watches Marana’s public planning records every day. This data-center filing was on our site on June 24 — two days before it reached local TV news.",
+         meta_text="tucsondailybrief.com"),
     # Reusable "how we know" card — generic, pairs with any News Report carousel.
     dict(slug="news-howweknow", theme="terracotta",
          kicker="How we know",
