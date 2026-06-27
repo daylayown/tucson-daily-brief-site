@@ -26,6 +26,40 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AGENDA_WATCH_DIR="$SCRIPT_DIR/agenda-watch"
 SEND_TELEGRAM="$HOME/.openclaw/skills/tucson-daily-brief/scripts/send_telegram.py"
 
+# Fire a distinct, louder Telegram for high-interest topic flags (data centers,
+# etc.) that the dev-watch pollers emit as `TOPIC-ALERT` lines. This is on top
+# of the routine development-count notice — these items get human eyes fast.
+# Arg: the captured stdout of a dev_watch_*.py run.
+send_topic_alerts() {
+    local out="$1"
+    local alerts
+    alerts=$(printf '%s\n' "$out" | grep '^TOPIC-ALERT' || true)
+    [ -z "$alerts" ] && return 0
+
+    local body=""
+    while IFS=$'\t' read -r _tag _topic muni title url; do
+        [ -z "$title" ] && continue
+        body="${body}• ${muni}: ${title}
+  ${url}
+"
+    done <<< "$alerts"
+
+    local MSG="🛰️ DATA CENTER WATCH — high-interest application surfaced
+
+A data-center-related land-use application was just auto-published to Around Town. Data centers are a live Southern AZ flashpoint (power · water · growth) — consider fast-tracking human coverage.
+
+${body}
+Discovery: town ArcGIS land-use feed. Documents: town permit portal (eTRAKiT)."
+
+    local TMPFILE
+    TMPFILE=$(mktemp /tmp/topic-alert-XXXXX.md)
+    printf '%s\n' "$MSG" > "$TMPFILE"
+    if [ -f "$SEND_TELEGRAM" ]; then
+        python3 "$SEND_TELEGRAM" "$TMPFILE" || echo "WARNING: Topic-alert Telegram notification failed (non-fatal)"
+    fi
+    rm -f "$TMPFILE"
+}
+
 cd "$SCRIPT_DIR"
 
 echo "$(date): Checking for new agendas..."
@@ -177,6 +211,7 @@ fi
 echo "Checking Oro Valley development cases..."
 DEV_OUTPUT=$(python3 dev_watch_orovalley.py 2>&1) || true
 echo "$DEV_OUTPUT"
+send_topic_alerts "$DEV_OUTPUT"
 DEV_COUNT=$(echo "$DEV_OUTPUT" | grep -oP 'Published/updated \K\d+' | tail -1)
 DEV_COUNT=${DEV_COUNT:-0}
 
@@ -204,6 +239,7 @@ fi
 echo "Checking Marana development projects..."
 DEV_OUTPUT_MA=$(python3 dev_watch_marana.py 2>&1) || true
 echo "$DEV_OUTPUT_MA"
+send_topic_alerts "$DEV_OUTPUT_MA"
 DEV_COUNT_MA=$(echo "$DEV_OUTPUT_MA" | grep -oP 'Published/updated \K\d+' | tail -1)
 DEV_COUNT_MA=${DEV_COUNT_MA:-0}
 

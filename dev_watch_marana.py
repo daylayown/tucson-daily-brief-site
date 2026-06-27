@@ -64,11 +64,16 @@ from generate_post import (
     ANALYTICS_HTML,
     ARROW_LEFT_SVG,
     SCROLL_TRIGGER_JS,
+    detect_topics,
     footer_html,
     post_header_html,
     rebuild_homepage,
     section_nav_html,
+    topic_badge_html,
 )
+
+# Public base URL for an Around Town page, used in topic alerts.
+PUBLIC_BASE = "https://tucsondailybrief.com/around-town"
 
 # --- Config ---
 SITE_DIR = Path(__file__).resolve().parent
@@ -246,6 +251,14 @@ def escape_html(text) -> str:
             .replace('"', "&quot;"))
 
 
+def case_topics(a: dict) -> list[str]:
+    """High-interest topic flags (e.g. data-center) for this case, matched over
+    its name, type, and description. See generate_post.TOPIC_DEFS."""
+    return detect_topics(_clean(a.get("name")),
+                         _clean(a.get("type")),
+                         _clean(a.get("description")))
+
+
 # ---------------------------------------------------------------------------
 # Summary (LLM with grounded fallback)
 # ---------------------------------------------------------------------------
@@ -328,6 +341,7 @@ def render_case_html(a: dict, summary: str, date: datetime) -> str:
     title = case_title(a)
     ctype = _clean(a.get("type")) or "Development project"
     status = _clean(a.get("status")) or "Active"
+    topic_badge = topic_badge_html(case_topics(a))
 
     facts = []
     if _clean(a.get("name")):
@@ -388,6 +402,7 @@ def render_case_html(a: dict, summary: str, date: datetime) -> str:
 
 <article class="post-page public-record-filing">
 <p class="post-meta">Around Town &middot; Development &middot; {escape_html(MUNICIPALITY)}</p>
+{topic_badge}
 <h1>{escape_html(title)}</h1>
 <p class="filing-subtitle">{escape_html(ctype)} &middot; {escape_html(status)}</p>
 
@@ -456,10 +471,12 @@ def process(dry_run=False, force=False, limit=None, use_llm=True) -> int:
         slug = make_slug(a, date)
         out_path = AROUND_TOWN_DIR / f"{slug}.html"
         title = case_title(a)
+        topics = case_topics(a)
 
         if dry_run:
             action = "update" if prior else "new"
-            print(f"  [DRY RUN] {action}: {slug}.html  ({_clean(a.get('type')) or '?'}: {title})")
+            flag = f"  [TOPIC: {', '.join(topics)}]" if topics else ""
+            print(f"  [DRY RUN] {action}: {slug}.html  ({_clean(a.get('type')) or '?'}: {title}){flag}")
             published += 1
             continue
 
@@ -475,6 +492,13 @@ def process(dry_run=False, force=False, limit=None, use_llm=True) -> int:
         out_path.write_text(render_case_html(a, summary, date))
         new_state[key] = {"hash": chash, "slug": slug}
         published += 1
+
+        # Machine-readable alert line for high-interest topics (data centers,
+        # etc.). check_agendas.sh greps for these and fires a distinct, louder
+        # Telegram than the routine development-count notice. Tab-separated:
+        # TOPIC-ALERT <topic-key> <municipality> <title> <url>
+        for t in topics:
+            print(f"TOPIC-ALERT\t{t}\t{MUNICIPALITY}\t{title}\t{PUBLIC_BASE}/{slug}.html")
 
     if not dry_run:
         save_state(new_state)

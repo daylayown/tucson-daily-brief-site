@@ -108,6 +108,62 @@ def inline_format(text: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Topic detection — high-interest civic topics
+# ---------------------------------------------------------------------------
+# Some auto-published items deserve more than a generic card. Data centers, in
+# particular, are a live Southern AZ flashpoint (power, water, growth): Marana
+# approved a 600-acre hyperscale rezoning in Jan 2026 over packed-chamber
+# opposition, and more applications keep arriving. This block lets the
+# dev-watch pollers (Marana, Oro Valley, future Tucson) flag a case by topic so
+# it gets an on-card badge AND a distinct Telegram alert (wired in
+# check_agendas.sh) instead of being lost in the routine development feed.
+#
+# Precision over recall: a match elevates a card and pings a human, so a false
+# positive costs reader trust. Keywords stay tight and specific. "technology /
+# computing campus" are included because they're the standard euphemism these
+# projects are branded with (the Marana "Ranch House" case literally reads
+# "Technology Campus, Data Center and Medium Density Residential").
+TOPIC_DEFS = {
+    "data-center": {
+        "label": "Data Center Watch",
+        "keywords": [
+            "data center", "data centre", "datacenter", "data-center",
+            "hyperscale", "server farm",
+            "technology campus", "computing campus", "compute campus",
+        ],
+    },
+}
+
+
+def detect_topics(*texts: str) -> list[str]:
+    """Return topic keys whose keywords appear in the given text(s).
+
+    Case-insensitive substring match over the concatenated, lowercased text.
+    Returns a list (stable TOPIC_DEFS order) so callers can flag a card with
+    one or more topics; empty when nothing matches."""
+    blob = " ".join(t for t in texts if t).lower()
+    return [key for key, spec in TOPIC_DEFS.items()
+            if any(kw in blob for kw in spec["keywords"])]
+
+
+def topic_label(key: str) -> str:
+    """Reader-facing label for a topic key (falls back to the key itself)."""
+    return TOPIC_DEFS.get(key, {}).get("label", key)
+
+
+def topic_badge_html(keys: list[str]) -> str:
+    """Badge row for an elevated-topic card; empty string when no topics."""
+    if not keys:
+        return ""
+    badges = "".join(
+        f'<span class="topic-flag topic-flag--{escape(k)}">'
+        f'{escape(topic_label(k))}</span>'
+        for k in keys
+    )
+    return f'<p class="topic-flags">{badges}</p>'
+
+
+# ---------------------------------------------------------------------------
 # Briefing markdown → HTML
 # ---------------------------------------------------------------------------
 
@@ -652,6 +708,8 @@ def _collect_at_dir(directory: Path, href_prefix: str, kind: str, kind_label: st
         lede_match = re.search(r'<p class="filing-subtitle">(.+?)</p>', content)
         if lede_match:
             lede = _unescape_and_truncate(lede_match.group(1))
+        # Carry any high-interest topic flags (e.g. data-center) onto the card.
+        topics = sorted(set(re.findall(r'topic-flag--([a-z0-9-]+)', content)))
         items.append({
             "date": dt,
             "title": title,
@@ -659,6 +717,7 @@ def _collect_at_dir(directory: Path, href_prefix: str, kind: str, kind_label: st
             "href": f"{href_prefix}/{f.stem}.html",
             "kind": kind,
             "kind_label": kind_label,
+            "topics": topics,
         })
     return items
 
@@ -1062,10 +1121,14 @@ def render_local_government(latest_meeting: dict | None,
 
 def _render_at_item(it: dict) -> str:
     """One row in the Around Town combined feed, tagged by kind."""
+    topic_html = "".join(
+        f'<span class="topic-flag topic-flag--{escape(t)}">{escape(topic_label(t))}</span>'
+        for t in it.get("topics", []))
     return f"""<li class="at-item">
 <div class="at-meta">
 <span class="post-date">{format_date_short(it["date"])}</span>
 <span class="at-tag at-tag--{it["kind"]}">{it["kind_label"]}</span>
+{topic_html}
 </div>
 <a href="{it["href"]}">{escape(it["title"])}</a>
 <p class="post-lede">{escape(it["lede"])}</p>

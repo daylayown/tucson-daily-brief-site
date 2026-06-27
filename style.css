@@ -1203,6 +1203,33 @@ article.post-page p.source {
   margin-bottom: var(--gap-m);
 }
 
+/* Elevated-topic badges (e.g. Data Center Watch) — flags high-interest civic
+   items in the Around Town feed so they stand out from routine development. */
+.topic-flags {
+  margin: 0 0 var(--gap-s);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.topic-flag {
+  display: inline-block;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--bone);
+  background: var(--clay);
+  border: 1px solid var(--terracotta-dark);
+}
+
+.topic-flag--data-center {
+  background: var(--terracotta);
+  border-color: var(--terracotta-dark);
+}
+
 .filing-facts {
   margin: var(--gap-m) 0;
   padding: var(--gap-m) var(--gap-l);
