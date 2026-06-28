@@ -59,6 +59,7 @@ Static blog for GitHub Pages — minimal, text-first, Daring Fireball style. No 
 ├── social/                      # Instagram/Threads promo image-card renderers (see "Social Media Cards" section)
 │   ├── render_card.py           # Core: build_card() -> headless Chromium 2x screenshot -> 1080x1350 PNG; terracotta + light themes; built-in card configs
 │   ├── render_feature_carousel.py # Multi-slide swipeable "what sets us apart" carousel (cover -> feature slides -> CTA)
+│   ├── render_newsletter_carousel.py # "Free newsletter + here's how we build the Tucson Mini" carousel (reuses render_feature_carousel.slide_html)
 │   ├── render_crossword_card.py # Numbered 5x5 Tucson Mini grid + clues, promoting the Sunday newsletter perk
 │   ├── render_story.py          # 1080x1920 IG Story asset (sticker-safe open bottom third)
 │   └── cards/                   # Generated PNG output (gitignored; tooling is committed, renders are working state)
@@ -688,6 +689,15 @@ Outputs to `crossword/puzzles/{date}-{6char}.json` plus updates `.latest.txt` (g
 ### Cost
 
 ~$0.02-0.03 per puzzle (Sonnet 4.6, two API calls: clue generation + dedup-references check). Negligible at weekly cadence.
+
+### Editorial review — Saturday ritual (added 2026-06-27)
+
+Generation is **manual and not cron'd**, so two failure modes recur and must be caught by a human before send:
+
+1. **Silent non-generation.** If nobody runs `generate_puzzle.py` for the send date, the newsletter generator finds no puzzle ("exact-date match, else earliest puzzle dated after") and the draft lands with `(no puzzle available — pick one before sending)` in both the Tucson Mini section and the metadata header. This happened for both the 2026-06-21 and 2026-06-28 sends.
+2. **Fabricated pop-culture clues.** The Sonnet clue generator has produced wrong celebrity/pop-culture clues two weeks running: 6/14 *"Judd of 'Twin Peaks' fame"*→NAOMI (Naomi Judd was a country singer, no Twin Peaks link — shipped), and 6/28 *"Hugh ___, the Wolverine himself"*→LOGAN (the actor is Hugh **Jackman**; "Hugh Logan" is not a person — caught + fixed pre-send). Violates the no-fabrication bar (`feedback_ai_content_quality_bar` memory).
+
+**The ritual (user's standing process as of 2026-06-27):** every Saturday, while doing the weekend editorial pass on the TDB Weekly draft, generate that week's puzzle and review it *together* before scheduling the Buttondown send. Steps: (1) `generate_puzzle.py YYYY-MM-DD` for the Sunday send date; (2) validate grid crossings AND fact-check every clue, with extra scrutiny on pop-culture answers; (3) fix bad clues by editing the puzzle JSON directly; (4) `git add` + commit + push the puzzle JSON — it must be on GitHub Pages for `play.html?p=<slug>` to resolve (drafts are gitignored, stay local); (5) embed the play URL in the newsletter draft's Tucson Mini section + metadata header, then upload to Buttondown. If the fabricated-clue pattern recurs, tighten the clue prompt's anti-fabrication guard around celebrity/pop-culture references.
 
 ### Deferred work (as of 2026-05-06)
 
