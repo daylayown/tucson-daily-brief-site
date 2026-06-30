@@ -25,7 +25,7 @@ CARDS_DIR = os.path.join(HERE, "cards")
 
 # IG portrait 4:5 — most feed real estate.
 W, H = 1080, 1350
-SCALE = 2  # render at 2x for crisp text, then downscale
+SCALE = 3  # supersample at 3x for crisp text, then downscale to spec
 
 FONTS_HREF = ("https://fonts.googleapis.com/css2?"
               "family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..900,0..100,0..1&"
@@ -318,10 +318,11 @@ def render(slug, html_str, size=None):
         f"file://{html_path}",
     ], check=True, capture_output=True)
 
-    # downscale 2x -> exact spec with high-quality filter
+    # downscale supersample -> exact spec: Lanczos for sharp edges, then a gentle
+    # unsharp pass to counter the softening every downscale introduces.
     subprocess.run([
-        "convert", big_path, "-resize", f"{w}x{h}", "-strip",
-        "-quality", "92", final_path,
+        "convert", big_path, "-filter", "Lanczos", "-resize", f"{w}x{h}",
+        "-unsharp", "0x0.6+0.7+0", "-strip", "-quality", "95", final_path,
     ], check=True, capture_output=True)
     os.remove(big_path)
     os.remove(html_path)
