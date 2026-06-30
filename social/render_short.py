@@ -21,6 +21,7 @@ import subprocess, os, sys, html as _html
 from render_card import THEMES, FONTS_HREF, SUN_SVG, CARDS_DIR
 
 VW, VH = 1080, 1920
+SCALE = 3  # supersample scenes at 3x for crisp text, then downscale to spec
 SCENE_DUR = 3.2
 XFADE = 0.5
 FPS = 30
@@ -111,13 +112,19 @@ def scene_html(scene, theme):
 
 def render_scene_png(idx, scene, theme):
     html_path = os.path.join(CARDS_DIR, f"scene-{idx:02d}.html")
+    big = os.path.join(CARDS_DIR, f"scene-{idx:02d}.{SCALE}x.png")
     png = os.path.join(CARDS_DIR, f"scene-{idx:02d}.png")
     with open(html_path, "w") as f:
         f.write(scene_html(scene, theme))
+    # Supersample at SCALE x, then downscale to spec with a sharp filter — same
+    # treatment as the image cards (render_card.py); a 1x screenshot reads soft.
     subprocess.run(["chromium", "--headless=new", "--no-sandbox", "--disable-gpu",
-        "--hide-scrollbars", "--force-device-scale-factor=1",
+        "--hide-scrollbars", f"--force-device-scale-factor={SCALE}",
         f"--window-size={VW},{VH}", "--virtual-time-budget=7000",
-        f"--screenshot={png}", f"file://{html_path}"], check=True, capture_output=True)
+        f"--screenshot={big}", f"file://{html_path}"], check=True, capture_output=True)
+    subprocess.run(["convert", big, "-filter", "Lanczos", "-resize", f"{VW}x{VH}",
+        "-unsharp", "0x0.6+0.7+0", "-strip", png], check=True, capture_output=True)
+    os.remove(big)
     os.remove(html_path)
     return png
 
