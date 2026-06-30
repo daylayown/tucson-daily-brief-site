@@ -37,6 +37,9 @@ def _music(name):
 SERIES = {
     "only-in-tucson": {"theme": "terracotta", "music": _music("tdb-only-in-tucson.mp3")},
     "buried-in-the-agenda": {"theme": "dark", "music": _music("tdb-buried-in-the-agenda.mp3")},
+    # "How it's made" BTS series — proven strong on IG. Reuses the terracotta
+    # theme + the only-in-tucson track until it gets its own music.
+    "behind-the-scenes": {"theme": "terracotta", "music": _music("tdb-only-in-tucson.mp3")},
 }
 
 CLIPS = {
@@ -48,6 +51,25 @@ CLIPS = {
             {"text": "Meet Moonbead\nand Pretzel. 🦁", "big": True},
             {"text": "Named by kids from Beads of Courage, a nonprofit for children facing serious illness."},
             {"text": "Only in Tucson. 🌵", "cta": True, "nowrap": True},
+        ],
+    },
+    "bts-podcast-voice": {
+        "series": "behind-the-scenes",
+        # The voice-clone reveal. Renders the muted/music version. The "killer"
+        # variant layers ~4.8s of a real episode at the reveal beat (~8.2s) with
+        # the music ducked — a manual ffmpeg post-pass, not part of this render:
+        #   ffmpeg -y -i cards/short-bts-podcast-voice.mp4 -i voice-clip.mp3 \
+        #     -filter_complex "[0:a]volume='if(between(t,8.0,13.3),0.15,1)':eval=frame[mus];\
+        #       [1:a]aformat=channel_layouts=stereo,adelay=8200|8200[vo];\
+        #       [mus][vo]amix=inputs=2:normalize=0:duration=first[a]" \
+        #     -map 0:v -map "[a]" -c:v copy -c:a aac -b:a 192k cards/short-bts-podcast-voiced.mp4
+        # (grab voice-clip.mp3 from a clean sentence in the day's podcast MP3 on R2).
+        "script": [
+            {"eyebrow": "Behind the scenes", "text": "We publish a Tucson news podcast every single morning."},
+            {"text": "An AI condenses the day’s news into a tight rundown."},
+            {"text": "And the voice reading it to you?"},
+            {"text": "It’s an AI clone of\nour founder’s own voice. 🎙️", "big": True},
+            {"text": "New episode every\nmorning. 🎧", "cta": True},
         ],
     },
     "buried-ov-bodycam": {
