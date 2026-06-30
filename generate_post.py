@@ -177,15 +177,25 @@ def md_to_html(text: str) -> str:
     if lines and lines[0].startswith("Tucson Daily Brief"):
         i = 1
 
-    # Skip trailing metadata lines
+    # Strip the trailing operational footer block. Every brief — both the
+    # deterministic generate_brief.py output and the older OpenClaw-era variants —
+    # ends with a block whose first line begins with "Briefing saved:", followed
+    # by free-form source counts / skip notes / "Generated deterministically…" /
+    # manual "Edited …" notes. The wording of those follow-on lines varies, so we
+    # anchor on the stable "Briefing saved:" marker and drop everything from there
+    # to the end (it's metadata for the Telegram message, not for publication).
+    # Any blank line or separator immediately preceding it is dropped too, so no
+    # dangling <hr> is left behind.
     end = len(lines)
     for j in range(len(lines) - 1, -1, -1):
-        line = lines[j].strip()
-        if (line.startswith("Briefing saved:") or
-                line.startswith("Sources fetched:") or
-                line.startswith("Failed sources:") or
-                line.startswith("Next update:")):
+        # tolerate bold-wrapped markers like "**Briefing saved:**"
+        if lines[j].strip().lstrip("*").startswith("Briefing saved:"):
             end = j
+            break
+    while end > 0:
+        prev = lines[end - 1].strip()
+        if (not prev) or re.match(r"^[─\-]{3,}$", prev):
+            end -= 1
         else:
             break
 
