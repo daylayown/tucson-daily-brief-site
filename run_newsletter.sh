@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
 #
 # Generate the weekly TDB Weekly newsletter draft and upload it to Buttondown.
-# Runs Friday at 6pm via cron; the draft sits in Buttondown for editorial
-# review over the weekend and is manually scheduled for Sunday 5am send.
+#
+# NOT cron'd. This is the final step of the manual Saturday ritual: generate and
+# review this week's Tucson Mini crossword together FIRST (it's the newsletter's
+# subscriber perk), lock it in, then run this. generate_newsletter.py hard-stops
+# if no puzzle is locked for the send date, so a puzzle-less draft can't ship.
+# The uploaded draft sits in Buttondown for review and is manually scheduled for
+# the Sunday 5am send.
 #
 # Usage:
 #   ./run_newsletter.sh              # full run: generate + upload
 #   ./run_newsletter.sh --dry-run    # generator runs in dry-run mode, no upload
-#
-# Cron (Fridays at 6 PM MST):
-#   0 18 * * 5 ~/claude-code-projects/tucson-daily-brief-site/run_newsletter.sh >> /tmp/newsletter-gen.log 2>&1
 
 set -euo pipefail
 

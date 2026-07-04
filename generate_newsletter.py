@@ -257,6 +257,11 @@ def main():
     parser.add_argument("--send-date", type=str, help="Send date YYYY-MM-DD (default: next Sunday)")
     parser.add_argument("--force", action="store_true", help="Overwrite existing draft")
     parser.add_argument("--dry-run", action="store_true", help="Print the prompt and exit; no API call")
+    parser.add_argument(
+        "--allow-missing-puzzle",
+        action="store_true",
+        help="Escape hatch: generate even when no crossword is locked for the send date (uses a placeholder)",
+    )
     args = parser.parse_args()
 
     today = date.today()
@@ -288,7 +293,18 @@ def main():
 
     crossword_link = get_crossword_link(send_date)
     if not crossword_link:
-        print("WARNING: no crossword puzzle found for send date. Placeholder used.", file=sys.stderr)
+        if not args.allow_missing_puzzle:
+            print(
+                f"ERROR: no crossword puzzle locked for send date {send_date.isoformat()}.\n"
+                "The newsletter is generated AFTER the Tucson Mini is locked in — generate and\n"
+                "review this week's puzzle first, e.g.:\n"
+                f"    .venv/bin/python3 crossword/tools/generate_puzzle.py {send_date.isoformat()}\n"
+                "then re-run this generator. To override anyway (ships a placeholder link that must\n"
+                "be filled before sending), pass --allow-missing-puzzle.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        print("WARNING: no crossword puzzle found for send date. Placeholder used (--allow-missing-puzzle).", file=sys.stderr)
         crossword_link = "(no puzzle available — pick one before sending)"
     else:
         print(f"  Crossword:             {crossword_link}")
