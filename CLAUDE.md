@@ -1177,8 +1177,10 @@ The current YouTube thumbnail (`~/.openclaw/skills/tucson-daily-brief/assets/you
 ## Deployment
 
 - **Live URL:** `https://tucsondailybrief.com` (custom domain via CNAME)
-- GitHub Pages from the main branch root, repo `daylayown/tucson-daily-brief-site`
+- GitHub Pages serves the `master` branch root, repo `daylayown/tucson-daily-brief-site`
 - `.nojekyll` ensures static serving
+
+**Deploy runs via a custom GitHub Actions workflow (`.github/workflows/deploy.yml`), NOT GitHub's managed "Deploy from a branch" flow (2026-07-04).** The Pages source was switched to "GitHub Actions" (`build_type: workflow`) because GitHub's managed flow has no retry and its Pages backend intermittently failed the deploy step twice in three days (July 2: deploy stuck queued → 10-min timeout; July 4: `Deployment failed, try again later.` — in both cases the **build** succeeded, only the backend hand-off failed). The workflow uploads the repo root as the artifact and deploys with **up to 3 attempts + backoff** (60s, 120s), each capped at 5 min, so a transient Pages hiccup self-heals instead of leaving the site stale. It triggers on every push to `master` (same as before) plus manual `workflow_dispatch`. **Revert to the managed flow if ever needed:** `gh api repos/daylayown/tucson-daily-brief-site/pages -X PUT -f build_type=legacy`.
 
 ### Cron schedule (system crontab)
 
