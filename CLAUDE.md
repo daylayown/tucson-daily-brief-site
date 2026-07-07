@@ -193,41 +193,6 @@ The podcast script is condensed from a full ~7,500-char read (~8 minutes) to a t
 
 **ElevenLabs budget:** Creator tier, 100K chars/month. Condensed podcast uses ~45K chars/month (with Turbo v2.5 at 0.5 credits/char, that's ~22.5K credits/month). Usage-based billing enabled at 25,000 credit threshold as safety net.
 
-### Voxtral TTS as ElevenLabs replacement (researched March 2026)
-
-Mistral released **Voxtral TTS** (4B params) on March 26, 2026 — an open-weights TTS model with a hosted API. It's a strong candidate to replace ElevenLabs for podcast generation.
-
-**Cost comparison:**
-
-| Provider | Cost per 1K chars | Monthly cost (45K chars) | Monthly cost (100K chars) |
-|---|---|---|---|
-| ElevenLabs Creator | $22/mo flat (overage $0.30/1K) | $22/mo | $22/mo |
-| Voxtral TTS API | $0.016/1K chars | **$0.72/mo** | **$1.60/mo** |
-
-**API details:**
-- Endpoint: `POST https://api.mistral.ai/v1/audio/speech`
-- Model ID: `voxtral-mini-tts-2603`
-- Auth: `Authorization: Bearer $MISTRAL_API_KEY`
-- Output formats: MP3, WAV, PCM, FLAC, Opus, AAC (MP3 supported directly — no conversion needed)
-- Response: JSON with `audio_data` field (base64-encoded), requires `base64.b64decode()`
-- Python SDK: `pip install mistralai` → `client.audio.speech.complete()`
-- Output sample rate: 24 kHz
-- Latency: ~70-90ms model processing, ~3s time-to-first-audio (MP3 streaming)
-
-**Voice cloning:** Adapts from as little as 3 seconds of reference audio. Two approaches:
-1. **One-off:** Pass base64-encoded audio clip as `ref_audio` in each request
-2. **Saved voice:** Create once via `POST /v1/audio/voices` with `sample_audio` (base64), then use returned `voice_id`
-
-**Quality:** Mistral claims 62.8% listener preference over ElevenLabs Flash v2.5 on naturalness, parity with ElevenLabs v3 on expressiveness. Current pipeline uses Turbo v2.5 (comparable to Flash), so Voxtral could be an upgrade. Not independently benchmarked for news podcast voices yet.
-
-**Limit to watch:** Max 2 minutes of audio per request. Condensed script (~1,400 chars / ~90 seconds) fits. Full script fallback (~7,500 chars / ~8 minutes) would NOT fit — would need chunking or truncation if condensation fails.
-
-**License:** Open weights on HuggingFace are CC BY-NC 4.0 (non-commercial for self-hosting). Hosted API has standard commercial terms — no restriction.
-
-**What the swap looks like:** ~15-line change in `generate_podcast.py`. Replace the ElevenLabs HTTP POST with Voxtral endpoint, swap auth header, change voice parameter, add base64 decode. `clean_for_tts()`, condensation, RSS, R2 upload, and YouTube pipeline are all untouched.
-
-**Status:** Research complete. Next step is a side-by-side audio quality test — generate a sample episode via Voxtral API and compare against current ElevenLabs output. Requires Mistral API key from `console.mistral.ai`.
-
 ## Meeting Watch (Agenda Mining Pipeline)
 
 Automated "What to Watch" previews for government meetings across four municipalities. Runs daily via cron, auto-publishes to the site with zero human intervention. See `MEETING-WATCH-PIPELINE.md` for full reference.
@@ -298,117 +263,19 @@ The daily brief repackages existing journalism. The agenda mining pipeline (abov
 
 ### AI Reporter Pipeline
 
-Live pipeline built March 2026. VOD pipeline built May 2026 (`ai_reporter_vod.py`).
+Live + VOD meeting-transcription → AP-style news-report pipeline. Live built March 2026, VOD (`ai_reporter_vod.py`) May 2026. **Full reference (architecture, usage, schema, scheduler internals, live-pipeline flags, STT provider research) → `AI-REPORTER.md`.** Load-bearing essentials kept here:
 
-**Architecture:**
-```
-Live input (YouTube):  streamlink → ffmpeg (PCM 16kHz mono) → Deepgram WebSocket → transcript JSON
-Live input (Swagit):   ffmpeg reads HLS .m3u8 directly (--direct mode) → Deepgram WebSocket → transcript JSON
-VOD input:             ffmpeg extracts → opus file → Deepgram batch (pre-recorded) API → transcript JSON
-                                                                                    │
-Downstream:            transcript JSON → Claude Sonnet 4.6 news report → Telegram review → approve → publish HTML
-```
+**Scripts:** `ai_reporter.py` (transcript → Claude report → Telegram → approve/publish), `ai_reporter_live.py` (live: streamlink or `--direct` HLS → Deepgram WebSocket → transcript JSON), `ai_reporter_vod.py` (any URL/file → ffmpeg opus → Deepgram batch → transcript JSON → hands off to `ai_reporter.py`), `run_live_reporter.sh` (wrapper: env, dep validation, wait-for-stream).
 
-**Why a separate VOD pipeline?** Deepgram's live WebSocket API expects ~1× real-time audio. ffmpeg reading an HLS VOD pulls audio much faster than real-time, which floods the live WebSocket and triggers a 1011 keepalive-timeout error after a minute or two. Verified on the Marana May 5 VOD (2026-05-10): live pipeline died after capturing 95 seconds; batch API processed the same 72-minute meeting cleanly in one shot. The batch API is the right tool whenever the source is a complete recording rather than a real-time stream.
+**Live vs. VOD:** live WebSocket expects ~1× real-time audio; ffmpeg pulls an HLS VOD faster than real-time and triggers Deepgram's 1011 keepalive timeout — so use `ai_reporter_vod.py` (batch API) whenever the source is a complete recording, not a live stream.
 
-**Scripts:**
-
-| Script | Purpose |
-|---|---|
-| `ai_reporter.py` | Downstream pipeline: transcript JSON → Claude report → Telegram → approve/publish |
-| `ai_reporter_live.py` | Live input: streamlink or direct HLS → Deepgram WebSocket → real-time terminal display → transcript JSON |
-| `ai_reporter_vod.py` | VOD input: any audio/video URL or local file → ffmpeg extracts opus → Deepgram batch API → transcript JSON, then hands off to `ai_reporter.py` for the draft |
-| `run_live_reporter.sh` | Shell wrapper: loads env vars, validates deps, waits for stream to go live, passes args through. Skips streamlink/yt-dlp checks in `--direct` mode |
-
-**Usage:**
+**Common commands:**
 ```bash
-# Capture a YouTube live stream and generate a news report
-./run_live_reporter.sh "https://youtube.com/watch?v=XXX" --slug pentagon-2026-03-26
-
-# Capture a Swagit/HLS live stream (direct mode — no streamlink needed)
-./run_live_reporter.sh "https://stream.swagit.com/live-edge/orovalleyaz/smil:hd-16x9-1-a/playlist.m3u8" --slug orovalley-council-2026-04-08 --direct
-
-# Transcribe only (no news report)
-./run_live_reporter.sh "https://youtube.com/watch?v=XXX" --slug test-1 --transcribe-only
-
-# Generate a report from an existing transcript
-python3 ai_reporter.py transcripts/pentagon-2026-03-26.json
-
-# Re-generate with --force if draft already exists
-python3 ai_reporter.py transcripts/pentagon-2026-03-26.json --force
-
-# Approve and publish a draft
-python3 ai_reporter.py --approve transcripts/pentagon-2026-03-26-draft.md
-
-# Publish an already-approved file
-python3 ai_reporter.py --publish transcripts/pentagon-2026-03-26-approved.md
-
-# VOD transcription — when live capture failed or the source is a recording
-# (HLS playlist URL works; MP4 / local file works; ffmpeg handles any input format)
-.venv/bin/python3 ai_reporter_vod.py \
-    "https://archive-stream.granicus.com/.../playlist.m3u8" \
-    --slug marana-2026-05-05 \
-    --title "Marana Town Council Regular Meeting" \
-    --started-at 2026-05-05
-```
-
-**File layout:**
-```
-transcripts/                              # Working directory (gitignored)
-  pentagon-2026-03-26.json                # Raw Deepgram transcript
-  pentagon-2026-03-26-partial.json        # Auto-saved during live capture (every 60s)
-  pentagon-2026-03-26-draft.md            # Claude news report draft
-  pentagon-2026-03-26-approved.md         # Human-approved version
-
-news-reports/                             # Published HTML (on GitHub Pages)
-  pentagon-2026-03-26.html
-
-news-reports.html                         # News Reports index page
-```
-
-**Transcript JSON schema:**
-```json
-{
-  "meta": {
-    "source_url": "https://youtube.com/...",
-    "slug": "pentagon-2026-03-26",
-    "title": "Pentagon Press Briefing",
-    "started_at": "2026-03-26T14:00:00Z",
-    "ended_at": "2026-03-26T14:45:00Z",
-    "duration_seconds": 2700,
-    "provider": "deepgram",
-    "model": "nova-2",
-    "diarization": true
-  },
-  "segments": [
-    {"start": 0.0, "end": 3.5, "speaker": 0, "text": "Good afternoon.", "confidence": 0.98}
-  ]
-}
-```
-
-**Wait-for-stream:** Two modes depending on input type:
-- **Streamlink mode** (default): `run_live_reporter.sh` polls with `yt-dlp --simulate` every 60 seconds for up to 30 minutes. YouTube's `/live` URL for a channel always redirects to the current livestream if one exists, but returns nothing if the channel isn't streaming yet.
-- **Direct mode** (`--direct`): The shell wrapper skips yt-dlp polling. Instead, `ai_reporter_live.py` probes the URL with a quick `ffmpeg` read attempt, retrying every 60 seconds for up to 30 minutes. This is needed for HLS URLs (Swagit, etc.) that yt-dlp doesn't understand.
-
-**Scheduling live recordings with `at`:**
-
-Recordings can be pre-scheduled using the `at` command (package: `at`, daemon: `atd`). `at` captures the current working directory and environment at scheduling time.
-
-```bash
-# Schedule a YouTube recording — start 5 min before meeting, retry loop handles the gap
-echo "./run_live_reporter.sh 'https://www.youtube.com/@PimaCountyArizona/live' --slug pima-bos-2026-04-07 >> /tmp/live-reporter.log 2>&1" | at 8:55 AM 2026-04-07
-
-# Schedule a Swagit/HLS recording (direct mode)
-echo "./run_live_reporter.sh 'https://stream.swagit.com/live-edge/orovalleyaz/smil:hd-16x9-1-a/playlist.m3u8' --slug orovalley-council-2026-04-08 --direct >> /tmp/live-reporter-ov.log 2>&1" | at 4:55 PM 2026-04-08
-
-# List scheduled jobs
-atq
-
-# Inspect a job
-at -c <job_number>
-
-# Remove a job
-atrm <job_number>
+./run_live_reporter.sh "https://youtube.com/watch?v=XXX" --slug pima-bos-2026-04-07          # YouTube (streamlink)
+./run_live_reporter.sh "<swagit .m3u8>" --slug orovalley-2026-04-08 --direct                 # Swagit HLS (direct)
+python3 ai_reporter.py transcripts/<slug>.json [--force]                                       # (re)draft from transcript
+python3 ai_reporter.py --approve transcripts/<slug>-draft.md                                   # approve + publish
+.venv/bin/python3 ai_reporter_vod.py "<url|file>" --slug <slug> --title "…" --started-at <date> # VOD path
 ```
 
 **Live stream URLs by municipality:**
@@ -420,102 +287,11 @@ atrm <job_number>
 | Oro Valley | Swagit (HLS) | `https://stream.swagit.com/live-edge/orovalleyaz/smil:hd-16x9-1-a/playlist.m3u8` | `--direct` |
 | Marana | Swagit (HLS) | `https://edge-f.swagit.com/live/maranaaz/live-1-a/playlist.m3u8` | `--direct` |
 
-Pima County and Tucson stream on YouTube (use default streamlink mode). Oro Valley and Marana stream on Swagit, which serves HLS `.m3u8` streams — use `--direct` mode to have ffmpeg read the URL directly, bypassing streamlink. Swagit's streaming infrastructure uses Video.js + HLS.js on the frontend, backed by `stream.swagit.com` CDN.
+Swagit URL conventions vary per municipality — **never infer; verify via devtools during a live broadcast** (the Marana URL differs from Oro Valley's on host, path, and slug, and the inferred one failed capture twice).
 
-**Auto-scheduling from agenda mining (built April 2026):** `check_agendas.sh` calls `schedule_recording.py` after each new preview is published. The scheduler:
+**Auto-scheduling:** `check_agendas.sh` → `schedule_recording.py` reads each `{slug}-full.md`, has Sonnet extract `public_session_start` (distinct from any preceding executive session, with `confidence`), and schedules an `at` job for `max(now+2min, start-5min)`; state in `agenda-watch/.scheduled.json`. Handles same-slug reschedule, NOT date-moves/cancellations (`atrm` manually). **Gated by `ENABLE_AUTO_SCHEDULE=1`, live in the 8 AM cron line since April 24, 2026** (crontab backup `~/.cache/crontab/crontab.bak`). Audit: `schedule_recording.py --all-dry-run | --list`.
 
-1. Reads the `{slug}-full.md` reference file produced by the miner.
-2. Asks Claude Sonnet for a structured JSON extraction of `public_session_start` — deliberately distinguishing it from any executive session that might precede it (e.g., Oro Valley's "Regular Session at or after 5:00 PM" [executive] vs "Resume Regular Session at or after 6:00 PM" [public]). Returns `confidence: high|medium|low` with one-sentence reasoning.
-3. Looks up the stream URL + mode from a hardcoded `STREAM_SOURCES` dict (YouTube/streamlink for Pima + Tucson, Swagit/`--direct` for Oro Valley + Marana).
-4. Schedules an `at` job for `max(now+2min, public_session_start - 5min)` — 5-min lead absorbs minor meeting slop, the `now+2min` floor handles same-day discovery (e.g., agenda posted at 8 AM for a 9 AM BOS meeting).
-5. Persists state to `agenda-watch/.scheduled.json` (gitignored) keyed by slug. On the next run, matching public-session times are no-ops; different times trigger `atrm` + re-schedule.
-6. Sends a Telegram notification with the meeting time, `at` job id, confidence level, and the LLM's reasoning notes. Low-confidence extractions are tagged "please verify".
-
-**Enable flag:** The scheduling call in `check_agendas.sh` is gated by `ENABLE_AUTO_SCHEDULE=1`. **This is enabled in the 8 AM cron line as of April 24, 2026** — the crontab prefixes the command with `ENABLE_AUTO_SCHEDULE=1`. To temporarily disable, either `crontab -e` and remove the prefix, or unset the env var in an ad-hoc run. Backup of the pre-change crontab lives at `~/.cache/crontab/crontab.bak`.
-
-**Marana stream URL verified 2026-05-19.** The live URL is `https://edge-f.swagit.com/live/maranaaz/live-1-a/playlist.m3u8` — captured via devtools (Network → `.m3u8` filter) on `www.maranaaz.gov/Council/Public-Meeting-Videos` during the May 19 Town Council broadcast. The previous inferred URL (`stream.swagit.com/live-edge/maranaaz/smil:hd-16x9-1-a/playlist.m3u8`, copied from the Oro Valley pattern) was wrong on three dimensions: different host (`edge-f` vs `stream`), different path segment (`/live/` vs `/live-edge/`), and different stream slug (`live-1-a` vs `smil:hd-16x9-1-a`). The inferred URL had failed live capture twice (most recently 2026-05-05, ffmpeg retried for 30 min and got nothing). Lesson: Swagit's URL conventions vary per municipality — do not infer; always verify via devtools during a real broadcast before scheduling.
-
-**Backtest and audit commands:**
-```bash
-# Dry-run extraction against every existing preview (no `at`, no state write, no Telegram)
-python3 schedule_recording.py --all-dry-run
-
-# List currently-scheduled recordings
-python3 schedule_recording.py --list
-
-# Manual schedule for a single preview
-python3 schedule_recording.py agenda-watch/pima-county-2026-04-29-preview.md \
-    agenda-watch/pima-county-2026-04-29-full.md pima-county
-
-# Force re-schedule even if state matches
-python3 schedule_recording.py --force <preview> <full_ref> <municipality>
-```
-
-**Reschedule/cancellation limits:** The scheduler handles same-slug rescheduling (e.g., the same meeting gets a new time in a re-posted agenda). It does **not** handle date-level moves or cancellations — if a meeting is moved to a different day, the old `at` job remains scheduled and must be manually removed via `atrm`. Future improvement: nightly cleanup pass that prunes stale entries from `.scheduled.json`.
-
-**Live pipeline details:**
-- Audio pipeline (default): `streamlink --stdout URL audio_only` → `ffmpeg` (convert to PCM s16le, 16kHz, mono) → Python reads 4096-byte chunks (~128ms) → Deepgram WebSocket
-- Audio pipeline (direct): `ffmpeg -i URL` reads HLS/RTMP directly → same PCM conversion → same Deepgram path
-- Deepgram config: nova-2 model, smart_format, diarize, interim_results, 300ms endpointing
-- Terminal display: interim results shown in-place, final results with timestamps and speaker labels
-- Periodic save every 60 seconds to `{slug}-partial.json` (crash protection)
-- Graceful shutdown: Ctrl+C, dead air timeout (15 min default, only after first speech AND after the 4 hr `min-recording-time` floor), max duration (6 hr default), or stream end → flushes Deepgram finals, saves transcript, auto-runs downstream pipeline
-- Cost: ~$0.0077/min (~$1.38 for a 3-hour meeting)
-- Idempotency: skips if transcript JSON already exists; skips draft generation if `-draft.md` exists (use `--force` to override)
-- Runs unattended: designed for automated recording of town halls/briefings with no human monitoring
-
-**Deepgram setup:** ✅ Done (March 27, 2026). API key in `~/.config/environment.d/deepgram.conf`. $200 free credit claimed.
-
-**Dependencies:** ✅ Installed. `streamlink` and `yt-dlp` via pacman, `deepgram-sdk` (v6.1.1) via pip in project venv (`.venv/`). The shell wrapper `run_live_reporter.sh` uses `.venv/bin/python3` automatically.
-
-**Deepgram SDK v6 notes:** The script was updated from the v3/v4 API to v6.1.1. Key differences: context manager pattern (`with client.listen.v1.connect(...) as connection`), `EventType.MESSAGE` replaces `LiveTranscriptionEvents.Transcript`, `send_media()` replaces `send()`, `send_close_stream()` replaces `finish()`, boolean params must be passed as strings (`"true"` not `True`) due to SDK query string encoding bug.
-
-**Auto-stop behavior:** The live pipeline runs unattended with three auto-stop triggers:
-- **Dead air timeout** (default 15 min) — no speech detected → graceful stop. Configurable via `--dead-air-timeout N` (seconds). **It only fires after TWO gates clear: (1) first speech has been detected, and (2) the `--min-recording-time` floor has elapsed — which defaults to 4 hours** (`MIN_RECORDING_TIME` in `ai_reporter_live.py`, measured from recording start, configurable via `--min-recording-time N`). The first-speech gate ignores pre-meeting silence so the recorder can wait through late starts and always-on streams (e.g., Tucson's 24/7 YouTube stream); the 4-hour floor means mid-meeting silence (recesses, closed/executive sessions) in the first 4 hours will **not** stop the recording. Practical consequence: for a meeting that opens with a closed executive session before the public portion (e.g., the June 1 2026 Pima County BOS ACA-lawsuit special meeting), the recorder sits through the silent closed session and still captures the public vote when it resumes — no flag tuning needed. The first-speech gate was added April 7, 2026 after both Pima County BOS and Tucson Mayor & Council recordings failed due to late meeting starts.
-- **Max duration** (default 6 hours) — safety cap to prevent runaway costs. Configurable via `--max-duration N` (seconds).
-- **Stream end** — streamlink/ffmpeg exit when the broadcast ends.
-
-**Tested:** March 27, 2026. Verified on live YouTube streams (WWE, Al Jazeera). Broadcast-quality audio produces near-perfect transcripts (confidence 0.999-1.0). Speaker diarization working.
-
-**VOD pipeline (built 2026-05-10):**
-- `ai_reporter_vod.py` — ffmpeg extracts audio from any URL or local file → opus at 24 kbps mono 16 kHz → Deepgram pre-recorded API (`POST /v1/listen`) with `model=nova-2&diarize=true&utterances=true&smart_format=true&punctuate=true&language=en-US` → utterances mapped into the standard transcript JSON schema → exec `ai_reporter.py` for the Sonnet draft.
-- Why batch vs. live for VOD: Deepgram's live WebSocket expects ~1× real-time audio; ffmpeg pulls HLS VODs much faster and triggers a 1011 keepalive timeout. Batch API ingests at its own pace.
-- Cost: ~$0.0043/min (~$0.31 for a 72-minute meeting via the pre-recorded endpoint, well under the live pipeline's $1.38 for a 3-hour meeting because there's no streaming overhead).
-- Wall clock: ~5–10 minutes total for a 72-min meeting (ffmpeg HLS pull is the bottleneck; Deepgram batch returns much faster than real-time).
-- First production use: Marana May 5 Town Council Regular Meeting, transcribed via VOD on 2026-05-10 after live capture failed. 1,095 utterances, 16 diarized speakers, clean draft.
-- Marana/OV Swagit auto-transcripts (available 1–3 business days after a meeting at `maranaaz.new.swagit.com/videos/{id}/transcript`) remain a viable alternative when human-quality captions are preferable to Deepgram's batch output — but our pipeline doesn't ingest them yet.
-
-**STT provider research (March 2026):**
-
-OpenAI's Realtime API was evaluated as an alternative to Deepgram for live transcription. **Decision: stick with Deepgram.** Key findings:
-
-| | OpenAI Realtime | Deepgram WebSocket |
-|---|---|---|
-| 3-hr meeting cost | $0.54 (mini) / $1.08 (4o) | $1.39 |
-| Session limit | **60 min** (dealbreaker) | **None** |
-| Latency | 300-800ms | Sub-300ms |
-| Audio formats | PCM16 only (24kHz mono) | PCM, Opus, MP3, WAV, FLAC... |
-| Speaker diarization | No | Yes |
-| Free credits | None | $200 (~430 hrs) |
-
-OpenAI's 60-minute session cap requires 3-4 reconnections per meeting with potential audio gaps — unacceptable for production. Also: no speaker diarization (needed to attribute statements to council members), PCM16-only input (YouTube streams AAC/Opus, would need ffmpeg conversion), and the API is designed for interactive voice agents, not passive long-form monitoring. The ~$0.85/meeting savings doesn't justify the complexity. OpenAI's batch `gpt-4o-mini-transcribe` ($0.003/min) remains a viable VOD alternative if Deepgram batch pricing is unfavorable.
-
-Google's Gemini 3.1 Flash Live (launched March 2026) was also evaluated. **Decision: rejected, same fundamental problem as OpenAI.**
-
-| | Gemini 3.1 Flash Live | Deepgram WebSocket |
-|---|---|---|
-| 3-hr meeting cost | ~$0.90 (audio input) | $1.39 |
-| Session limit | **10-15 min** (dealbreaker) | **None** |
-| Latency | "Optimized for real-time" (no exact number) | Sub-300ms |
-| Audio formats | PCM, AAC, FLAC, MP3, OGG, WAV, WebM | PCM, Opus, MP3, WAV, FLAC... |
-| Speaker diarization | No | Yes |
-| Free credits | Free tier available | $200 (~430 hrs) |
-
-The 10-15 minute session cap is even worse than OpenAI's 60 minutes — would need 12-18 reconnections per 3-hour meeting, with no session resumption support. No speaker diarization either. Gemini Live API is designed for conversational voice agents, not passive long-form monitoring. Gemini's non-Live batch API could be worth evaluating for the VOD pipeline separately.
-
-**No municipality publishes verbatim transcripts as official records** — all four produce summary/action minutes only. For full meeting content, video/audio recordings + transcription is the only path.
-
-**Transcript availability timing (Marana, tested March 2026):** Marana's policy is recordings within 3 working days. In practice, the March 3 (Tuesday evening) meeting had a full Swagit transcript available by March 8 (Sunday). Transcripts are auto-generated from closed captions, so they're likely available as soon as the video is posted — estimated **1-3 business days** after the meeting. Pipeline approach: morning-after cron check, retry daily until transcript appears, then draft and send to Telegram for human review.
+**Live auto-stop:** three triggers — dead-air (15 min, but only fires after first-speech is detected AND the 4 hr `--min-recording-time` floor, so pre-meeting silence + closed/executive sessions don't kill it), max-duration (6 hr cost cap), and stream-end. Cost ~$0.0077/min live (~$1.38/3 hr), ~$0.0043/min VOD. Idempotent on transcript JSON + `-draft.md`.
 
 ### Local names and places bible
 
@@ -717,7 +493,7 @@ Weekly editorial newsletter delivered via Buttondown. Reader-facing promise: "Fe
 
 ### Strategic logic
 
-A daily site is great for the people who already know about TDB, but it's a terrible discovery surface — daily readers are a tiny minority of any audience. Layering a weekly curation on top of the daily firehose is how regional outlets actually grow (Axios Local, most successful local newsletters). Cost is essentially zero: a Sonnet pass over the previous seven days is ~$0.07/run, and the existing TTS pipeline (ElevenLabs or Voxtral) handles the audio version when we get there with no new infrastructure.
+A daily site is great for the people who already know about TDB, but it's a terrible discovery surface — daily readers are a tiny minority of any audience. Layering a weekly curation on top of the daily firehose is how regional outlets actually grow (Axios Local, most successful local newsletters). Cost is essentially zero: a Sonnet pass over the previous seven days is ~$0.07/run, and the existing ElevenLabs TTS pipeline handles the audio version when we get there with no new infrastructure.
 
 ### Format (encoded in the prompt)
 
@@ -841,7 +617,7 @@ For now the form is homepage-only. Adding to other index pages (`meeting-watch.h
 
 ### Audio version (deferred)
 
-Reuse the existing TTS pipeline (`generate_podcast.py` flow). Weekly episode is just a different input text — clean for TTS, send to ElevenLabs or Voxtral, upload to R2 or Buttondown's native podcast hosting. Add this once the written newsletter is stable.
+Reuse the existing TTS pipeline (`generate_podcast.py` flow). Weekly episode is just a different input text — clean for TTS, send to ElevenLabs, upload to R2 or Buttondown's native podcast hosting. Add this once the written newsletter is stable.
 
 ### Build order (updated 2026-05-08)
 
@@ -966,64 +742,19 @@ Researched and verified 2026-06-18 (feasibility scans). **Full reference: `COVER
 
 - **First original-journalism feature: "Southern Arizona Debated Flock Cameras"** (write-ready brief in `COVERAGE-EXPANSION.md` Part 2). Non-advocacy, human-reviewed, anchored in TDB's own meeting transcripts with external reporting layered underneath. **Framing landmine:** Tucson/TPD uses Verkada, NOT Flock — the "Tucson Flock" debate is the separate City of South Tucson, which cancelled its contract Feb 17 2026. The regional spine: South Tucson pulls back while Oro Valley (drones) and U of A (62 cams, $870K) expand, against no AZ ALPR law + SB 1070 non-sanctuary posture. Best accountability thread: UA PD said it doesn't share with feds but ran searches for the U.S. Marshals Service (EFF records). Brief includes outline, records-request list, and a confirm-before-publish checklist.
 
-## Roadmap: Oro Valley Structured-Data Layer
+## Roadmap: Structured-Data Layers (Oro Valley / Marana / Tucson / Schools)
 
-Feasibility-scanned 2026-06-23. **Full reference: `OV-DATA-FEASIBILITY.md`.** Thesis: RAG/Ask made TDB's *text* queryable; the next leap is turning the messy civic record into *structured data* and monitoring it (extraction → structured store → monitor/Ask). Oro Valley is the wedge — under-covered but small/tractable enough that an AI pipeline can become the system of record, and the structured data unlocks the next-gen AI tools below. **Gate:** don't start until the in-flight social/short-form-video work settles (per [[feedback_resist_feature_creep]]); the next big project is short-form video, not this.
+Shared thesis: RAG/Ask made TDB's *text* queryable; the next leap is turning the messy civic record into *structured data* and monitoring it (extraction → structured store → monitor/Ask), unlocking the AI-forward tools below. Each municipality gets its own layer, all reusing the `dev_watch_*.py` poll-and-diff pattern. **Gate per [[feedback_resist_feature_creep]]: the next big project is short-form video — capture only, don't start building these mid-stream without a user go-ahead.** Each has a full feasibility doc + memory entry with exact endpoints/fields/verdicts; the essentials:
 
-**Cross-cutting gotcha:** `orovalleyaz.gov` is behind an **Akamai WAF** — bots get 403 unless they spoof a full Chrome header set (UA + Accept + Referer + Sec-Fetch-*) or use a headless browser. The clean WAF-free paths (prefer these): `gismap.orovalleyaz.gov` (GIS), Swagit→Granicus minutes redirect, FBI Crime Data Explorer API, Laserfiche `edoc` download.
+- **Oro Valley** (scanned 2026-06-23, `OV-DATA-FEASIBILITY.md`). Wedge municipality. **Gotcha: `orovalleyaz.gov` is behind an Akamai WAF** (403 without a full Chrome header set); WAF-free paths: `gismap.orovalleyaz.gov` (GIS), Swagit→Granicus minutes redirect, FBI CDE API, Laserfiche `edoc`. Build-first = **OV Development Watch** (`gismap.orovalleyaz.gov/gismap/rest/services` `CED-Planning/Development_Cases`, poll/diff on `CaseNumber`). Then vote tracker (minutes PDFs → member-level votes), crime (FBI CDE), water, budget (vendor register = records-request only).
 
-Priority order (verdicts + sources in the doc):
-1. ⭐ **OV Development Watch — EASY, build first.** OV's own public anonymous **ArcGIS REST** server exposes a `CED-Planning/Development_Cases` layer (rezonings/GPAs/variances) as queryable JSON — `gismap.orovalleyaz.gov/gismap/rest/services`. Poll + diff on `CaseNumber`/`last_edited_date`; same shape as the Spotted/agenda miners. No auth, no WAF.
-2. **OV Council Vote Tracker — EASY–MODERATE.** Official minutes PDFs (member-level: named OPPOSED/ABSTAINING + roll call → each member's vote derivable, not just tallies) via the Swagit→Granicus redirect `orovalleyaz.new.swagit.com/videos/{id}/minutes` → `pdftotext` → regex the fixed template. Reuses the existing OV transcription pipeline; feeds the **Vote & Promise Tracker** tool. Spot-check ~5–10 split votes first. Scan returned a current names roster to add to `pipeline/local_names.json` (confirm post-Aug-4-2026 primary).
-3. **OV Crime + the TPD-contrast story — EASY (FBI CDE API).** `api.usa.gov/crime/fbi/sapi` (free key, ORI-keyed JSON) for OV trends; AZ DPS TOPS PDFs supplement. Confirmed story: TPD was the only US agency >250K pop that failed to report to the FBI in 2022 while OV PD reported cleanly — verify OV's ORI + per-year completeness in CDE before publishing.
-4. **Water tracker — MODERATE.** Annual Report (production by source, per-well groundwater levels) + Rates Analysis PDFs; on-brand desert/water but annual cadence, image-table extraction needs an LLM pass. WAF headers required.
-5. **Budget summaries — MODERATE; vendor data BLOCKED.** ACFR/adopted-budget PDFs parse with existing `pdftotext` muscle (dept-level budget-vs-actual). The high-value vendor check register is **not published** — records request only. `openbooks.az.gov` is a dead end for OV (stub).
+- **Marana** (scanned 2026-06-24, `MARANA-DATA-FEASIBILITY.md` + `project_marana_data_layer` memory). **Gotcha (INVERSE of OV): `www.maranaaz.gov` 403s a full Chrome UA but 200s with no/minimal UA.** WAF-free: `portal.maranaaz.gov` (ArcGIS), `services1.arcgis.com/IZmVB517nWCTFBQy` (AGOL), `gisdata.pima.gov`, FBI CDE. ✅ **Development Watch SHIPPED 2026-06-24 (`9120a30`, `dev_watch_marana.py`)** — content-hash diff (no edit-timestamp), undated projects skipped not dated-today; state `around-town/.dev_state_marana.json`. **Build next = Marana Crime** (FBI CDE, **Marana PD ORI `AZ0100900`**, clean NIBRS 2018–2024, `api.usa.gov/crime/fbi/cde/summarized/agency/AZ0100900/{violent-crime|property-crime|homicide}?from=MM-YYYY&to=MM-YYYY&API_KEY=…`) — ships a feed + the "Marana reported every year, TPD didn't" story. Then permits/business-licenses, DPS TOPS, budget, water. Open Qs: is `Business_License_2023` live or a frozen snapshot; DLLC pending-apps endpoint; Financial Transparency Dashboard vendor.
 
-## Roadmap: Marana Structured-Data Layer
+- **City of Tucson** (scanned 2026-06-26, `TUCSON-DATA-FEASIBILITY.md` + `project_tucson_data_layer` memory). **Headline: Tucson is the *most* data-open municipality** — two authless no-WAF ArcGIS REST hosts (`mapdata.tucsonaz.gov` + `gis.tucsonaz.gov` `/arcgis/rest/services`). **Gotcha: `www.tucsonaz.gov` CMS 403s a Chrome UA but serves a blank UA** (incl. `/files/` PDFs); bare `TPD`/`PublicSafety`/`HCD` folders token-secured → public data under `PublicMaps/OpenData_*`; budget = OpenGov (no API). Build-first = Development Watch + "What's Opening" (permits/COs `PermitsCode/MapServer` /81,/99 + licenses /3). High-value = **Crime + FBI-gap story** (`Tucson_Police_Reported_Crimes/FeatureServer/8`, TPD ORI `AZ0100300` 2021 NIBRS all-null; `clearance_verbose` makes the 97.56%/57.45% gap computable). Also 311/Responsiveness M1 (`seeclickfix.com/api/v2/issues?place_url=tucson`), code enforcement (`/103`). Story-only: TFD fire-data GAP.
 
-Feasibility-scanned 2026-06-24 (4 parallel research agents; recovered from a mid-run PC crash). **Full reference: `MARANA-DATA-FEASIBILITY.md`** + the `project_marana_data_layer` memory. Same thesis as the OV layer above — Marana is the second municipality to get one. Marana is fast-growing and under-covered, and most of its civic data lives behind clean (non-WAF) ArcGIS/API surfaces.
+- **Southern AZ Schools** (scanned 2026-06-26, `SCHOOL-DATA-FEASIBILITY.md` + `project_school_data_layer` memory + `COVERAGE-EXPANSION.md` Part 1C). 9 metro K-12 districts — most under-covered governance beat. **EASY data (no WAF): Auditor General "School District Spending" XLSX** (classroom-% + teacher salary, all districts), **ADE Report Cards JSON API** (`azreportcards.azed.gov/api/DataApi/…`, no key) + A-F grades XLSX on `azsbe.az.gov`, **Urban Institute Education Data API** (`educationdata.urban.org`, no key). **Gotcha: `www.azed.gov` is a Cloudflare JS-challenge wall (spoofing FAILS)** — use the APIs instead. **Meetings: 8/9 districts via two scrapers — Diligent** (TUSD `tusd1-schooldesk.community.highbond.com`, Vail, Sahuarita, Tanque Verde) + **BoardBook** (Amphi 2065, Marana 1780, Catalina Foothills 1202, Flowing Wells 1607); **Sunnyside = BoardDocs `susd12`** (hardest). 6 YouTube live feeds + TUSD Livestream.com HLS (`--direct`). **Pilot = Vail USD.** Higher editorial sensitivity (culture-war-adjacent) → human-review all reports, never surface student-level data (FERPA).
 
-**Cross-cutting gotcha (INVERSE of OV's Akamai):** `www.maranaaz.gov` returns **403 to a full Chrome UA but 200 with no/minimal UA**; direct `files/assets/...` PDF URLs download fine. The clean WAF-free paths (prefer these): `portal.maranaaz.gov` (own ArcGIS server), `services1.arcgis.com/IZmVB517nWCTFBQy` (Marana AGOL org), `gisdata.pima.gov` (Marana zoning + parcels), FBI CDE API. `openbooks.az.gov` is Cloudflare-walled (needs a real UA).
-
-Priority order (verdicts + exact endpoints/fields in the doc):
-1. ✅ **Marana Development Watch — SHIPPED 2026-06-24 (`9120a30`).** `dev_watch_marana.py`, polling `portal.maranaaz.gov/.../Hosted/DS_Current_Projects_Live/FeatureServer/0`. 60 projects seeded into Around Town; wired into `check_agendas.sh` (own Telegram notice) + RAG (auto). Quirks handled: no edit-timestamp (content-hash diff), sparse date/number (case# recovered from the Cloudinary img path), and — because the feed shows each card's date — the ~20 undated projects are **skipped, not dated "today"** (no fabricated dates, no wall). State: `around-town/.dev_state_marana.json` (gitignored).
-2. ⭐ **Marana Crime + the TPD-contrast story — EASY, build next.** FBI CDE JSON API, **Marana PD ORI `AZ0100900`** confirmed, clean NIBRS 2018–2024 (no gap). `api.usa.gov/crime/fbi/cde/summarized/agency/AZ0100900/{violent-crime|property-crime|homicide}?from=MM-YYYY&to=MM-YYYY&API_KEY=…` (date format MM-YYYY). Ships a chartable feed **and** the story — "Marana reported every year; Tucson PD didn't, 2021–23." Establishes the crime-poller pattern OV wants too.
-3. **Commercial permits / business licenses — EASY–MODERATE.** Same Marana GIS `Hosted/` folder: `COMMERCIAL_BLDG_PERMITS`, `Business_License_2023` (a "what's opening" feed, near-identical poller to the dev watch). **Verify first:** is `Business_License_2023` live or a frozen 2023 snapshot? Liquor must come from the *state* DLLC — Marana's clerk page publishes no registry.
-4. **AZ DPS TOPS PDF — MODERATE.** Crime cross-check (`curl -k` — broken TLS chain); adds DPS clearance rate, corroborates FBI.
-5. **Budget/ACFR/AG-schedule PDFs — MODERATE.** Dept-level `pdftotext` parse; AG Schedules A–G are standardized state forms (one extractor works across municipalities). Vendor check-register **not published** (records request only).
-6. **Water — MODERATE.** Raftelis rate study + consumer-confidence reports; on-brand desert beat, annual cadence.
-
-**3 open questions the crash interrupted (verify before building those feeds):** (a) the Marana "Financial Transparency Dashboard" vendor/API — could be the expenditure explorer openbooks isn't; (b) the DLLC pending-applications endpoint — would it give a real liquor "new filings" feed?; (c) `Business_License_2023` currency + whether ADOT publishes a Marana crash-data slice.
-
-**Tiny side task:** add Marana council members + Marana PD command staff to `pipeline/local_names.json` (helps the meeting-reporter + RAG get names right).
-
-## Roadmap: City of Tucson Structured-Data Layer
-
-Feasibility-scanned **2026-06-26** (4 parallel research agents; reconstructed after a PC crash wiped the original unsaved search — captured this time). **Full reference: `TUCSON-DATA-FEASIBILITY.md`** + the `project_tucson_data_layer` memory. Third municipality after OV + Marana. **Guiding principle (user):** use AI to collect/analyze/re-present the civic data governments already publish, in *any* format that makes Southern AZ legible (not just articles/charts/podcasts — maps, dashboards, short-form video, social cards, alerts, RAG answers, trackers).
-
-**Headline:** Tucson is the *most* data-open municipality (opposite of its OnBase-PDF agenda reputation). Two **authless, no-WAF ArcGIS REST hosts** — `mapdata.tucsonaz.gov/arcgis/rest/services` + `gis.tucsonaz.gov/arcgis/rest/services` (reconcile canonical host at build; layer IDs matched across agents) — drop straight into the `dev_watch_*.py` poll-and-diff pattern.
-
-**Cross-cutting gotchas:** WAF *inversion* vs OV — `www.tucsonaz.gov` CMS 403s a Chrome UA but serves 200 to a **blank UA** (incl. `/files/` PDFs); GIS REST hosts no WAF. Bare `TPD`/`PublicSafety`/`HCD` folders are token-secured (empty to anon) — public data re-exposed under `PublicMaps/OpenData_*`. NOT Socrata; budget = OpenGov (no API). DCAT catalog at `gisdata.tucsonaz.gov/api/feed/dcat-us/1.1.json`.
-
-Priority order (endpoints/verdicts in the doc):
-1. ⭐ **Tucson Development Watch + "What's Opening"** — EASY, build first. Permits + Certificates of Occupancy (`PermitsCode/MapServer` /81, /99) + business licenses (/3 EconomicDevelopment, 93K rows + weekly CSV). Clone the OV/Marana dev-watch poller → Around Town.
-2. ⭐ **Crime/police + the FBI-gap story** — EASY, highest editorial value. Summarized UCR table (`services3.../Tucson_Police_Reported_Crimes/FeatureServer/8`, 256K rows current to this month = the policeanalysis.tucsonaz.gov PowerBI source) + geolocated incidents/CFS/OIS/traffic (`OpenData_PublicSafety/MapServer`). FBI CDE confirms TPD ORI `AZ0100300`'s 2021 NIBRS all-null gap. `clearance_verbose` makes the 97.56%/57.45% clearance gap (crime-tpd-data.md) computable.
-3. **311 / Responsiveness M1** — EASY. `seeclickfix.com/api/v2/issues?place_url=tucson` (live, status transitions → open→closed latency). Unblocks `responsiveness/PLANNING.md`.
-4. **Code enforcement** — EASY. `PermitsCode/MapServer/103` (last-60-days; Tucson publishes it — a gap in most metros). Accountability feed.
-5. Opportunistic: transit GTFS-RT live map (`GTFS-RT.suntran.com`), AirNow AQI, pavement-quality, water/flood maps.
-6. Story-driven (not feeds): **Fire data GAP** (no operational TFD data anywhere — a Transparency-Tracker story), budget ACFR PDFs, vendor check register (records-request-only).
-
-**Gate per [[feedback_resist_feature_creep]]:** next big project is still short-form video; capture here, don't start building mid-stream without a user go-ahead. **Side task:** add City of Tucson officials to `pipeline/local_names.json`.
-
-## Roadmap: Southern AZ School-District Coverage (data + meetings)
-
-Feasibility-scanned **2026-06-26** (4 parallel agents, endpoints fetched live). **Full reference: `SCHOOL-DATA-FEASIBILITY.md`** + the `project_school_data_layer` memory + `COVERAGE-EXPANSION.md` Part 1C (meeting-coverage plan, now verified/corrected). Covers the 9 Tucson-metro K-12 districts. School boards are the most under-covered governance beat; this is a strong new content line.
-
-**EASY data wins (no WAF/headless):** (1) ⭐ **Auditor General "School District Spending" XLSX** — one statewide file, all districts, classroom-% + per-category $ + teacher salary → "where your district's money goes" + classroom-$ ranking. (2) ⭐ **ADE Report Cards undocumented JSON API** (`azreportcards.azed.gov/api/DataApi/...`, no key) for assessment/grad/enrollment/EL/absenteeism trends + **A-F grades** XLSX on `azsbe.az.gov`. (3) ⭐ **Urban Institute Education Data API** (`educationdata.urban.org`, no key) for CCD enrollment, F-33 per-pupil finance, CRDC discipline-by-race. **Gotcha:** `www.azed.gov` is a Cloudflare *JS-challenge* wall (header spoofing FAILS) — avoid by using the API + azsbe. Dropout rate = gap (walled-only). Elections (override/bond + board races) = Pima County CSV via CivicPlus (MODERATE); SOS never carries school results.
-
-**Meeting coverage:** 8 of 9 districts via TWO scrapers — **Diligent** (TUSD, Vail, Sahuarita, Tanque Verde) + **BoardBook** (Amphitheater 2065, Marana 1780, Catalina Foothills 1202, Flowing Wells 1607). **Corrections:** TUSD portal = `tusd1-schooldesk.community.highbond.com` (not govboard); **Sunnyside = BoardDocs `susd12`, NOT NovusAGENDA** (hardest, 403s bots). **Video:** 6 YouTube live feeds (Vail, Marana, Amphi, Sahuarita, Sunnyside, Flowing Wells) → `run_live_reporter.sh`; TUSD = Livestream.com HLS (`--direct`); Tanque Verde none.
-
-**Pilot = Vail USD** (Diligent + YouTube → preview + post-meeting report day one; Vail Chamber warm launch). **Signature originals:** ESA vouchers vs enrollment-decline (biggest AZ ed story, thinly covered), annual "dollars in the classroom," CRDC discipline-equity, override/bond accountability. **Editorial:** higher sensitivity (culture-war-adjacent) → human-review gate on all meeting reports, never surface student-level data (FERPA). **Gate per [[feedback_resist_feature_creep]]:** capture only; the user hinted 2026-06-26 the gate may soften given how strong the civic-data findings are — pairs with the Tucson/OV/Marana data layers as a coherent "AI civic-data" push. **Side task:** add board members + superintendents to `pipeline/local_names.json`.
+**Side task across all four:** add council members / PD command staff / board members + superintendents to `pipeline/local_names.json`.
 
 ## Topic flags + Roadmap: Southern AZ Data Center Watch
 
@@ -1144,7 +875,7 @@ Auto-generate ~30-second vertical (1080×1920) news videos from existing TDB con
 The current podcast video path is minimal: `~/.openclaw/skills/tucson-daily-brief/scripts/generate_video.sh` does *static 1280×720 thumbnail + MP3 → MP4 via ffmpeg*, and `upload_to_youtube.py` already does OAuth + YouTube Data API v3 uploads (category 25, News & Politics). A vertical short is the **same recipe** with three deltas:
 
 1. **Script** — extend `condense_script()` in `generate_podcast.py` to pick *one* story and write a ~30s (~450-char) vertical script (vs. the existing 90s / 5-story condense). One extra Haiku call, pennies.
-2. **Audio** — same ElevenLabs/Voxtral TTS, shorter clip.
+2. **Audio** — same ElevenLabs TTS, shorter clip.
 3. **Video** — the only genuinely new work: render at **1080×1920** (branded vertical template + headline text + **burned-in captions**). Captions are the key upgrade — short-form is watched **muted**, so karaoke-style captions drive retention. Timing path we already own: run the generated TTS audio back through **Deepgram** (~$0.0002 for 30s) for word timestamps → build an ASS/SRT file → ffmpeg burns it in. (ElevenLabs can also return character-level timestamps directly.) Stay on raw ffmpeg + ASS for the low-dependency v1; `moviepy`/Remotion only if fancier motion graphics are wanted later.
 
 ### Publishing is a gradient — build in this order (each gate de-risks the next):
