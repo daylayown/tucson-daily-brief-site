@@ -72,6 +72,21 @@ CLIPS = {
             {"text": "New episode every\nmorning. 🎧", "cta": True},
         ],
     },
+    "bts-tucson-mini": {
+        "series": "behind-the-scenes",
+        # How-it's-made for the weekly Tucson Mini. Arc: what it is -> local
+        # vocab -> your week's real news -> concrete news-tie example -> the
+        # human-fact-check reveal (trust beat) -> CTA. Honest per the no-
+        # fabrication bar: we DO fact-check every clue by hand before it ships.
+        "script": [
+            {"eyebrow": "Behind the scenes", "text": "Every Sunday, we build a\ntiny Tucson crossword."},
+            {"text": "It starts with 160+ genuinely\nTucson answers. 🌵"},
+            {"text": "Then we fold in the real news\nfrom your week here."},
+            {"text": "So a clue can wink at the news —\nlike Dante’s farewell whiskey dinner. 🥃"},
+            {"text": "AI drafts it —\na human checks every clue.", "big": True},
+            {"text": "Free every Sunday in\nour newsletter. 🎟️", "cta": True},
+        ],
+    },
     "buried-ov-bodycam": {
         "series": "buried-in-the-agenda",
         "script": [
