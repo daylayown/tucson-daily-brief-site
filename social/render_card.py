@@ -396,6 +396,12 @@ DEMO = [
          headline="Our system found it first.",
          dek="Tucson Daily Brief automatically watches Marana’s public planning records every day. This data-center filing was on our site on June 24 — two days before it reached local TV news.",
          meta_text="tucsondailybrief.com"),
+    # --- 2026-07-11: Blowing Dust Advisory (same-day monsoon safety alert)
+    dict(slug="dust-advisory-2026-07-11", theme="terracotta",
+         kicker="Blowing Dust Advisory",
+         headline="Blowing dust likely this evening, 4–11 PM.",
+         dek="NWS Tucson warns visibility could drop to a quarter-mile with 50+ mph gusts, worst along I-10. Caught driving in it? Pull off the road, turn your lights off, take your foot off the brake, and wait it out.",
+         meta_text="Pull aside, stay alive"),
     # Reusable "how we know" card — generic, pairs with any News Report carousel.
     dict(slug="news-howweknow", theme="terracotta",
          kicker="How we know",
