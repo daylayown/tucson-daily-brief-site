@@ -401,7 +401,7 @@ def site_header_html() -> str:
 <div class="container">
 <p class="masthead__kicker">From the Old Pueblo</p>
 <h1 class="masthead__wordmark"><a href="./">Tucson Daily Brief</a></h1>
-<p class="masthead__tagline">An ongoing experiment at the intersection of artificial intelligence and local journalism, by Nicholas De Leon.</p>
+<p class="masthead__tagline">The Tucson news you&rsquo;d otherwise miss, by Nicholas De Leon.</p>
 </div>
 </header>"""
 
@@ -411,7 +411,7 @@ def post_header_html() -> str:
 <div class="container">
 <p class="masthead__kicker">From the Old Pueblo</p>
 <h1 class="masthead__wordmark"><a href="../">Tucson Daily Brief</a></h1>
-<p class="masthead__tagline">An ongoing experiment at the intersection of artificial intelligence and local journalism, by Nicholas De Leon.</p>
+<p class="masthead__tagline">The Tucson news you&rsquo;d otherwise miss, by Nicholas De Leon.</p>
 </div>
 </header>"""
 
@@ -535,7 +535,7 @@ def render_post(date: datetime, body_html: str) -> str:
 <div class="container">
 <p class="masthead__kicker">From the Old Pueblo</p>
 <h1 class="masthead__wordmark"><a href="{home_href}">Tucson Daily Brief</a></h1>
-<p class="masthead__tagline">An ongoing experiment at the intersection of artificial intelligence and local journalism, by Nicholas De Leon.</p>
+<p class="masthead__tagline">The Tucson news you&rsquo;d otherwise miss, by Nicholas De Leon.</p>
 </div>
 </header>
 
