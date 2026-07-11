@@ -276,4 +276,33 @@ if [ "$PUBLISHED" -gt 0 ]; then
     echo "Pushed to GitHub Pages."
 fi
 
+# --- Weekly "Buried in the Agenda" short (Mondays) ---
+# Picks the most consequential under-the-radar item from this week's upcoming
+# meeting previews, renders a vertical short, and publishes it to YouTube
+# Shorts unattended (user call 2026-07-11: full-auto while YouTube-only, same
+# posture as the daily Only in Tucson short). Runs AFTER the miners so
+# freshly-generated previews are included. Skips cleanly on weeks with no
+# upcoming meetings or no genuinely strong item. Non-fatal on failure.
+if [ "$(date +%u)" = "1" ]; then
+    echo "Monday: generating weekly 'Buried in the Agenda' short..."
+    BIA_OUTPUT=$(python3 social/generate_agenda_short.py --publish 2>&1) || true
+    echo "$BIA_OUTPUT"
+    BIA_LINE=$(printf '%s\n' "$BIA_OUTPUT" | grep '^SHORT-PUBLISHED' | tail -1 || true)
+    if [ -n "$BIA_LINE" ]; then
+        IFS=$'\t' read -r _tag BIA_TITLE BIA_URL <<< "$BIA_LINE"
+        NOTIFY_MSG="🎬 Buried in the Agenda short published (unreviewed)
+
+This week's agenda short was auto-published to YouTube Shorts. Watch it and pull it if anything is off:
+
+$BIA_TITLE
+$BIA_URL"
+        TMPFILE=$(mktemp /tmp/bia-notify-XXXXX.md)
+        printf '%s\n' "$NOTIFY_MSG" > "$TMPFILE"
+        if [ -f "$SEND_TELEGRAM" ]; then
+            python3 "$SEND_TELEGRAM" "$TMPFILE" || echo "WARNING: BIA Telegram notification failed (non-fatal)"
+        fi
+        rm -f "$TMPFILE"
+    fi
+fi
+
 echo "$(date): Done."
