@@ -402,6 +402,19 @@ DEMO = [
          headline="Blowing dust likely this evening, 4–11 PM.",
          dek="NWS Tucson warns visibility could drop to a quarter-mile with 50+ mph gusts, worst along I-10. Caught driving in it? Pull off the road, turn your lights off, take your foot off the brake, and wait it out.",
          meta_text="Pull aside, stay alive"),
+    # --- 2026-07-12: Saturday-night monsoon storm recap (2-slide: recap + the
+    # county's flood-control votes Tuesday). Facts from the 2026-07-12 brief
+    # (KGUN 9 / KOLD / KVOA) + the pima-county-2026-07-14 agenda preview.
+    dict(slug="monsoon-recap-2026-07-12", theme="terracotta",
+         kicker="Monsoon · Saturday night",
+         headline="10,000+ lost power. Washes ran fast.",
+         dek="Saturday night’s storm knocked out power to more than 10,000 TEP customers across 28 outages, flooded streets and washes citywide, and downed trees. Fire crews pulled one person — uninjured — from the fast-moving Alamo Wash.",
+         meta_text="swipe → what the county does about it"),
+    dict(slug="monsoon-floodvote-2026-07-12", theme="light",
+         kicker="Tuesday · Board of Supervisors",
+         headline="Flood votes, right on cue.",
+         dek="Three days after the storm, county supervisors vote on buying 28.86 acres of flood-prone land along Brawley Wash — part of a multi-year effort to blunt monsoon flooding in Tucson’s southwest corridor.",
+         meta_text="tucsondailybrief.com"),
     # Reusable "how we know" card — generic, pairs with any News Report carousel.
     dict(slug="news-howweknow", theme="terracotta",
          kicker="How we know",

@@ -17,12 +17,15 @@ from render_card import THEMES, FONTS_HREF, SUN_SVG, CARDS_DIR, SCALE
 SW, SH = 1080, 1920
 T = THEMES["terracotta"]
 
-# Today's story: a poll hook tied to the feature week. Leave bottom open for the
-# poll sticker (e.g. "Did you know that?" -> "Yep" / "No idea").
-KICKER = "How we cover Tucson"
-HEADLINE = "We read every<br>Tucson council<br>agenda —<br>before the meeting."
-SUBHEAD = "Most local outlets can’t anymore. We can."
-STICKER_HINT = "vote below ↓"
+# Today's story: Saturday-night monsoon storm recap (facts from the 2026-07-12
+# brief — KGUN 9 / KOLD / KVOA). Leave bottom open for the poll sticker
+# (e.g. "Did you lose power last night?" -> "Yep" / "Kept the lights on").
+KICKER = "Monsoon · Saturday night"
+HEADLINE = "10,000+ without<br>power. One rescue<br>from a running<br>wash."
+SUBHEAD = ("Saturday night’s storm flooded streets and washes across Tucson and "
+           "downed trees citywide. Crews pulled one person, uninjured, from the "
+           "Alamo Wash — and Tuesday, the county votes on flood-control land.")
+STICKER_HINT = "poll below ↓"
 
 PAGE = f"""<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
@@ -75,13 +78,14 @@ def render_story(slug, html_str):
         f"--force-device-scale-factor={SCALE}", f"--window-size={SW},{SH}",
         "--virtual-time-budget=7000", f"--screenshot={big}", f"file://{html_path}"],
         check=True, capture_output=True)
-    subprocess.run(["convert", big, "-resize", f"{SW}x{SH}", "-strip",
-        "-quality", "92", final], check=True, capture_output=True)
+    subprocess.run(["convert", big, "-filter", "Lanczos", "-resize", f"{SW}x{SH}",
+        "-unsharp", "0x0.6+0.7+0", "-strip", "-quality", "95", final],
+        check=True, capture_output=True)
     os.remove(big); os.remove(html_path)
     print(f"  wrote {final}")
 
 
 if __name__ == "__main__":
     print("rendering story ...")
-    render_story("story-2026-06-22", PAGE)
+    render_story("story-monsoon-2026-07-12", PAGE)
     print("done.")
