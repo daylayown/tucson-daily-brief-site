@@ -70,8 +70,9 @@ SLIDES = [
          kicker="Say hi",
          headline="I make this\nfor you.",
          dek="A free daily brief, a 90-second podcast, and a Sunday "
-             "newsletter with a Tucson crossword. Reply, comment, send tips "
-             "— there's a real person on the other end. Link in bio.",
+             "newsletter with a Tucson crossword. Questions, comments, "
+             "requests, feedback? DM me anytime — there's a real person on "
+             "the other end. Link in bio.",
          cta=True),
 ]
 
