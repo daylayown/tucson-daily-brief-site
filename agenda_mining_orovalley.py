@@ -280,7 +280,7 @@ def publish_preview(preview_path: str) -> None:
     PUBLISHED_DIR.mkdir(exist_ok=True)
     body_html = preview_md_to_html(md_text)
     html_path = PUBLISHED_DIR / f"{slug}.html"
-    html_path.write_text(render_meeting_post(title, date, body_html))
+    html_path.write_text(render_meeting_post(title, date, body_html, page_slug=html_path.stem))
     print(f"  Published: {html_path}")
 
     # Rebuild meeting watch index

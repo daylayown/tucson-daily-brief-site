@@ -25,6 +25,8 @@ from pathlib import Path
 
 from generate_post import (
     ANALYTICS_HTML,
+    seo_head_html,
+    derive_description,
     HAND_RULE_SVG,
     SCROLL_TRIGGER_JS,
     SUBSCRIBE_PANEL_HTML,
@@ -497,17 +499,25 @@ def extract_preview_lede(md_text: str) -> str:
     return ""
 
 
-def render_meeting_post(title: str, date: datetime, body_html: str) -> str:
-    """Render a full meeting watch HTML page."""
+def render_meeting_post(title: str, date: datetime, body_html: str, page_slug: str = "") -> str:
+    """Render a full meeting watch HTML page. `page_slug` is the output
+    filename stem (e.g. "pima-county-bos-2026-03-03") for canonical/OG URLs."""
     from generate_post import ARROW_LEFT_SVG, post_header_html
     slug = date.strftime("%Y-%m-%d")
+    seo = ""
+    if page_slug:
+        seo = seo_head_html(
+            title=f"{title} — Tucson Daily Brief",
+            description=derive_description(body_html) or f"What to watch at the {title} meeting.",
+            path=f"meeting-watch/{page_slug}.html",
+            og_type="article", published=date) + "\n"
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{escape_html(title)} &mdash; Tucson Daily Brief</title>
-<link rel="stylesheet" href="../style.css">
+{seo}<link rel="stylesheet" href="../style.css">
 {ANALYTICS_HTML}
 </head>
 <body>
@@ -557,6 +567,10 @@ def render_meeting_index(posts: list[dict]) -> str:
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Local Meeting Previews &mdash; Tucson Daily Brief</title>
+{seo_head_html(
+    title="Local Meeting Previews — Tucson Daily Brief",
+    description="AI-assisted previews of what's on the agenda for local government meetings across Tucson, Pima County, Marana, and Oro Valley — published the morning agendas drop.",
+    path="meeting-watch.html")}
 <link rel="stylesheet" href="style.css">
 {ANALYTICS_HTML}
 </head>
@@ -571,7 +585,7 @@ def render_meeting_index(posts: list[dict]) -> str:
 <main>
 <div class="container container--editorial">
 <div style="padding-top:var(--gap-xl);margin-bottom:var(--gap-l)">
-<h2 class="section-head">Local Meeting Previews</h2>
+<h1 class="section-head">Local Meeting Previews</h1>
 <p class="section-intro">Before each meeting: AI-assisted previews of what&rsquo;s on the agenda for local government bodies across Tucson, Pima County, Marana, and Oro Valley. Auto-published the morning agendas drop.</p>
 </div>
 
@@ -616,7 +630,7 @@ def publish_preview(preview_path: str) -> None:
     PUBLISHED_DIR.mkdir(exist_ok=True)
     body_html = preview_md_to_html(md_text)
     html_path = PUBLISHED_DIR / f"{slug}.html"
-    html_path.write_text(render_meeting_post(title, date, body_html))
+    html_path.write_text(render_meeting_post(title, date, body_html, page_slug=html_path.stem))
     print(f"  Published: {html_path}")
 
     # Rebuild meeting watch index

@@ -62,6 +62,8 @@ from pathlib import Path
 
 from generate_post import (
     ANALYTICS_HTML,
+    seo_head_html,
+    derive_description,
     ARROW_LEFT_SVG,
     SCROLL_TRIGGER_JS,
     detect_topics,
@@ -337,7 +339,7 @@ Return only the two sentences, no preamble."""
 # Render
 # ---------------------------------------------------------------------------
 
-def render_case_html(a: dict, summary: str, date: datetime) -> str:
+def render_case_html(a: dict, summary: str, date: datetime, page_slug: str = "") -> str:
     title = case_title(a)
     ctype = _clean(a.get("type")) or "Development project"
     status = _clean(a.get("status")) or "Active"
@@ -379,13 +381,24 @@ def render_case_html(a: dict, summary: str, date: datetime) -> str:
     if link.startswith("http"):
         links_html = f'<p><a href="{escape_html(link)}">View the town&rsquo;s project record</a></p>'
 
+    seo = ""
+    if page_slug:
+        description = (summary or "").strip() or f"{ctype}: {title}."
+        description = re.sub(r"<[^>]+>", "", description)
+        if len(description) > 300:
+            description = description[:297].rsplit(" ", 1)[0] + "…"
+        seo = seo_head_html(
+            title=f"{title} — Around Town — Tucson Daily Brief",
+            description=description,
+            path=f"around-town/{page_slug}.html",
+            og_type="article", published=date) + "\n"
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{escape_html(title)} &mdash; Around Town &mdash; Tucson Daily Brief</title>
-<link rel="stylesheet" href="../style.css">
+{seo}<link rel="stylesheet" href="../style.css">
 {ANALYTICS_HTML}
 </head>
 <body>
@@ -489,7 +502,7 @@ def process(dry_run=False, force=False, limit=None, use_llm=True) -> int:
 
         print(f"  Publishing: {slug}.html  ({_clean(a.get('type')) or '?'}: {title})")
         summary = summarize_case(a, use_llm=use_llm)
-        out_path.write_text(render_case_html(a, summary, date))
+        out_path.write_text(render_case_html(a, summary, date, page_slug=slug))
         new_state[key] = {"hash": chash, "slug": slug}
         published += 1
 

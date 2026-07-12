@@ -12,6 +12,7 @@ Usage:
 import sys
 import os
 import re
+import json
 import argparse
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -296,6 +297,105 @@ ANALYTICS_HTML = """<link rel="preconnect" href="https://fonts.googleapis.com">
   gtag('config', 'G-MEYSB9GYF2');
 </script>"""
 
+# ---------------------------------------------------------------------------
+# SEO / social meta — shared by every renderer (added 2026-07-11)
+# ---------------------------------------------------------------------------
+
+SITE_URL = "https://tucsondailybrief.com"
+OG_IMAGE_URL = f"{SITE_URL}/assets/og-default.png"
+RSS_URL = f"{SITE_URL}/rss.xml"
+SITE_NAME = "Tucson Daily Brief"
+
+
+def seo_head_html(*, title: str, description: str, path: str,
+                  og_type: str = "website",
+                  published: datetime | None = None,
+                  jsonld: dict | None = None) -> str:
+    """Meta description + canonical + Open Graph/Twitter cards + optional
+    JSON-LD, for one page. `title`/`description` are plain text (unescaped);
+    `path` is the site-relative path ("" for the homepage)."""
+    url = f"{SITE_URL}/{path}" if path else f"{SITE_URL}/"
+    t, d = escape(title), escape(description)
+    lines = [
+        f'<meta name="description" content="{d}">',
+        f'<link rel="canonical" href="{url}">',
+        f'<meta property="og:site_name" content="{SITE_NAME}">',
+        f'<meta property="og:type" content="{og_type}">',
+        f'<meta property="og:title" content="{t}">',
+        f'<meta property="og:description" content="{d}">',
+        f'<meta property="og:url" content="{url}">',
+        f'<meta property="og:image" content="{OG_IMAGE_URL}">',
+        '<meta property="og:image:width" content="1200">',
+        '<meta property="og:image:height" content="630">',
+        '<meta name="twitter:card" content="summary_large_image">',
+        f'<meta name="twitter:title" content="{t}">',
+        f'<meta name="twitter:description" content="{d}">',
+        f'<meta name="twitter:image" content="{OG_IMAGE_URL}">',
+        f'<link rel="alternate" type="application/rss+xml" title="{SITE_NAME}" href="{RSS_URL}">',
+    ]
+    if published is not None:
+        lines.append(f'<meta property="article:published_time" content="{published.strftime("%Y-%m-%d")}">')
+    if jsonld:
+        lines.append('<script type="application/ld+json">'
+                     + json.dumps(jsonld, ensure_ascii=False) + "</script>")
+    return "\n".join(lines)
+
+
+def news_article_jsonld(*, headline: str, path: str, published: datetime,
+                        description: str = "") -> dict:
+    """schema.org NewsArticle for an article page."""
+    url = f"{SITE_URL}/{path}"
+    d = {
+        "@context": "https://schema.org",
+        "@type": "NewsArticle",
+        "headline": headline[:110],
+        "url": url,
+        "mainEntityOfPage": url,
+        "datePublished": published.strftime("%Y-%m-%d"),
+        "author": [{"@type": "Person", "name": "Nicholas De Leon"}],
+        "publisher": {
+            "@type": "NewsMediaOrganization",
+            "name": SITE_NAME,
+            "url": f"{SITE_URL}/",
+            "logo": {"@type": "ImageObject", "url": OG_IMAGE_URL},
+        },
+        "image": [OG_IMAGE_URL],
+    }
+    if description:
+        d["description"] = description
+    return d
+
+
+def derive_description(body_html: str, max_len: int = 160) -> str:
+    """Plain-text meta description from the first substantive paragraph of an
+    article body fragment. Skips chrome-y paragraphs (post-meta, back links,
+    kickers) and very short ones."""
+    for m in re.finditer(r"<p(\s[^>]*)?>(.*?)</p>", body_html, re.DOTALL):
+        attrs = m.group(1) or ""
+        if re.search(r"post-meta|back-link|brief-kicker|brief-weekday|masthead|post-lede|section-intro", attrs):
+            continue
+        text = _unescape_and_truncate(m.group(2), max_len=0)
+        if len(text) < 40:
+            continue
+        if max_len and len(text) > max_len:
+            text = text[: max_len - 1].rsplit(" ", 1)[0] + "…"
+        return text
+    return ""
+
+
+def extract_headline(md_text: str) -> str:
+    """First real story headline from a briefing markdown — skips weather
+    day-labels/temps (which lead the brief on weather-alert days), mirroring
+    collect_existing_posts()."""
+    for line in md_text.strip().split("\n"):
+        for match in re.finditer(r"\*\*(.+?)\*\*", line):
+            headline = match.group(1).strip().rstrip(".")
+            if _is_weather_label(headline):
+                continue
+            return headline
+    return ""
+
+
 # Inline SVGs reused across the site
 SUNRAY_SVG = """<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
 <circle cx="7" cy="7" r="2.2" fill="currentColor"/>
@@ -396,11 +496,14 @@ SUBSCRIBE_PANEL_HTML = f"""<div class="subscribe__panel">
 </div>"""
 
 # Header used by every page on the site
-def site_header_html() -> str:
-    return """<header class="masthead">
+def site_header_html(h1: bool = False) -> str:
+    # The wordmark is an <h1> only on the homepage; every other page reserves
+    # its <h1> for the page's own title (one h1 per page).
+    tag = "h1" if h1 else "p"
+    return f"""<header class="masthead">
 <div class="container">
 <p class="masthead__kicker">From the Old Pueblo</p>
-<h1 class="masthead__wordmark"><a href="./">Tucson Daily Brief</a></h1>
+<{tag} class="masthead__wordmark"><a href="./">Tucson Daily Brief</a></{tag}>
 <p class="masthead__tagline">The Tucson news you&rsquo;d otherwise miss, by Nicholas De Leon.</p>
 </div>
 </header>"""
@@ -410,7 +513,7 @@ def post_header_html() -> str:
     return """<header class="masthead">
 <div class="container">
 <p class="masthead__kicker">From the Old Pueblo</p>
-<h1 class="masthead__wordmark"><a href="../">Tucson Daily Brief</a></h1>
+<p class="masthead__wordmark"><a href="../">Tucson Daily Brief</a></p>
 <p class="masthead__tagline">The Tucson news you&rsquo;d otherwise miss, by Nicholas De Leon.</p>
 </div>
 </header>"""
@@ -511,33 +614,48 @@ def section_nav_html(active: str = "", path_prefix: str = "") -> str:
 # Post rendering (individual daily-brief page)
 # ---------------------------------------------------------------------------
 
-def render_post(date: datetime, body_html: str) -> str:
-    """Render a daily-brief individual post page in the new editorial language."""
-    title = f"{format_date_long(date)} &mdash; Tucson Daily Brief"
+def render_post(date: datetime, body_html: str, headline: str = "") -> str:
+    """Render a daily-brief individual post page in the new editorial language.
+    `headline` (the day's first real story headline, plain text) feeds the
+    <title>, meta description, and NewsArticle structured data."""
+    date_long = format_date_long(date)
     slug = post_slug(date)
+    path = f"posts/{slug}.html"
     weekday = date.strftime("%A")
     css_path = "../style.css"
     home_href = "../"
     back_href = "../briefings.html"
+
+    if headline:
+        short = headline if len(headline) <= 80 else headline[:77].rsplit(" ", 1)[0] + "..."
+        title_text = f"{short} — Tucson Daily Brief, {date_long}"
+        description = f"{headline}, plus the rest of the day's Tucson news — local government, public safety, business, and events."
+    else:
+        title_text = f"{date_long} — Tucson Daily Brief"
+        description = f"The Tucson news for {date_long} — local government, public safety, business, and events."
+    if len(description) > 300:
+        description = description[:297].rsplit(" ", 1)[0] + "…"
+    seo = seo_head_html(
+        title=title_text, description=description, path=path,
+        og_type="article", published=date,
+        jsonld=news_article_jsonld(
+            headline=headline or f"Tucson Daily Brief — {date_long}",
+            path=path, published=date, description=description),
+    )
 
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{title}</title>
+<title>{escape(title_text)}</title>
+{seo}
 <link rel="stylesheet" href="{css_path}">
 {ANALYTICS_HTML}
 </head>
 <body>
 
-<header class="masthead">
-<div class="container">
-<p class="masthead__kicker">From the Old Pueblo</p>
-<h1 class="masthead__wordmark"><a href="{home_href}">Tucson Daily Brief</a></h1>
-<p class="masthead__tagline">The Tucson news you&rsquo;d otherwise miss, by Nicholas De Leon.</p>
-</div>
-</header>
+{post_header_html()}
 
 <div class="container">
 {section_nav_html(active="briefings", path_prefix=home_href)}
@@ -958,13 +1076,28 @@ def render_homepage(posts: list[dict],
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tucson Daily Brief</title>
+<title>Tucson Daily Brief &mdash; The Tucson news you&rsquo;d otherwise miss</title>
+{seo_head_html(
+    title="Tucson Daily Brief — The Tucson news you'd otherwise miss",
+    description="Daily Tucson news briefings, local government meeting coverage, and new business and development filings across Tucson, Pima County, Marana, and Oro Valley — by Nicholas De Leon.",
+    path="",
+    jsonld={
+        "@context": "https://schema.org",
+        "@graph": [
+            {"@type": "WebSite", "name": SITE_NAME, "url": f"{SITE_URL}/"},
+            {"@type": "NewsMediaOrganization", "name": SITE_NAME,
+             "url": f"{SITE_URL}/",
+             "logo": {"@type": "ImageObject", "url": OG_IMAGE_URL},
+             "founder": {"@type": "Person", "name": "Nicholas De Leon"},
+             "areaServed": "Tucson metropolitan area, Arizona"},
+        ],
+    })}
 <link rel="stylesheet" href="style.css">
 {ANALYTICS_HTML}
 </head>
 <body>
 
-{site_header_html()}
+{site_header_html(h1=True)}
 
 <div class="container">
 {section_nav_html(active="")}
@@ -1007,6 +1140,10 @@ def render_briefings_index(posts: list[dict]) -> str:
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Daily Briefs &mdash; Tucson Daily Brief</title>
+{seo_head_html(
+    title="Daily Briefs — Tucson Daily Brief",
+    description="The full archive of Tucson Daily Brief's morning news briefings — every day's Tucson and Southern Arizona news in one place.",
+    path="briefings.html")}
 <link rel="stylesheet" href="style.css">
 {ANALYTICS_HTML}
 </head>
@@ -1021,7 +1158,7 @@ def render_briefings_index(posts: list[dict]) -> str:
 <main>
 <div class="container container--editorial">
 <div style="padding-top:var(--gap-xl);margin-bottom:var(--gap-l)">
-<h2 class="section-head">Daily Briefs</h2>
+<h1 class="section-head">Daily Briefs</h1>
 <p class="section-intro">Every day&rsquo;s synthesis of Tucson, Pima County, and Arizona news, newest first.</p>
 </div>
 
@@ -1060,7 +1197,7 @@ def rebuild_all_briefs(source_dir: str | Path) -> None:
         slug = post_slug(date)
         md_text = md_path.read_text()
         body_html = md_to_html(md_text)
-        (POSTS_DIR / f"{slug}.html").write_text(render_post(date, body_html))
+        (POSTS_DIR / f"{slug}.html").write_text(render_post(date, body_html, extract_headline(md_text)))
         count += 1
     print(f"  Regenerated {count} daily-brief HTML page(s)")
 
@@ -1090,6 +1227,10 @@ def render_local_government(latest_meeting: dict | None,
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Local Government &mdash; Tucson Daily Brief</title>
+{seo_head_html(
+    title="Local Government — Tucson Daily Brief",
+    description="Meeting previews and post-meeting news reports for Tucson Mayor & Council, the Pima County Board of Supervisors, and the Marana and Oro Valley town councils.",
+    path="local-government.html")}
 <link rel="stylesheet" href="style.css">
 {ANALYTICS_HTML}
 </head>
@@ -1104,7 +1245,7 @@ def render_local_government(latest_meeting: dict | None,
 <main>
 <div class="container container--editorial">
 <div style="padding-top:var(--gap-xl);margin-bottom:var(--gap-l)">
-<h2 class="section-head">Local Government</h2>
+<h1 class="section-head">Local Government</h1>
 <p class="section-intro">What your local government is deciding &mdash; before and after. Ahead of each meeting we preview what&rsquo;s on the agenda; afterward we report what was decided. Coverage spans Tucson, Pima County, Marana, and Oro Valley.</p>
 </div>
 
@@ -1156,6 +1297,10 @@ def render_around_town(items: list[dict]) -> str:
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Around Town &mdash; Tucson Daily Brief</title>
+{seo_head_html(
+    title="Around Town — Tucson Daily Brief",
+    description="What's opening, building, and changing in the Tucson area — new businesses, liquor license filings, rezonings, and development cases pulled from public records.",
+    path="around-town.html")}
 <link rel="stylesheet" href="style.css">
 {ANALYTICS_HTML}
 </head>
@@ -1170,7 +1315,7 @@ def render_around_town(items: list[dict]) -> str:
 <main>
 <div class="container container--editorial">
 <div style="padding-top:var(--gap-xl);margin-bottom:var(--gap-l)">
-<h2 class="section-head">Around Town</h2>
+<h1 class="section-head">Around Town</h1>
 <p class="section-intro">What&rsquo;s opening, building, and changing near you &mdash; new businesses and liquor filings, plus rezonings and development cases &mdash; pulled automatically from public records, most of which never get reported on. Each item is tagged <strong>New business</strong> or <strong>Development</strong>.</p>
 </div>
 
@@ -1190,6 +1335,69 @@ def render_around_town(items: list[dict]) -> str:
 </body>
 </html>
 """
+
+
+def build_sitemap() -> None:
+    """Write sitemap.xml covering every indexable page on the site. The
+    crossword is deliberately excluded (noindex, subscriber-only)."""
+    root_pages = ["", "briefings.html", "local-government.html", "around-town.html",
+                  "meeting-watch.html", "news-reports.html", "public-record.html",
+                  "in-depth.html", "ask.html", "about.html", "responsiveness.html"]
+    entries = []
+
+    def add(path: str, lastmod: str | None = None) -> None:
+        loc = f"{SITE_URL}/{path}" if path else f"{SITE_URL}/"
+        lm = f"\n<lastmod>{lastmod}</lastmod>" if lastmod else ""
+        entries.append(f"<url>\n<loc>{loc}</loc>{lm}\n</url>")
+
+    for p in root_pages:
+        add(p)
+    for directory, prefix in [(POSTS_DIR, "posts"), (MEETINGS_DIR, "meeting-watch"),
+                              (REPORTS_DIR, "news-reports"), (PUBLIC_RECORD_DIR, "public-record"),
+                              (AROUND_TOWN_DIR, "around-town"), (INDEPTH_DIR, "in-depth")]:
+        if not directory.exists():
+            continue
+        for f in sorted(directory.glob("*.html")):
+            m = re.search(r"(\d{4}-\d{2}-\d{2})", f.stem)
+            add(f"{prefix}/{f.name}", m.group(1) if m else None)
+
+    (SITE_DIR / "sitemap.xml").write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        + "\n".join(entries) + "\n</urlset>\n")
+
+
+def build_rss(posts: list[dict], limit: int = 30) -> None:
+    """Write rss.xml — the most recent daily briefs (newest first)."""
+    def xml_escape(s: str) -> str:
+        return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+    items = []
+    for p in posts[:limit]:
+        title = f"Tucson Daily Brief — {format_date_long(p['date'])}"
+        url = f"{SITE_URL}/posts/{p['slug']}.html"
+        desc = _unescape_and_truncate(p.get("lede", ""), max_len=0)
+        pub = p["date"].strftime("%a, %d %b %Y 06:00:00 -0700")
+        items.append(f"""<item>
+<title>{xml_escape(title)}</title>
+<link>{url}</link>
+<guid isPermaLink="true">{url}</guid>
+<pubDate>{pub}</pubDate>
+<description>{xml_escape(desc)}</description>
+</item>""")
+
+    (SITE_DIR / "rss.xml").write_text(f"""<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+<title>{SITE_NAME}</title>
+<link>{SITE_URL}/</link>
+<atom:link href="{RSS_URL}" rel="self" type="application/rss+xml"/>
+<description>The Tucson news you'd otherwise miss — daily briefings on Tucson and Southern Arizona.</description>
+<language>en-us</language>
+{chr(10).join(items)}
+</channel>
+</rss>
+""")
 
 
 def rebuild_homepage() -> None:
@@ -1212,7 +1420,9 @@ def rebuild_homepage() -> None:
     (SITE_DIR / "around-town.html").write_text(
         render_around_town(collect_around_town_items())
     )
-    print(f"  Rebuilt: index.html + briefings.html + local-government.html + around-town.html ({len(posts)} briefing(s))")
+    build_sitemap()
+    build_rss(posts)
+    print(f"  Rebuilt: index.html + briefings.html + local-government.html + around-town.html + sitemap.xml + rss.xml ({len(posts)} briefing(s))")
 
 
 # ---------------------------------------------------------------------------
@@ -1252,7 +1462,7 @@ def main():
 
     POSTS_DIR.mkdir(exist_ok=True)
     post_file = POSTS_DIR / f"{slug}.html"
-    post_file.write_text(render_post(date, body_html))
+    post_file.write_text(render_post(date, body_html, extract_headline(md_text)))
     print(f"Wrote {post_file}")
 
     rebuild_homepage()

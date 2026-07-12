@@ -28,6 +28,8 @@ from pathlib import Path
 
 from generate_post import (
     ANALYTICS_HTML,
+    seo_head_html,
+    derive_description,
     SCROLL_TRIGGER_JS,
     SUBSCRIBE_PANEL_HTML,
     footer_html,
@@ -115,6 +117,15 @@ def extract_lede(article_md: str) -> str:
 # ---------------------------------------------------------------------------
 
 def render_indepth_post(title: str, date: datetime, body_html: str, slug: str) -> str:
+    from generate_post import news_article_jsonld
+    path = f"in-depth/{slug}.html"
+    description = derive_description(body_html) or title
+    seo = seo_head_html(
+        title=f"{title} — Tucson Daily Brief",
+        description=description, path=path,
+        og_type="article", published=date,
+        jsonld=news_article_jsonld(headline=title, path=path,
+                                   published=date, description=description))
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -122,6 +133,7 @@ def render_indepth_post(title: str, date: datetime, body_html: str, slug: str) -
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="published" content="{date.strftime('%Y-%m-%d')}">
 <title>{escape_html(title)} &mdash; Tucson Daily Brief</title>
+{seo}
 <link rel="stylesheet" href="../style.css">
 {ANALYTICS_HTML}
 </head>
@@ -170,6 +182,10 @@ def render_indepth_index(items: list[dict]) -> str:
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Deep Dives &mdash; Tucson Daily Brief</title>
+{seo_head_html(
+    title="Deep Dives — Tucson Daily Brief",
+    description="Original investigations and deep dives into Tucson and Southern Arizona civic life, built on public records, meeting transcripts, and government data.",
+    path="in-depth.html")}
 <link rel="stylesheet" href="style.css">
 {ANALYTICS_HTML}
 </head>
@@ -184,7 +200,7 @@ def render_indepth_index(items: list[dict]) -> str:
 <main>
 <div class="container container--editorial">
 <div style="padding-top:var(--gap-xl);margin-bottom:var(--gap-l)">
-<h2 class="section-head">Deep Dives</h2>
+<h1 class="section-head">Deep Dives</h1>
 <p class="section-intro">Standalone features on the issues that matter most across Southern Arizona &mdash; reported from TDB&rsquo;s own archive of meetings, filings, and records, with the wider context layered in. Human-reviewed, every one.</p>
 </div>
 

@@ -30,6 +30,8 @@ from pathlib import Path
 
 from generate_post import (
     ANALYTICS_HTML,
+    seo_head_html,
+    derive_description,
     HAND_RULE_SVG,
     SCROLL_TRIGGER_JS,
     SUBSCRIBE_PANEL_HTML,
@@ -475,17 +477,28 @@ def report_md_to_html(md_text: str) -> str:
     return "\n".join(html_parts)
 
 
-def render_report_post(title: str, date: datetime, body_html: str) -> str:
-    """Render a full news report HTML page."""
-    from generate_post import ARROW_LEFT_SVG, post_header_html
+def render_report_post(title: str, date: datetime, body_html: str, page_slug: str = "") -> str:
+    """Render a full news report HTML page. `page_slug` is the output filename
+    stem (e.g. "pima-bos-2026-04-07") for canonical/OG URLs + structured data."""
+    from generate_post import ARROW_LEFT_SVG, post_header_html, news_article_jsonld
     slug = date.strftime("%Y-%m-%d")
+    seo = ""
+    if page_slug:
+        path = f"news-reports/{page_slug}.html"
+        description = derive_description(body_html) or title
+        seo = seo_head_html(
+            title=f"{title} — Tucson Daily Brief",
+            description=description, path=path,
+            og_type="article", published=date,
+            jsonld=news_article_jsonld(headline=title, path=path,
+                                       published=date, description=description)) + "\n"
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{escape_html(title)} &mdash; Tucson Daily Brief</title>
-<link rel="stylesheet" href="../style.css">
+{seo}<link rel="stylesheet" href="../style.css">
 {ANALYTICS_HTML}
 </head>
 <body>
@@ -535,6 +548,10 @@ def render_report_index(posts: list[dict]) -> str:
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Local Meeting Reports &mdash; Tucson Daily Brief</title>
+{seo_head_html(
+    title="Local Meeting Reports — Tucson Daily Brief",
+    description="Post-meeting news reports on Tucson-area local government — AI-drafted from full meeting transcripts, reviewed by a human editor before publishing.",
+    path="news-reports.html")}
 <link rel="stylesheet" href="style.css">
 {ANALYTICS_HTML}
 </head>
@@ -549,7 +566,7 @@ def render_report_index(posts: list[dict]) -> str:
 <main>
 <div class="container container--editorial">
 <div style="padding-top:var(--gap-xl);margin-bottom:var(--gap-l)">
-<h2 class="section-head">Local Meeting Reports</h2>
+<h1 class="section-head">Local Meeting Reports</h1>
 <p class="section-intro">After each meeting: AI-drafted, human-reviewed coverage of what local government bodies across the Tucson metro actually decided. Every report sees an editor before it&rsquo;s published.</p>
 </div>
 
@@ -615,7 +632,7 @@ def publish_report(md_path: str) -> None:
     REPORTS_DIR.mkdir(exist_ok=True)
     body_html = report_md_to_html(md_text)
     html_path = REPORTS_DIR / f"{slug}.html"
-    html_path.write_text(render_report_post(title, date, body_html))
+    html_path.write_text(render_report_post(title, date, body_html, page_slug=html_path.stem))
     print(f"  Published: {html_path}")
 
     # Rebuild news reports index

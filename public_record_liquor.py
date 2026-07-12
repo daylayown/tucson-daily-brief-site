@@ -37,6 +37,8 @@ from pathlib import Path
 
 from generate_post import (
     ANALYTICS_HTML,
+    seo_head_html,
+    derive_description,
     HAND_RULE_SVG,
     SCROLL_TRIGGER_JS,
     SUBSCRIBE_PANEL_HTML,
@@ -260,8 +262,9 @@ def escape_html(text: str) -> str:
             .replace('"', "&quot;"))
 
 
-def render_filing_html(data: dict, source_meta: dict, meeting_date: str) -> str:
-    """Render a single liquor license filing as an HTML page."""
+def render_filing_html(data: dict, source_meta: dict, meeting_date: str, page_slug: str = "") -> str:
+    """Render a single liquor license filing as an HTML page. `page_slug` is
+    the output filename stem for canonical/OG URLs."""
     business = data.get("business_name") or "Liquor License Filing"
     address = data.get("address") or ""
     city = data.get("city") or ""
@@ -305,13 +308,27 @@ def render_filing_html(data: dict, source_meta: dict, meeting_date: str) -> str:
     facts_html = "\n".join(facts)
 
     from generate_post import ARROW_LEFT_SVG, post_header_html
+    seo = ""
+    if page_slug:
+        try:
+            pub_dt = datetime.strptime(meeting_date, "%Y-%m-%d")
+        except ValueError:
+            pub_dt = None
+        description = summary or f"{business} liquor license filing before {body_name}."
+        if len(description) > 300:
+            description = description[:297].rsplit(" ", 1)[0] + "…"
+        seo = seo_head_html(
+            title=f"{title} — Tucson Daily Brief",
+            description=description,
+            path=f"public-record/{page_slug}.html",
+            og_type="article", published=pub_dt) + "\n"
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{escape_html(title)} &mdash; Tucson Daily Brief</title>
-<link rel="stylesheet" href="../style.css">
+{seo}<link rel="stylesheet" href="../style.css">
 {ANALYTICS_HTML}
 </head>
 <body>
@@ -377,6 +394,10 @@ def render_index_html(filings: list[dict]) -> str:
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>New Businesses &amp; Filings &mdash; Around Town &mdash; Tucson Daily Brief</title>
+{seo_head_html(
+    title="New Businesses & Filings — Around Town — Tucson Daily Brief",
+    description="New restaurants, bars, and businesses going through public review in the Tucson area — liquor license filings most outlets never report on.",
+    path="public-record.html")}
 <link rel="stylesheet" href="style.css">
 {ANALYTICS_HTML}
 </head>
@@ -391,7 +412,7 @@ def render_index_html(filings: list[dict]) -> str:
 <main>
 <div class="container container--editorial">
 <div style="padding-top:var(--gap-xl);margin-bottom:var(--gap-l)">
-<h2 class="section-head">New Businesses &amp; Filings</h2>
+<h1 class="section-head">New Businesses &amp; Filings</h1>
 <p class="section-intro">New restaurants, bars, businesses, and filings going through public review &mdash; most of which never get reported on. We pull them automatically from the agendas of Pima County BOS, Tucson Mayor &amp; Council, and Oro Valley Town Council. This is part of <a href="around-town.html">Around Town</a> &mdash; see development &amp; rezonings there too. Spot one near you? <a href="mailto:nicholas@daylayown.org">Let us know</a>.</p>
 </div>
 
@@ -506,7 +527,7 @@ def process_source_file(
                 continue
 
             PUBLIC_RECORD_DIR.mkdir(exist_ok=True)
-            out_path.write_text(render_filing_html(data, source_meta, meeting_date))
+            out_path.write_text(render_filing_html(data, source_meta, meeting_date, page_slug=slug))
             print(f"      Published: {out_path.name}")
             published += 1
 
