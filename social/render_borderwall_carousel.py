@@ -57,8 +57,8 @@ SLIDES = [
          kicker="The argument",
          headline="“If no one is\ncrossing, why do\nwe need a\nborder wall?”",
          dek="Jose said the nation spends millions of its own tribal funds on "
-             "border security — barriers, patrol roads, sensor towers, "
-             "checkpoints, the all-native Shadow Wolves unit — and that "
+             "border security — vehicle barriers, patrol roads, forward "
+             "operating bases, sensor towers, checkpoints — and that "
              "apprehensions on the reservation have fallen more than 95% in "
              "two years, by the federal government’s own data."),
 
