@@ -189,6 +189,58 @@ def format_item(item: dict) -> str:
     return "\n".join(lines)
 
 
+_CANCEL_WORD = r"cancell?ed|cancellation"
+
+# The cancel word next to "meeting"/"session" — not merely present. An agenda
+# item about a canceled *contract* must not read as a canceled *meeting*.
+_CANCEL_NEAR_MEETING_RE = re.compile(
+    rf"(?:meeting|session)s?[^.]{{0,80}}\b(?:{_CANCEL_WORD})\b"
+    rf"|\b(?:{_CANCEL_WORD})\b[^.]{{0,80}}(?:meeting|session)s?",
+    re.IGNORECASE,
+)
+
+
+def is_canceled_meeting(meeting_label: str, agenda_text: str = "") -> bool:
+    """True when the posted meeting is canceled and there is nothing to preview.
+
+    Both signals are needed because the portals disagree on where they say it:
+    Marana and Oro Valley put it in the meeting label itself ("Council Regular
+    Meeting - CANCELED"), while Tucson leaves the label reading "Mayor & Council
+    - Regular" and buries the notice in the PDF body ("Due to an anticipated
+    lack of quorum, the ... meetings of JULY 7, 2026, are CANCELLED"). Checking
+    only the label misses every Tucson cancellation.
+
+    The body check is confined to the notice header, where a cancellation is
+    announced, so an ordinary agenda that happens to cancel a contract 200 lines
+    down doesn't trip it.
+    """
+    if re.search(_CANCEL_WORD, meeting_label or "", re.IGNORECASE):
+        return True
+    head = " ".join((agenda_text or "").split("\n")[:40])
+    return bool(_CANCEL_NEAR_MEETING_RE.search(head))
+
+
+def canceled_analysis_md(body_name: str, meeting_date: datetime) -> str:
+    """Stand-in for the editorial analysis when a meeting is canceled.
+
+    Deliberately a flat statement of fact with no "what to watch" framing: there
+    is no agenda, so there is nothing to analyze, and asking a model to write a
+    preview anyway invites it to manufacture significance. It did exactly that
+    on 2026-07-21, filing a full preview — headline, "Reporter's Note",
+    follow-up questions — about a meeting that was not happening.
+
+    Still published rather than skipped, because "is there a meeting Tuesday?"
+    is a real reader question and the answer is worth a page.
+    """
+    date_str = meeting_date.strftime("%B %-d, %Y")
+    return "\n".join([
+        f"**The {date_str} {body_name} meeting has been canceled.** "
+        "No agenda items will be heard and no public business will be conducted.",
+        "",
+        "This page exists to record the cancellation. There is no agenda to preview.",
+    ])
+
+
 def analyze_with_claude(event: dict, substantive_items: list[dict]) -> str | None:
     """Send agenda items to Claude for editorial analysis."""
     api_key = os.environ.get("ANTHROPIC_API_KEY")
@@ -290,8 +342,15 @@ AGENDA ITEMS:
         return None
 
 
-def generate_preview(event: dict, items: list[dict], analysis: str) -> str:
-    """Generate the publishable preview — just the editorial analysis."""
+def generate_preview(event: dict, items: list[dict], analysis: str,
+                     canceled: bool = False) -> str:
+    """Generate the publishable preview — just the editorial analysis.
+
+    canceled=True swaps the title (nothing to "watch"), drops the item counts,
+    and swaps the disclosure — a cancellation notice is written by
+    canceled_analysis_md(), not by a model, so crediting CLAUDE_MODEL for it
+    would be a false disclosure.
+    """
     event_date = datetime.strptime(event["EventDate"][:10], "%Y-%m-%d")
     date_str = event_date.strftime("%B %d, %Y")
     day_of_week = event_date.strftime("%A")
@@ -303,20 +362,25 @@ def generate_preview(event: dict, items: list[dict], analysis: str) -> str:
     discussion_items = [i for i in substantive if not i.get("EventItemConsent")]
 
     lines = []
-    lines.append(f"# Pima County Board of Supervisors — What to Watch")
+    lines.append(f"# Pima County Board of Supervisors — {'Meeting Canceled' if canceled else 'What to Watch'}")
     lines.append(f"## {day_of_week}, {date_str} at {time_str}")
     if location:
         lines.append(f"\n{location}")
     lines.append("")
-    lines.append(f"**{len(substantive)} substantive items** on the agenda ({len(discussion_items)} for discussion, {len(consent_items)} on consent calendar)")
-    lines.append("")
+    if not canceled:
+        lines.append(f"**{len(substantive)} substantive items** on the agenda ({len(discussion_items)} for discussion, {len(consent_items)} on consent calendar)")
+        lines.append("")
     lines.append("---")
     lines.append("")
     lines.append(analysis)
     lines.append("")
     lines.append("---")
-    lines.append(f"*Generated {datetime.now().strftime('%Y-%m-%d %H:%M')} by Tucson Daily Brief agenda mining pipeline using {CLAUDE_MODEL}.*")
-    lines.append(f"*AI-assisted journalism — reviewed by a human editor before publication.*")
+    if canceled:
+        lines.append(f"*Generated {datetime.now().strftime('%Y-%m-%d %H:%M')} by Tucson Daily Brief agenda mining pipeline.*")
+        lines.append(f"*No agenda was posted for this meeting — this notice records the cancellation and is not AI-generated.*")
+    else:
+        lines.append(f"*Generated {datetime.now().strftime('%Y-%m-%d %H:%M')} by Tucson Daily Brief agenda mining pipeline using {CLAUDE_MODEL}.*")
+        lines.append(f"*AI-assisted journalism — reviewed by a human editor before publication.*")
     lines.append(f"*Source: [Pima County Legistar](https://pima.legistar.com/Calendar.aspx)*")
 
     return "\n".join(lines)
@@ -415,19 +479,19 @@ def preview_md_to_html(md_text: str) -> str:
 
         # H1
         if stripped.startswith("# ") and not stripped.startswith("## "):
-            html_parts.append(f"<h1>{escape_html(stripped[2:])}</h1>")
+            html_parts.append(f"<h1>{_heading_text(stripped[2:])}</h1>")
             i += 1
             continue
 
         # H2
         if stripped.startswith("## "):
-            html_parts.append(f"<h2>{escape_html(stripped[3:])}</h2>")
+            html_parts.append(f"<h2>{_heading_text(stripped[3:])}</h2>")
             i += 1
             continue
 
         # H3
         if stripped.startswith("### "):
-            html_parts.append(f"<h3>{escape_html(stripped[4:])}</h3>")
+            html_parts.append(f"<h3>{_heading_text(stripped[4:])}</h3>")
             i += 1
             continue
 
@@ -443,10 +507,12 @@ def preview_md_to_html(md_text: str) -> str:
             html_parts.append(f"<blockquote><p>{quote_text}</p></blockquote>")
             continue
 
-        # Italic line (standalone *text*)
+        # Italic line (standalone *text*) — every preview's source-attribution
+        # footer takes this branch, and it carries a markdown link, so it needs
+        # inline formatting rather than a bare escape.
         if stripped.startswith("*") and stripped.endswith("*") and not stripped.startswith("**"):
             inner = stripped[1:-1]
-            html_parts.append(f"<p><em>{escape_html(inner)}</em></p>")
+            html_parts.append(f"<p><em>{_inline_format(inner)}</em></p>")
             i += 1
             continue
 
@@ -471,11 +537,37 @@ def preview_md_to_html(md_text: str) -> str:
     return "\n".join(html_parts)
 
 
+def _heading_text(raw: str) -> str:
+    """Inline-format a heading, unwrapping a fully-bolded line.
+
+    Previews routinely arrive as "### **Headline**". A heading renders bold
+    already, so the wrapping pair is redundant — but running it through
+    escape_html alone published the asterisks as literal visible text
+    (meeting-watch/marana-council-2026-07-21.html). Unwrap the outer pair, then
+    inline-format the rest so partial bold inside a heading still works.
+    """
+    text = raw.strip()
+    m = re.fullmatch(r"\*\*(.+)\*\*", text, re.DOTALL)
+    if m and "**" not in m.group(1):
+        text = m.group(1)
+    return _inline_format(text)
+
+
 def _inline_format(text: str) -> str:
-    """Handle bold and inline formatting."""
+    """Handle bold, links, and inline formatting."""
     text = escape_html(text)
     # Bold
     text = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", text)
+    # Markdown links. Without this every preview published its own source
+    # attribution as dead text — "Source: [Town of Marana Agendas](https://...)"
+    # rendered literally on all 39 pages, so the provenance link never worked.
+    # Runs after escape_html, so & and " in the URL are already entity-safe;
+    # the scheme is pinned to http(s) so nothing else can reach an href.
+    text = re.sub(
+        r"\[([^\]]+)\]\((https?://[^)\s]+)\)",
+        r'<a href="\2">\1</a>',
+        text,
+    )
     # Emoji indicators
     text = text.replace("&amp;#x26A0;", "&#x26A0;")
     return text
@@ -743,11 +835,25 @@ def main():
 
         # LLM analysis → publishable preview
         if not args.no_llm:
-            print("  Running editorial analysis with Claude...")
-            analysis = analyze_with_claude(event, substantive)
+            # Legistar signals a cancellation in EventComment and/or the agenda
+            # status, not in the body text — so pass those as the label.
+            event_label = " ".join(filter(None, [
+                event.get("EventComment") or "",
+                event.get("EventAgendaStatusName") or "",
+            ]))
+            canceled = is_canceled_meeting(event_label)
+            if canceled:
+                print("  Meeting is CANCELED — writing stub preview, skipping Claude")
+                analysis = canceled_analysis_md(
+                    "Pima County Board of Supervisors",
+                    datetime.strptime(event["EventDate"][:10], "%Y-%m-%d"),
+                )
+            else:
+                print("  Running editorial analysis with Claude...")
+                analysis = analyze_with_claude(event, substantive)
             if analysis:
                 print("  Editorial analysis complete")
-                preview = generate_preview(event, items, analysis)
+                preview = generate_preview(event, items, analysis, canceled=canceled)
                 with open(preview_path, "w") as f:
                     f.write(preview)
                 print(f"  Saved publishable preview: {preview_path}")

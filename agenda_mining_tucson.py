@@ -264,13 +264,19 @@ AGENDA TEXT:
         return None
 
 
-def generate_preview(meeting_date: datetime, meeting_name: str, analysis: str) -> str:
-    """Generate the publishable preview."""
+def generate_preview(meeting_date: datetime, meeting_name: str, analysis: str,
+                     canceled: bool = False) -> str:
+    """Generate the publishable preview.
+
+    canceled=True swaps the title (nothing to "watch") and the disclosure — a
+    cancellation notice is written by canceled_analysis_md(), not by a model, so
+    crediting CLAUDE_MODEL for it would be a false disclosure.
+    """
     date_str = meeting_date.strftime("%B %d, %Y")
     day_of_week = meeting_date.strftime("%A")
 
     lines = []
-    lines.append(f"# Tucson Mayor & Council — What to Watch")
+    lines.append(f"# Tucson Mayor & Council — {'Meeting Canceled' if canceled else 'What to Watch'}")
     lines.append(f"## {day_of_week}, {date_str}")
     lines.append(f"\n{meeting_name}")
     lines.append("")
@@ -279,8 +285,12 @@ def generate_preview(meeting_date: datetime, meeting_name: str, analysis: str) -
     lines.append(analysis)
     lines.append("")
     lines.append("---")
-    lines.append(f"*Generated {datetime.now().strftime('%Y-%m-%d %H:%M')} by Tucson Daily Brief agenda mining pipeline using {CLAUDE_MODEL}.*")
-    lines.append(f"*AI-assisted journalism — auto-published.*")
+    if canceled:
+        lines.append(f"*Generated {datetime.now().strftime('%Y-%m-%d %H:%M')} by Tucson Daily Brief agenda mining pipeline.*")
+        lines.append(f"*No agenda was posted for this meeting — this notice records the cancellation and is not AI-generated.*")
+    else:
+        lines.append(f"*Generated {datetime.now().strftime('%Y-%m-%d %H:%M')} by Tucson Daily Brief agenda mining pipeline using {CLAUDE_MODEL}.*")
+        lines.append(f"*AI-assisted journalism — auto-published.*")
     lines.append(f"*Source: [City of Tucson Agendas]({ONBASE_BASE})*")
 
     return "\n".join(lines)
@@ -389,11 +399,19 @@ def process_meeting(meeting_id: str, meeting_name: str, meeting_date: datetime,
 
     # LLM analysis
     if not no_llm:
-        print("  Running editorial analysis with Claude...")
-        analysis = analyze_with_claude(meeting_date, meeting_name, agenda_text)
+        from agenda_mining import is_canceled_meeting, canceled_analysis_md
+        # Tucson's label stays "Mayor & Council - Regular" even when canceled —
+        # the notice is in the PDF body, so agenda_text is the load-bearing arg.
+        canceled = is_canceled_meeting(meeting_name, agenda_text)
+        if canceled:
+            print("  Meeting is CANCELED — writing stub preview, skipping Claude")
+            analysis = canceled_analysis_md("Tucson Mayor & Council", meeting_date)
+        else:
+            print("  Running editorial analysis with Claude...")
+            analysis = analyze_with_claude(meeting_date, meeting_name, agenda_text)
         if analysis:
             print("  Editorial analysis complete")
-            preview = generate_preview(meeting_date, meeting_name, analysis)
+            preview = generate_preview(meeting_date, meeting_name, analysis, canceled=canceled)
             with open(preview_path, "w") as f:
                 f.write(preview)
             print(f"  Saved publishable preview: {preview_path}")

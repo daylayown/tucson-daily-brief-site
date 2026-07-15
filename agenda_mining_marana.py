@@ -220,13 +220,19 @@ AGENDA TEXT:
         return None
 
 
-def generate_preview(meeting_date: datetime, meeting_type: str, analysis: str) -> str:
-    """Generate the publishable preview."""
+def generate_preview(meeting_date: datetime, meeting_type: str, analysis: str,
+                     canceled: bool = False) -> str:
+    """Generate the publishable preview.
+
+    canceled=True swaps the title (nothing to "watch") and the disclosure — a
+    cancellation notice is written by canceled_analysis_md(), not by a model, so
+    crediting CLAUDE_MODEL for it would be a false disclosure.
+    """
     date_str = meeting_date.strftime("%B %d, %Y")
     day_of_week = meeting_date.strftime("%A")
 
     lines = []
-    lines.append(f"# Marana Town Council — What to Watch")
+    lines.append(f"# Marana Town Council — {'Meeting Canceled' if canceled else 'What to Watch'}")
     lines.append(f"## {day_of_week}, {date_str}")
     lines.append(f"\n{meeting_type}")
     lines.append("")
@@ -235,8 +241,12 @@ def generate_preview(meeting_date: datetime, meeting_type: str, analysis: str) -
     lines.append(analysis)
     lines.append("")
     lines.append("---")
-    lines.append(f"*Generated {datetime.now().strftime('%Y-%m-%d %H:%M')} by Tucson Daily Brief agenda mining pipeline using {CLAUDE_MODEL}.*")
-    lines.append(f"*AI-assisted journalism — reviewed by a human editor before publication.*")
+    if canceled:
+        lines.append(f"*Generated {datetime.now().strftime('%Y-%m-%d %H:%M')} by Tucson Daily Brief agenda mining pipeline.*")
+        lines.append(f"*No agenda was posted for this meeting — this notice records the cancellation and is not AI-generated.*")
+    else:
+        lines.append(f"*Generated {datetime.now().strftime('%Y-%m-%d %H:%M')} by Tucson Daily Brief agenda mining pipeline using {CLAUDE_MODEL}.*")
+        lines.append(f"*AI-assisted journalism — reviewed by a human editor before publication.*")
     lines.append(f"*Source: [Town of Marana Agendas](https://destinyhosted.com/agenda_publish.cfm?id={DESTINY_ID})*")
 
     return "\n".join(lines)
@@ -373,11 +383,17 @@ def main():
 
         # LLM analysis
         if not args.no_llm:
-            print("  Running editorial analysis with Claude...")
-            analysis = analyze_with_claude(meeting_date, meeting_type, agenda_text)
+            from agenda_mining import is_canceled_meeting, canceled_analysis_md
+            canceled = is_canceled_meeting(meeting_type, agenda_text)
+            if canceled:
+                print("  Meeting is CANCELED — writing stub preview, skipping Claude")
+                analysis = canceled_analysis_md("Marana Town Council", meeting_date)
+            else:
+                print("  Running editorial analysis with Claude...")
+                analysis = analyze_with_claude(meeting_date, meeting_type, agenda_text)
             if analysis:
                 print("  Editorial analysis complete")
-                preview = generate_preview(meeting_date, meeting_type, analysis)
+                preview = generate_preview(meeting_date, meeting_type, analysis, canceled=canceled)
                 preview_path = os.path.join(OUTPUT_DIR, f"{base}-preview.md")
                 with open(preview_path, "w") as f:
                     f.write(preview)
@@ -436,11 +452,17 @@ def main():
 
         # LLM analysis
         if not args.no_llm:
-            print("  Running editorial analysis with Claude...")
-            analysis = analyze_with_claude(m["date"], m["type"], agenda_text)
+            from agenda_mining import is_canceled_meeting, canceled_analysis_md
+            canceled = is_canceled_meeting(m["type"], agenda_text)
+            if canceled:
+                print("  Meeting is CANCELED — writing stub preview, skipping Claude")
+                analysis = canceled_analysis_md("Marana Town Council", m["date"])
+            else:
+                print("  Running editorial analysis with Claude...")
+                analysis = analyze_with_claude(m["date"], m["type"], agenda_text)
             if analysis:
                 print("  Editorial analysis complete")
-                preview = generate_preview(m["date"], m["type"], analysis)
+                preview = generate_preview(m["date"], m["type"], analysis, canceled=canceled)
                 preview_path = os.path.join(OUTPUT_DIR, f"{base}-preview.md")
                 with open(preview_path, "w") as f:
                     f.write(preview)

@@ -99,6 +99,18 @@ def mark_processed(filename: str) -> None:
         f.write(filename + "\n")
 
 
+# A lettered sub-section header ("c.   Special Event(s)", "d.  Agent Change/...").
+# On Tucson agendas the new-license list lives under "b. Liquor License
+# Application(s)" and ends at the next lettered header, so this marks the tail
+# boundary. Indentation varies between agendas, hence the leading \s*.
+_SECTION_BOUNDARY_RE = re.compile(r"^\s*[a-z]\.\s+\S")
+
+# Never cut a new-license list shorter than this many lines after the last hit...
+_MIN_TAIL = 35
+# ...and never run away past this many, if no section boundary turns up.
+_MAX_TAIL = 250
+
+
 def find_liquor_blocks(full_md_text: str) -> list[str]:
     """Find text windows around 'liquor license' mentions in a full agenda reference.
 
@@ -107,9 +119,23 @@ def find_liquor_blocks(full_md_text: str) -> list[str]:
        lines that are clearly about one-off special event permits.
     2. Cluster nearby hits — hits within 35 lines of each other are part of the
        same agenda section and become one block.
-    3. For each cluster, take a generous window: 5 lines before the first hit
-       to 35 lines after the last hit. Tucson is verbose (section header may be
-       ~20 lines above the actual data fields), so a wide tail is essential.
+    3. For each cluster, take a window from 5 lines before the first hit to the
+       end of the section: at minimum _MIN_TAIL lines past the last hit, extended
+       to the next lettered sub-section header if one appears within _MAX_TAIL.
+
+    The tail must be found, not fixed. Tucson lists every new license under one
+    "Liquor License Application(s)" header, so the hits cluster at the top and
+    the filings run for as many lines as there are applicants — a fixed tail
+    silently truncates the list. A 5-applicant agenda (2026-07-21) ran ~55 lines
+    past the last hit: the old +35 cut mid-applicant, dropping two filings
+    entirely and stripping the address/agent off a third, which then published
+    as "no address provided". The same bug ate Circle K Store #9618 on
+    2026-06-23. Pima's format (data packed under each "### **24.**" header) has
+    no lettered boundary, finds none here, and keeps the _MIN_TAIL behavior.
+
+    Extension is one-directional — end never shrinks below the old _MIN_TAIL — so
+    a format this regex doesn't understand degrades to the previous behavior
+    rather than losing data.
 
     Each block may contain multiple distinct filings (Pima often has 2-3
     consecutive items). Claude handles splitting them in extract_liquor_filings.
@@ -141,11 +167,76 @@ def find_liquor_blocks(full_md_text: str) -> list[str]:
     blocks = []
     for cluster in clusters:
         start = max(0, cluster[0] - 5)
-        end = min(n, cluster[-1] + 35)
+        end = min(n, cluster[-1] + _MIN_TAIL)
+
+        # Run to the end of the section, so the tail is sized by the agenda
+        # rather than by a guess. Stop at the boundary line — the next lettered
+        # sub-section (special events, agent changes) is not a new license.
+        limit = min(n, cluster[-1] + _MAX_TAIL)
+        for j in range(cluster[-1] + 1, limit):
+            if _SECTION_BOUNDARY_RE.match(lines[j]):
+                end = max(end, j)
+                break
+
         block = "\n".join(lines[start:end]).strip()
         blocks.append(block)
 
     return blocks
+
+
+# Arizona liquor license series -> official DLLC license type name.
+# Source: https://liquor.az.gov/license-types, cross-checked against ARS Title 4.
+#
+# This is a fixed lookup and must NOT be inferred. Tucson agendas print only the
+# bare number ("Series: 3"), so a model asked to name the type picks a plausible
+# one from surrounding context and is wrong often: before this table, Series 4
+# published three different ways across three filings (Wholesaler / Hotel-Motel /
+# Beer and Wine Store) and Sacred Hand Beer Co — a microbrewery — went out
+# labeled "Beer and Wine Bar". Derive from the number, never extract.
+#
+# Series 20 is deliberately absent: the 2017 DLLC PDF called it "Alternating
+# Proprietorship" but current statute reuses that cite for Custom Crush (21) and
+# DLLC no longer lists 20. An unconfirmed series renders with no type at all
+# rather than a guessed one.
+SERIES_TYPES = {
+    "1": "In-State Producer",
+    "2": "Out-of-State Producer",
+    "2L": "Limited Out-of-State Producer",
+    "2M": "Out-of-State Microbrewery",
+    "2W": "Out-of-State Domestic Farm Winery",
+    "3": "Microbrewery",
+    "4": "Wholesaler",
+    "5": "Government",
+    "6": "Bar",
+    "7": "Beer and Wine Bar",
+    "8": "Conveyance",
+    "9": "Liquor Store",
+    "9S": "Liquor Store (Sampling)",
+    "10": "Beer and Wine Store",
+    "10S": "Beer and Wine Store (Sampling)",
+    "11": "Hotel/Motel",
+    "12": "Restaurant",
+    "13": "Farm Winery",
+    "14": "Private Club",
+    "15": "Special Event",
+    "16": "Craft Producer Festival",
+    "17": "Direct Shipment",
+    "18": "Craft Distillery",
+    "19": "Remote Tasting Room",
+    "21": "Custom Crush",
+}
+
+
+def license_type_for_series(series: str | None) -> str | None:
+    """Official DLLC type name for a license series, or None if unconfirmed.
+
+    None is a deliberate outcome, not a failure: a filing with a series we can't
+    confirm publishes without a type rather than asserting a wrong one.
+    """
+    if not series:
+        return None
+    key = str(series).strip().upper().lstrip("#").replace("SERIES", "").strip()
+    return SERIES_TYPES.get(key)
 
 
 def extract_liquor_filings(block: str, source_label: str, meeting_date: str) -> list[dict]:
@@ -154,6 +245,9 @@ def extract_liquor_filings(block: str, source_label: str, meeting_date: str) -> 
     Returns a list of filings (zero, one, or many — a single block from Pima
     BOS often contains multiple consecutive items). Returns an empty list if
     Claude determines the block has no real filings or if the API call fails.
+
+    license_type is NOT extracted — it is derived from the series number via
+    SERIES_TYPES after the model returns. See that table for why.
     """
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
@@ -171,8 +265,7 @@ Return a JSON object with this shape:
       "applicant": "string (person filing, or null)",
       "address": "string (street address — REQUIRED, look carefully through the entire block)",
       "city": "string (city, e.g. 'Tucson', 'Oro Valley')",
-      "series": "string (license series number, e.g. '12')",
-      "license_type": "string (e.g. 'Restaurant', 'Beer and Wine Bar', 'Beer and Wine Store', 'Hotel/Motel', 'Remote Tasting Room')",
+      "series": "string — the license series EXACTLY as printed in the block, digits only plus any letter suffix (e.g. '12', '9S'). Do not infer it from the business type.",
       "action_type": "string (one of: 'New License', 'Person Transfer', 'Location Transfer', 'Person and Location Transfer', 'Renewal', 'Other')",
       "ward": "string or null (e.g. 'Ward 5')",
       "hearing_date": "string or null (date the governing body considers the application, if specified)",
@@ -186,6 +279,8 @@ Rules:
 - is_new_business is true ONLY for action_type 'New License'. Transfers and renewals are false.
 - SKIP any items that are special event one-off permits, procedural boilerplate, or notes about past liquor decisions.
 - The address field is critical — search the entire block for "Address:", street numbers, or cross-streets. Do not return null for address unless it is genuinely absent.
+- Do NOT name the license type (e.g. "Restaurant", "Bar"). Report only the series number; the type is looked up from it downstream.
+- In the summary, describe the filing without naming the license type — say "a Series 12 license", not "a Series 12 restaurant license".
 - If the block contains no real filings (e.g., procedural mention only, or "no new applications scheduled"), return {{"filings": []}}.
 
 TEXT BLOCK:
@@ -223,7 +318,17 @@ Return only the JSON object, no other text."""
                 text = re.sub(r"^```(?:json)?\n?", "", text)
                 text = re.sub(r"\n?```$", "", text)
             data = json.loads(text)
-            return data.get("filings") or []
+            filings = data.get("filings") or []
+            for f in filings:
+                # Derive the type from the series; never trust an extracted one.
+                f["license_type"] = license_type_for_series(f.get("series")) or ""
+                if not f["license_type"] and f.get("series"):
+                    print(
+                        f"      WARN: unconfirmed series {f.get('series')!r} for "
+                        f"{f.get('business_name')!r} — publishing without a license type",
+                        file=sys.stderr,
+                    )
+            return filings
     except json.JSONDecodeError as e:
         print(f"  WARNING: Claude returned invalid JSON: {e}", file=sys.stderr)
         return []
