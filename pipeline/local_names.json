@@ -1,23 +1,29 @@
 {
   "_meta": {
     "purpose": "Canonical names and places for Southern Arizona municipalities. Loaded by ai_reporter.py and injected into the news-report generation prompt to correct Deepgram mistranscriptions.",
-    "last_updated": "2026-05-30",
+    "last_updated": "2026-07-14",
     "deepgram_misreads_note": "Each known misread observed in a transcript should be added to the `deepgram_misreads` array. The pipeline will tell the LLM to replace any of these with the canonical form.",
     "verification_needed": [
       "regional.people: Suzanne Droubie (Pima County Assessor) — re-verify on pima.gov before relying on",
-      "pima-county.people: Dan Hunt (CIO) — most recent direct confirmation was 2022; re-verify"
+      "pima-county.people: Dan Hunt (CIO) — most recent direct confirmation was 2022; re-verify",
+      "pima-county.people: pronouns unset for Carmine DeBonis Jr., Monica Perez, Art Cuaron, Jackson Jenkins, Dan Hunt — confirm on pima.gov before adding (do not infer from name)",
+      "regional.people: pronouns unset for Suzanne Droubie, Joe Snell, Laurie Kierstead-Joseph, John Cross, JD Wallace",
+      "pima-county.people: Michael Racy — Deepgram rendered as 'Rossi'/'Rask'; confirm current Pima County lobbying contract status"
     ],
-    "scope_note": "Regional bucket also holds state-level officials (e.g., Arizona Auditor General) since they appear at any municipality's meetings and don't belong in any single municipality bucket."
+    "scope_note": "Regional bucket also holds state-level officials (e.g., Arizona Auditor General) since they appear at any municipality's meetings and don't belong in any single municipality bucket.",
+    "pronouns_note": "Pronouns are injected so the model does not infer gender from a name (root cause of a 2026-07-14 Pima County draft misgendering Supervisor Andrés Cano). Only add pronouns that are evidenced — transcript honorifics/pronoun use, or documented public record. If unknown, leave the field off and add the person to verification_needed rather than guessing."
   },
   "pima-county": {
     "people": [
       {
         "canonical": "Rex Scott",
-        "title": "Supervisor, District 1"
+        "title": "Supervisor, District 1",
+        "pronouns": "he/him"
       },
       {
         "canonical": "Dr. Matt Heinz",
         "title": "Supervisor, District 2; Vice Chair (2026)",
+        "pronouns": "he/him",
         "deepgram_misreads": [
           "Hines"
         ]
@@ -25,13 +31,18 @@
       {
         "canonical": "Jennifer Allen",
         "title": "Supervisor, District 3; Board Chair (2026)",
+        "pronouns": "she/her",
         "deepgram_misreads": [
-          "Alan"
+          "Alan",
+          "Ellen",
+          "Cheer Ellen",
+          "Chair Ellen"
         ]
       },
       {
         "canonical": "Steve Christy",
         "title": "Supervisor, District 4",
+        "pronouns": "he/him",
         "deepgram_misreads": [
           "Christie"
         ]
@@ -39,19 +50,25 @@
       {
         "canonical": "Andrés Cano",
         "title": "Supervisor, District 5",
+        "pronouns": "he/him",
         "deepgram_misreads": [
           "Conner",
           "Connor",
           "Connolly",
           "Kano",
-          "Cooner"
+          "Cooner",
+          "Koenig",
+          "kind of"
         ]
       },
       {
         "canonical": "Jan Lesher",
         "title": "County Administrator",
+        "pronouns": "she/her",
         "deepgram_misreads": [
-          "Lusher"
+          "Lusher",
+          "Lester",
+          "Lascher"
         ]
       },
       {
@@ -60,11 +77,18 @@
       },
       {
         "canonical": "Steve Holmes",
-        "title": "Deputy County Administrator"
+        "title": "Deputy County Administrator",
+        "pronouns": "he/him"
       },
       {
         "canonical": "Chad Kasmar",
-        "title": "Deputy County Administrator"
+        "title": "Deputy County Administrator",
+        "pronouns": "he/him",
+        "deepgram_misreads": [
+          "Kazmar",
+          "Casmar",
+          "Kaz"
+        ]
       },
       {
         "canonical": "Monica Perez",
@@ -73,6 +97,7 @@
       {
         "canonical": "Dr. Theresa Cullen",
         "title": "Director, Pima County Health Department",
+        "pronouns": "she/her",
         "deepgram_misreads": [
           "Cohen",
           "Doctor Cohen"
@@ -98,9 +123,47 @@
       {
         "canonical": "Constance L. Hargrove",
         "title": "Pima County Elections Director",
+        "pronouns": "she/her",
         "deepgram_misreads": [
           "Khargrove",
           "Hargrave"
+        ]
+      },
+      {
+        "canonical": "Kathy Bolen",
+        "title": "Director, Human Resources Department",
+        "pronouns": "she/her",
+        "deepgram_misreads": [
+          "Bowen",
+          "Kathy Bowen",
+          "miss Bowen"
+        ]
+      },
+      {
+        "canonical": "Jake Martin",
+        "title": "Chief Deputy Treasurer, Pima County",
+        "pronouns": "he/him",
+        "deepgram_misreads": [
+          "Jane Martin",
+          "Jay Martin"
+        ]
+      },
+      {
+        "canonical": "Brian Johnson",
+        "title": "Former Pima County Treasurer (resigned 2026)",
+        "pronouns": "he/him"
+      },
+      {
+        "canonical": "Michael Racy",
+        "title": "Contract lobbyist for Pima County at the Arizona Legislature (Racy Associates)",
+        "pronouns": "he/him",
+        "deepgram_misreads": [
+          "Rossi",
+          "Michael Rossi",
+          "Rask",
+          "Roxy",
+          "Mister Roxy",
+          "Racy Associates"
         ]
       }
     ],
@@ -123,6 +186,31 @@
       },
       {
         "canonical": "Florence Detention Center"
+      },
+      {
+        "canonical": "Pima County",
+        "deepgram_misreads": [
+          "Piedmont County"
+        ]
+      },
+      {
+        "canonical": "District 4",
+        "deepgram_misreads": [
+          "Fisher four"
+        ]
+      },
+      {
+        "canonical": "Debt and Financial Transparency Advisory Commission",
+        "deepgram_misreads": [
+          "Debt and Financial Transfer Advisory Commission",
+          "debt and financial transfer advisory commission"
+        ]
+      },
+      {
+        "canonical": "Proposition 425",
+        "deepgram_misreads": [
+          "proposition four twenty five"
+        ]
       }
     ]
   },
@@ -512,7 +600,8 @@
     "people": [
       {
         "canonical": "Chris Nanos",
-        "title": "Pima County Sheriff"
+        "title": "Pima County Sheriff",
+        "pronouns": "he/him"
       },
       {
         "canonical": "Joe Snell",
@@ -532,7 +621,8 @@
       },
       {
         "canonical": "Laura Conover",
-        "title": "Pima County Attorney"
+        "title": "Pima County Attorney",
+        "pronouns": "she/her"
       },
       {
         "canonical": "Suzanne Droubie",
@@ -541,6 +631,7 @@
       {
         "canonical": "Gabriella Cázares-Kelly",
         "title": "Pima County Recorder",
+        "pronouns": "she/her",
         "deepgram_misreads": [
           "Cazares Kelly",
           "Cazares-Kelly",
@@ -574,6 +665,34 @@
       {
         "canonical": "Victoria Fisher",
         "title": "Financial Audit Manager, Arizona Auditor General's Office"
+      },
+      {
+        "canonical": "Verlan Jose",
+        "title": "Chairman, Tohono O'odham Nation",
+        "pronouns": "he/him"
+      },
+      {
+        "canonical": "Jacob Emmett",
+        "title": "Legislative Director, County Supervisors Association of Arizona",
+        "pronouns": "he/him"
+      },
+      {
+        "canonical": "Stephanie Stahl Hamilton",
+        "title": "Arizona State Representative, Legislative District 21",
+        "pronouns": "she/her",
+        "deepgram_misreads": [
+          "Stall Hamilton",
+          "Paul Hamilton",
+          "Stahl Hamilton"
+        ]
+      },
+      {
+        "canonical": "John Cross",
+        "title": "Executive recruiter, Slavin Management Consultants (Pima County administrator search)"
+      },
+      {
+        "canonical": "JD Wallace",
+        "title": "Retained speaker for Tucson Electric Power"
       }
     ],
     "places": [
@@ -637,6 +756,48 @@
       },
       {
         "canonical": "Sierra Vista"
+      },
+      {
+        "canonical": "Quitobaquito Springs",
+        "deepgram_misreads": [
+          "Quito Piquito Springs",
+          "Quito Buquito",
+          "Quito by quito",
+          "Quito Biquito"
+        ]
+      },
+      {
+        "canonical": "Organ Pipe Cactus National Monument",
+        "deepgram_misreads": [
+          "Oregon Pipe",
+          "organ pipe national"
+        ]
+      },
+      {
+        "canonical": "Cabeza Prieta National Wildlife Refuge",
+        "deepgram_misreads": [
+          "Cabeza Pieta"
+        ]
+      },
+      {
+        "canonical": "Monument Hill"
+      },
+      {
+        "canonical": "Southern Arizona Rescue Association (SARA)",
+        "deepgram_misreads": [
+          "Sarah",
+          "Southern Arizona Association",
+          "Sarah Leadership"
+        ]
+      },
+      {
+        "canonical": "Tucson Electric Power",
+        "deepgram_misreads": [
+          "two Electric Power"
+        ]
+      },
+      {
+        "canonical": "Roosevelt Reservation"
       }
     ]
   }

@@ -110,6 +110,9 @@ def load_local_names_reference(slug: str) -> str:
              "The transcript is from Deepgram and routinely mistranscribes proper nouns.",
              "Use the canonical spelling and title below when writing the report. If the",
              "transcript shows one of the listed misread variants, replace it with the canonical form.",
+             "Where pronouns are given in parentheses, use exactly those pronouns for that person.",
+             "For anyone NOT listed here, do not infer pronouns from their name — write around the",
+             "pronoun (repeat the name or title) or use they/them.",
              ""]
     if people_lines:
         block.append("People:")
@@ -706,12 +709,40 @@ def cmd_generate(args):
     send_telegram_review(draft_path, data)
 
 
+VERIFY_MARKER_RE = re.compile(r"VERIFY:\s*(.*?)(?:-->|$)", re.DOTALL)
+
+
+def check_verify_markers(text: str, allow_unverified: bool) -> None:
+    """Refuse to publish a draft that still carries editorial VERIFY markers.
+
+    report_md_to_html escapes HTML, so a leftover marker does not hide in the
+    source — it renders as literal text on the live page. Hard-stop instead.
+    """
+    markers = VERIFY_MARKER_RE.findall(text)
+    if not markers:
+        return
+    if allow_unverified:
+        print(f"  WARNING: publishing with {len(markers)} unresolved VERIFY marker(s) "
+              f"(--allow-unverified).", file=sys.stderr)
+        return
+    print(f"ERROR: draft still has {len(markers)} unresolved VERIFY marker(s):",
+          file=sys.stderr)
+    for m in markers:
+        print(f"  - {' '.join(m.split())[:160]}", file=sys.stderr)
+    print("\nResolve each one and delete the marker, or pass --allow-unverified "
+          "to publish anyway.", file=sys.stderr)
+    sys.exit(1)
+
+
 def cmd_approve(args):
     """Approve a draft and publish it."""
     draft_path = Path(args.approve)
     if not draft_path.exists():
         print(f"ERROR: File not found: {draft_path}", file=sys.stderr)
         sys.exit(1)
+
+    check_verify_markers(draft_path.read_text(),
+                         getattr(args, "allow_unverified", False))
 
     # Copy draft to approved
     slug = re.sub(r"-(draft|approved)$", "", draft_path.stem)
@@ -725,6 +756,10 @@ def cmd_approve(args):
 
 def cmd_publish(args):
     """Publish an already-approved markdown file."""
+    pub_path = Path(args.publish)
+    if pub_path.exists():
+        check_verify_markers(pub_path.read_text(),
+                             getattr(args, "allow_unverified", False))
     publish_report(args.publish)
 
 
@@ -743,6 +778,8 @@ def main():
 
     parser.add_argument("--force", action="store_true",
                         help="Regenerate even if draft already exists")
+    parser.add_argument("--allow-unverified", action="store_true",
+                        help="Publish even if the draft still has unresolved VERIFY markers")
 
     args = parser.parse_args()
 
