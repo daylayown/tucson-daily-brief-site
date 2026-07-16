@@ -415,6 +415,25 @@ DEMO = [
          headline="Flood votes, right on cue.",
          dek="Three days after the storm, county supervisors vote on buying 28.86 acres of flood-prone land along Brawley Wash — part of a multi-year effort to blunt monsoon flooding in Tucson’s southwest corridor.",
          meta_text="tucsondailybrief.com"),
+    # --- 2026-07-16: Flood Watch (same-day monsoon safety alert). Facts verified
+    # live against api.weather.gov/alerts/active?point=32.2217,-110.9694 (Flood
+    # Watch, onset 2 PM 7/16, ends 5 AM 7/17, "isolated rainfall totals of 1 to 3
+    # inches"). Stupid Motorist Law = ARS 28-910: liability attaches on driving
+    # around a barricade onto an already-flooded road, not on rain driving.
+    dict(slug="flood-watch-2026-07-16", theme="terracotta",
+         kicker="Flood Watch",
+         headline="Storms this afternoon. The washes will run.",
+         dek="NWS Tucson has a Flood Watch up from 2 PM today until 5 AM Friday, metro Tucson out to the Catalinas. Isolated totals of 1 to 3 inches are possible. Never drive around a barricade into a flooded wash — the Stupid Motorist Law can bill you for the rescue.",
+         meta_text="Turn Around, Don’t Drown"),
+    # --- 2026-07-16: Southwest Record & Vintage Fair, Sun 7/19 (Tucson Weekly).
+    # La Rosa = the Benedictine Monastery chapel, 800 N. Country Club (confirmed
+    # by two sources). Vendor list held to Zia + Wooden Tooth: the Weekly only
+    # said other shops come "from different parts of the state," so no city named.
+    dict(slug="record-fair-2026-07-16", theme="light",
+         kicker="Around Town",
+         headline="A record fair in a monastery. With A/C.",
+         dek="The Southwest Record and Vintage Fair lands at La Rosa — the old Benedictine Monastery chapel on Country Club — this Sunday. Zia and Wooden Tooth are digging out the crates, along with shops from around the state. And for the first time, it’s air-conditioned.",
+         meta_text="Sun · noon–5 · free"),
     # Reusable "how we know" card — generic, pairs with any News Report carousel.
     dict(slug="news-howweknow", theme="terracotta",
          kicker="How we know",

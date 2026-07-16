@@ -667,9 +667,13 @@
         "title": "Financial Audit Manager, Arizona Auditor General's Office"
       },
       {
-        "canonical": "Verlan Jose",
+        "canonical": "Verlon Jose",
         "title": "Chairman, Tohono O'odham Nation",
-        "pronouns": "he/him"
+        "pronouns": "he/him",
+        "deepgram_misreads": [
+          "Verlan Jose",
+          "Verlan"
+        ]
       },
       {
         "canonical": "Jacob Emmett",
