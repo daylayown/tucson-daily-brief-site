@@ -434,6 +434,19 @@ DEMO = [
          headline="A record fair in a monastery. With A/C.",
          dek="The Southwest Record and Vintage Fair lands at La Rosa — the old Benedictine Monastery chapel on Country Club — this Sunday. Zia and Wooden Tooth are digging out the crates, along with shops from around the state. And for the first time, it’s air-conditioned.",
          meta_text="Sun · noon–5 · free"),
+    # --- 2026-07-18: Gibson Food Hall reopening, told through Johnny Gibson (reach
+    # / "Only in Tucson" identity piece). Facts verified against Tucson Foodie
+    # (2024-12-23) + KOLD (2026-07-17) + KGUN: Gibson was a WWII vet, weightlifter,
+    # fitness-equipment designer, and barber on Sixth Ave for ~60 yrs; market at
+    # 11 S. Sixth Ave carries his name; reopened this week after ~2 yrs of reno,
+    # run by the neighboring HighWire owners. DELIBERATELY OMITTED: the year the
+    # market opened (sources conflict, 2015 vs 2016) and the Pearl Lounge speakeasy
+    # (NOT open — expected mid-August, and reported to sit in the adjacent building).
+    dict(slug="gibson-food-hall-2026-07-18", theme="light",
+         kicker="Only in Tucson",
+         headline="The weightlifting barber of Sixth Avenue",
+         dek="Johnny Gibson was a WWII veteran, a weightlifter, and a barber who cut hair on Sixth Avenue for nearly 60 years. The downtown market that still carries his name just reopened as a food hall — four restaurants, a grocery, a coffee bar, and a bar.",
+         meta_text="Now open downtown"),
     # Reusable "how we know" card — generic, pairs with any News Report carousel.
     dict(slug="news-howweknow", theme="terracotta",
          kicker="How we know",
