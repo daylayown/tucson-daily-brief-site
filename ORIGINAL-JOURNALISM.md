@@ -1,0 +1,171 @@
+# Roadmap: Original Journalism
+
+Planned content types (Spotted expansion, FOIA Lead Spotter, The Old Pueblo Speaks, Tracking, Budget Analysis, Deep Read, Cross-referencing), the post-meeting data-source matrix, the AI reporter quickref, site structure, story ideas, and constraints.
+
+Reference doc split out of CLAUDE.md on 2026-07-17 to keep the always-loaded context lean. Prose is preserved verbatim from CLAUDE.md; CLAUDE.md now carries a short pointer to this file.
+
+---
+
+## Roadmap: Original Journalism
+
+The daily brief repackages existing journalism. The agenda mining pipeline (`MEETING-WATCH-PIPELINE.md`) is the first **original journalism** feature — AI-generated previews of government meetings. The next stage expands this with more content types.
+
+### Planned content types
+
+- **Post-Meeting News Reports** — ✅ **LIVE.** AI reporter transcribes government meetings (live or from VOD) and generates AP-style news reports; human editorial review required before publishing. First real recordings April 7-8, 2026; steady cadence since. As of 2026-05-21, ten reports published covering Pima County BOS (study sessions, regular meetings, special meetings), Tucson Mayor & Council, Marana Town Council, and Oro Valley Town Council. **First successful live capture of a Marana Town Council meeting completed 2026-05-19** using the newly verified Swagit HLS URL (see "Live stream URLs by municipality" below). The Oro Valley May 20 report (Sun City Lion's Head Fountain amendment, Leisure Travel Plan adoption, formal in-house town attorney transition) added a tenth name to the bible: **Steven Zraick**, the new Town Attorney who replaced the Clark & Rothschild contract arrangement — Deepgram heard "Drake" (phonetically /zraɪk/ → "Drake" with mis-segmented leading Z), confirmed via signed Resolution R26-16 (April 22, 2026) on Destiny Hosted; the misreads `["Drake", "Strake", "Zrake"]` are now in the bible so future drafts catch it automatically. Recording is auto-scheduled by `schedule_recording.py` from agenda-watch previews (gated by `ENABLE_AUTO_SCHEDULE=1`). Names bible (`pipeline/local_names.json`, see below) injected into the report-generation prompt as of 2026-05-12 dramatically reduced editorial review time by correcting Deepgram name mistranscriptions before drafts land.
+
+- **Agenda Mining** — ✅ **LIVE.** Before meetings happen, read every agenda and supporting document. Surface buried items that reporters would miss and publish "what to watch" previews. Auto-publishes for all four municipalities.
+
+- **Spotted** (formerly "Public Record") — ✅ **LIVE (April 11, 2026; renamed 2026-05-11).** Surfaces public filings buried in government meeting agendas — starting with liquor license applications. Most never get reported on. The pipeline (`public_record_liquor.py`) is a post-process that runs after the four agenda miners finish: it scans the `agenda-watch/*-full.md` reference files, identifies liquor license items via keyword + line clustering, and uses Claude Sonnet to extract structured data (business name, address, series, license type, action type, applicant, ward) plus a 2-sentence newspaper-style summary. Each filing publishes as its own HTML page under `public-record/` (URL kept; only display name changed). Coverage: Pima County BOS, City of Tucson, Oro Valley Town Council. **Marana intentionally not supported** — Marana handles liquor licenses administratively through the Town Clerk and does not agendize them for council vote. Future expansion: scrape the Marana clerk page directly. Each cron run sends one consolidated Telegram notification if any new filings were published. Idempotent via `public-record/.processed.txt` (gitignored) plus per-filing output-file existence check. Cost: ~$0.005 per source file processed (one Sonnet call per liquor block, typically 1-3 filings extracted per call). The "Roadmap: Original Journalism" thesis in action — these filings are the basis for both automated coverage and the planned **The Old Pueblo Speaks** outreach pipeline (see above), which takes each Spotted filing and produces a draft request-for-comment email to the business owner for human review and send.
+
+  **Two data-integrity bugs found + fixed 2026-07-15 (commit `9f03cc3`). Both had been shipping wrong data to the live site for months; both are the kind only caught by diffing a published page against its source.**
+
+  1. **`find_liquor_blocks` silently truncated the new-license list.** The window tail was a fixed `last_hit + 35` lines. That assumption breaks on Tucson: it lists *every* applicant under one `b. Liquor License Application(s)` header, so the keyword hits cluster at the top and the filings run for as many lines as there are applicants. The 5-applicant 2026-07-21 agenda ran ~55 lines past the last hit, so the window cut **mid-applicant** — Tortilleria Don Juan II and Catrina's were dropped entirely, and La Indita's header made it in while its address/agent didn't, so it published as *"No agent name, street address, or compliance information was provided"* (the model reported the truncation honestly; the window lied to it). Same bug ate **Circle K Store #9618** on 2026-06-23 (never published until now) and stripped Sacred Hand Beer Co's address. **Fix:** the tail now runs to the section boundary (`_SECTION_BOUNDARY_RE`, the next lettered sub-section — `c. Special Event(s)`), bounded by `_MIN_TAIL`/`_MAX_TAIL`. Extension is **one-directional** — `end` never shrinks below the old floor — so Pima's format (data packed under each `### **24.**` header, no lettered boundary) finds no boundary and keeps its exact prior behavior (verified byte-identical at 48 lines). **A format this regex doesn't understand degrades to the old behavior rather than losing data.** Any future agenda format should be checked with `find_liquor_blocks` + an applicant count before trusting output.
+  2. **`license_type` was guessed, not derived.** The field was free text and the prompt handed the model a *menu* of plausible names to pick from (`'Restaurant', 'Beer and Wine Bar', 'Beer and Wine Store', 'Hotel/Motel', ...`), so it chose by vibe rather than deriving from the series number. Tucson agendas print only the bare number (`Series: 3`). The tell: **Series 4 published three different ways across three filings** (Wholesaler / Hotel-Motel / Beer and Wine Store) — same input, different output. **7 of 39 pages were wrong**, including Sacred Hand Beer Co (a microbrewery) labeled "Beer and Wine Bar", and Comfort Suites carrying "Series 6 Hotel/Motel" *in its prose* (it's a hotel, but they applied for a **Bar** license — the model pattern-matched the business name). **Fix:** `SERIES_TYPES` — a hardcoded table verified against [liquor.az.gov/license-types](https://liquor.az.gov/license-types) + ARS Title 4 — plus `license_type_for_series()`. The prompt no longer asks for a type at all; it's **derived after extraction and never trusted from the model**. An unconfirmed series (e.g. 20, retired) publishes with **no type rather than a wrong one**. Trap to avoid: **ARS §4-209(B) paragraph numbers track series numbers only through 14, then diverge** — reading it as a series table yields "Series 16 = Craft Distillery" (16 is Craft Producer Festival; 18 is Craft Distillery). Audit the archive with the subtitle regex + `license_type_for_series` after any change here.
+
+  **Generalizable lesson (both bugs + the canceled-preview bug in `MEETING-WATCH-PIPELINE.md`):** every one is the pipeline asking a model for something it should have *derived* — a list length, a lookup-table value, an editorial judgment about a meeting with no agenda. The model answered plausibly each time. See [[feedback_verify_dont_delegate]].
+
+### Post-meeting data sources (researched March 2026)
+
+| Municipality | Minutes | Video/Audio | Transcripts | Livestream |
+|---|---|---|---|---|
+| **Pima County** | Summary PDFs via Legistar API (`EventMinutesFile`) | Granicus player (`pima.granicus.com/player/clip/{EventMedia}`) | None published | Granicus + YouTube |
+| **Marana** | Summary PDFs on Destiny Hosted | Swagit (`maranaaz.new.swagit.com/videos/{id}`), MP4/MP3 | **Auto-generated from closed captions** at `/videos/{id}/transcript` | Swagit + Zoom |
+| **Oro Valley** | Summary PDFs on Laserfiche + Destiny | Swagit (`orovalleyaz.new.swagit.com/videos/{id}`), MP4/MP3 | Closed captions via Swagit (possibly human-generated) | Swagit |
+| **Tucson** | Summary PDFs on OnBase (`documentType=2`) | YouTube (`@cityoftucson`) + Internet Archive (`archive.org`) | None published | YouTube Live |
+
+**Key URLs for future pipeline:**
+- Marana transcripts: `https://maranaaz.new.swagit.com/videos/{id}/transcript`
+- Oro Valley videos: `https://orovalleyaz.new.swagit.com/videos/{id}` (MP4/MP3 download links)
+- Oro Valley minutes (Laserfiche): `https://srvvlfweb01.orovalley.net/WebLink/CustomSearch.aspx?SearchName=Minutes&dbid=0&repo=OroValley`
+- Tucson YouTube: `https://www.youtube.com/@cityoftucson/streams`
+- Tucson Internet Archive: `https://archive.org/details/cotaz-Tucson_Mayor_and_City_Council_Meeting_{date}`
+- Pima County Granicus: `https://pima.granicus.com/player/clip/{clip_id}`
+- Pima County minutes via API: `EventMinutesFile` field on `/v1/pima/events/{id}`
+
+**Recommended build order for post-meeting pipeline:**
+1. **Marana** (easiest) — Swagit transcripts already available as text, just fetch and send to Claude
+2. **Oro Valley** — Same Swagit platform, captions may be higher quality (human-generated)
+3. **Tucson** — Download audio from YouTube via `yt-dlp`, transcribe with Deepgram
+4. **Pima County** (hardest) — Need to figure out Granicus video/audio download, then transcribe
+
+### AI Reporter Pipeline
+
+Live + VOD meeting-transcription → AP-style news-report pipeline. Live built March 2026, VOD (`ai_reporter_vod.py`) May 2026. **Full reference (architecture, usage, schema, scheduler internals, live-pipeline flags, STT provider research) → `AI-REPORTER.md`.** Load-bearing essentials kept here:
+
+**Scripts:** `ai_reporter.py` (transcript → Claude report → Telegram → approve/publish), `ai_reporter_live.py` (live: streamlink or `--direct` HLS → Deepgram WebSocket → transcript JSON), `ai_reporter_vod.py` (any URL/file → ffmpeg opus → Deepgram batch → transcript JSON → hands off to `ai_reporter.py`), `run_live_reporter.sh` (wrapper: env, dep validation, wait-for-stream).
+
+**Live vs. VOD:** live WebSocket expects ~1× real-time audio; ffmpeg pulls an HLS VOD faster than real-time and triggers Deepgram's 1011 keepalive timeout — so use `ai_reporter_vod.py` (batch API) whenever the source is a complete recording, not a live stream.
+
+**Common commands:**
+```bash
+./run_live_reporter.sh "https://youtube.com/watch?v=XXX" --slug pima-bos-2026-04-07          # YouTube (streamlink)
+./run_live_reporter.sh "<swagit .m3u8>" --slug orovalley-2026-04-08 --direct                 # Swagit HLS (direct)
+python3 ai_reporter.py transcripts/<slug>.json [--force]                                       # (re)draft from transcript
+python3 ai_reporter.py --approve transcripts/<slug>-draft.md                                   # approve + publish (hard-stops on unresolved VERIFY: markers)
+.venv/bin/python3 ai_reporter_vod.py "<url|file>" --slug <slug> --title "…" --started-at <date> # VOD path
+```
+
+**Live stream URLs by municipality:**
+
+| Municipality | Platform | Live URL | Mode |
+|---|---|---|---|
+| Pima County BOS | YouTube | `https://www.youtube.com/@PimaCountyArizona/live` | streamlink (default) |
+| City of Tucson | YouTube | `https://www.youtube.com/user/CityofTucson/live` | streamlink (default) |
+| Oro Valley | Swagit (HLS) | `https://stream.swagit.com/live-edge/orovalleyaz/smil:hd-16x9-1-a/playlist.m3u8` | `--direct` |
+| Marana | Swagit (HLS) | `https://edge-f.swagit.com/live/maranaaz/live-1-a/playlist.m3u8` | `--direct` |
+
+Swagit URL conventions vary per municipality — **never infer; verify via devtools during a live broadcast** (the Marana URL differs from Oro Valley's on host, path, and slug, and the inferred one failed capture twice).
+
+**Auto-scheduling:** `check_agendas.sh` → `schedule_recording.py` reads each `{slug}-full.md`, has Sonnet extract `public_session_start` (distinct from any preceding executive session, with `confidence`), and schedules an `at` job for `max(now+2min, start-5min)`; state in `agenda-watch/.scheduled.json`. Handles same-slug reschedule, NOT date-moves/cancellations (`atrm` manually). **Gated by `ENABLE_AUTO_SCHEDULE=1`, live in the 8 AM cron line since April 24, 2026** (crontab backup `~/.cache/crontab/crontab.bak`). Audit: `schedule_recording.py --all-dry-run | --list`.
+
+**Live auto-stop:** three triggers — dead-air (15 min, but only fires after first-speech is detected AND the 4 hr `--min-recording-time` floor, so pre-meeting silence + closed/executive sessions don't kill it), max-duration (6 hr cost cap), and stream-end. Cost ~$0.0077/min live (~$1.38/3 hr), ~$0.0043/min VOD. Idempotent on transcript JSON + `-draft.md`.
+
+- **Spotted, expanded scope** — Currently covers liquor license filings (live as of 2026-04-11). Roadmap: monitor building permits, business license applications, court filings, and campaign finance disclosures. Flag anomalies — large developments before they're announced, unusual donations, lawsuits involving the city.
+
+- **Budget & Spending Analysis** — Track city/county budgets, check registers, and contract awards. Flag unusually large contracts, sole-source awards, and spending trends. Compare budget projections vs. actuals over time.
+
+- **Deep Read** — AI-assisted analysis of large documents when they drop: environmental impact statements, audit reports, proposed legislation, police use-of-force statistics, school performance data.
+
+- **Cross-referencing** — Connect dots across public datasets: developers who get rezonings and also donate to council members, LLCs buying properties along future transit corridors, contractors who win multiple bids and employ registered lobbyists.
+
+- **Community Input Analysis** — Analyze public comment submissions on controversial projects (hundreds of written comments that get one-sentence summaries in staff reports). Track 311 complaints by neighborhood.
+
+- **FOIA Lead Spotter** — A downstream post-processing layer that runs a Sonnet pass over ingested public documents (agenda-watch full references, news report drafts, public record filings) to flag items worth a public records request. Target signals: sole-source contracts above a threshold, agenda items referencing documents not included in the packet (audits, assessments, studies), rezoning decisions with thin supporting documentation, budget amendments with no attached justification. Output is a Telegram notification with the specific item, which document it came from, and what record to request — a lead, not an automated filing. The human decides whether to pursue. Fits the same architecture as `public_record_liquor.py`: scan existing reference files, apply editorial judgment via LLM, notify. Natural to build after the existing pipelines are producing steady volume, since more data flowing through means more signal to catch.
+
+- **The Old Pueblo Speaks** — Outreach pipeline that turns Spotted filings into actual journalism by hearing from the people behind them. When Spotted publishes a new filing, a follow-up script drafts a polite request-for-comment email to the business owner / applicant / responsible party, asking for a short statement or interview. Draft saved as markdown in `outreach/drafts/{slug}.md` with a structured header (to/from/subject/body/source-filing-link/date). User edits and sends manually from `nicholas@daylayown.org` via Gmail. When a response comes in, it gets paired with the original filing and published as a short interview/statement post under a new "The Old Pueblo Speaks" section on the site (homepage link, section index, individual pages). Name ties to the masthead kicker ("From the Old Pueblo") — the section is literally Old Pueblo voices speaking.
+
+  **Build sequence (each gate de-risks the next):**
+  1. Drafter only, no contact discovery. Input: a Spotted filing's structured data. Output: a markdown email draft in the outreach folder. Use existing 18 filings as test cases. If drafts read at human-quality, proceed.
+  2. Add contact discovery — Google + Sonnet web-search to find owner contact info (~50-70% accurate on small businesses; chains are easier). Pre-fill the "to" address; if no contact found, flag `research_needed: true` so user knows to look it up.
+  3. Wire to Spotted's publish step (already extends `public_record_liquor.py` via Telegram on new filings — add the drafter call there).
+  4. Build the section publisher — takes a manually-paired (filing, response) markdown and produces an HTML page under `the-old-pueblo-speaks/{slug}.html`, plus rebuilds the section index. Same shape as the existing news-reports renderer.
+
+  **Send mode:** manual is the default and current intent — drafts sit in the folder, user edits and sends from Gmail by copy-paste. Architectural support for `SEND_MODE=auto` (smtplib + Gmail app password) can ship alongside but stays off; flip the flag once the prompt is calibrated against 4-8 weeks of real responses. Manual review also catches edge cases: some "applicants" on filings are corporate attorneys acting on behalf of the actual owner, and an auto-email to a Phoenix law firm asking about a Tucson bar would land badly.
+
+  **The hard engineering problem is contact discovery, not drafting.** Liquor license filings give an applicant's legal name but rarely an email. The web-search step is where accuracy and reputational risk both concentrate. Start with the drafter; add discovery only when drafts are proven.
+
+  **Adjacent use — outreach for photographs, not just statements (opened 2026-07-16).** Prompted by a KVOA Instagram post on the Pima County border-wall vote that ran **a real photo of the barrier on O'odham land, captioned "Courtesy: Tohono O'odham Nation"** — i.e. a handout image, obtained by asking. Our card for the same story was typographic, and on a feed a photograph of the actual place beats type nearly every time. **What KVOA had wasn't a photographer or a budget. It was a credit line.** This is the Old Pueblo Speaks pipeline pointed at images, and the same drafter/review shape applies.
+
+  - **Sent 2026-07-16:** request to `contactus@tonation-nsn.gov` asking whether the Nation has border-barrier imagery TDB may publish with credit, offering to credit exactly as directed and to honor any usage restriction; scope deliberately limited to **the barrier and surrounding land — explicitly not sacred sites or anything the Nation would consider sensitive**. Sent from `nicholas@daylayown.org` (see sender note below). Leads with our own 7/14 report as the credential — we covered the chairman's testimony from the room the day it happened.
+  - **The Nation has no press office and no media inbox.** Its press-releases page has published nothing since **January 2022**; the directory lists no communications/PIO role. Only published email is the general `contactus@`. **The real door is the Office of the Chairman & Vice Chairman, (520) 383-2028** — for a tribal government the phone call is the likelier unlock, and email is the weaker channel. **Follow up by phone if there's no reply.**
+  - **Sender constraint (resolved, worth remembering):** `tdb@tucsondailybrief.com` **cannot send.** Apex MX is Cloudflare Email Routing, which is **receive-only**, and apex SPF is `v=spf1 include:_spf.mx.cloudflare.net ~all` — authorizing only Cloudflare's forwarders. There is **no DMARC record at all**. Sending as `tdb@` through Gmail would softfail SPF with no DKIM → silent spam-foldering. (`tdb@mail.tucsondailybrief.com` is a *different* address — the Buttondown/Postmark newsletter sender; don't mix press outreach into its reputation.) **Sending from `nicholas@daylayown.org` is the accepted answer** and already the plan of record for this pipeline. **If `tdb@` sending is ever wanted, it does NOT require an MX change** — receiving and sending are governed separately, so a free SMTP relay (SMTP2GO / Brevo) + a DKIM record + extending SPF to `include:` the relay + Gmail "Send mail as" gets there in ~30 min while Cloudflare keeps forwarding inbound untouched. This sidesteps the MX collision that pushed the newsletter to a subdomain. Adding a `p=none` DMARC record is a separate outstanding gap.
+  - **Editorial rule this surfaced — geographic honesty in imagery.** Federal border-wall photos *are* public domain (CBP/DHS media libraries, [DVIDS CBP border wall gallery](https://www.dvidshub.net/feature/cbpborderwall)), but that gallery's 67 images are mostly **Rio Grande Valley and San Ysidro** — Texas and California. **A wall photo is not interchangeable with *this* wall photo.** Running a 30-ft Texas bollard wall over a Tohono O'odham story would be visually false even with a true caption — the same failure as AI-generated news imagery wearing a different hat, and it trips the same bar ([[feedback_ai_content_quality_bar]]). Better public-domain lead when geography genuinely matches: **NPS imagery from Organ Pipe Cactus National Monument**, which abuts O'odham land on the border. Otherwise: ask the source, shoot it ourselves (the border is ~2 hrs from Tucson; one trip yields a permanently reusable owned library), or run no image.
+
+  **Volume sizing:** Spotted is currently 1-3 filings/week. Manageable manually. If Spotted expands to building permits, court filings, or campaign finance disclosures (as planned above), volume could go 10× — at which point the section needs a real triage/review tool, not just folders. Size the data model for that eventual scale now.
+
+  **Standing lead — La Indita's new Series 12 (surfaced 2026-07-15).** Filed on the 2026-07-21 M&C agenda for **722 N. Stone Ave.** (`public-record/liquor-la-indita-series-12-2026-07-21.html`) and **the best Old Pueblo Speaks candidate to date**, but *not* publishable as-is and **specifically not as "La Indita is coming to Stone Ave"** — that framing is false. Verified: opened **1983**, founder **Maria Garcia** (96 in March 2026), Mexican + **Purépecha/Tarascan** + **Tohono O'odham** (the Purépecha strand is central, not incidental — the "Tarascan taco" is the signature). Spent **38 years at 622 N. Fourth Ave**, lost the building in 2021 when neighboring IBT's exercised right of first refusal, moved to Stone Ave via GoFundMe, **opened there 2021-05-14** — five years ago. Daughter **Nicole Carrillo** already runs a cocktail program there. **So the agenda's "New License" framing is the story, not the move: why a new Series 12 *now* is genuinely UNKNOWN** — couldn't confirm; needs a call to the City Clerk or the restaurant. **Attribution landmine:** the agenda says **"Agent: Kevin Arnold Kramber"** — *agent*, not applicant (compare item 4, which says "Applicant"). Kramber is a third-party liquor-license consultant who is **agent on Masa Madre on the same agenda**; he is not the owner. Also unverified: Joseph Garcia (named co-owner in 2021 coverage) is unmentioned in the March 2026 Tucson Foodie piece — **do not reference him in present tense** without checking. Don't publish 1979 as the founding year (a directory says so; all real reporting says 1983).
+
+- **Tracking** — Standing topic pages that aggregate everything TDB knows about a developing story (e.g., the Karla Toledo ICE detention from 2026-05-19), backed by research-agent pulls of external coverage and primary documents. Solves the local-news SEO problem: fragmented daily-brief paragraphs don't rank for "Karla Toledo ICE Tucson," but a canonical `/tracking/karla-toledo` page would. Also a real reader-value problem — no other Tucson outlet does the running-file format.
+
+  **Name:** "Tracking" picked because it's two-syllable, fits the sectional pattern (Meeting Watch / News Reports / Spotted / Tracking), reads honestly as "developing story" rather than overpromising investigative reporting, and matches a query users actually google.
+
+  **Page structure (v1):** TLDR + "Updated: [date]" badge; timeline of dated events; key people; what TDB has covered (links to daily briefs, news reports, meeting-watch entries); external coverage cited and dated; primary documents when research agents find them; open questions / what to watch next.
+
+  **Editorial model:** Human review required on every publish AND every update — this is not the agenda-mining model. A standing canonical page that's wrong stays wrong, so the bar is the news-reports bar, not the previews bar.
+
+  **Source model:** TDB RAG corpus is the spine ("everything TDB has said about Topic X across daily briefs + meeting transcripts + news reports + agenda full references"). Research agents add external coverage (KGUN, AZ Daily Star, KOLD, federal court records, agency press releases) and primary documents (council statements, detention records, FOIA returns) so the page is more than an aggregation of secondhand reporting. For the Toledo example: lead with what TDB uniquely knows about Tucson sanctuary-city policy and TPD's ICE-cooperation posture from meeting coverage, then layer KGUN's reporting and external primary docs underneath.
+
+  **Hard gate: ship after RAG Phase 2 is fully deployed.** Tracking depends on the same retrieval infrastructure as Ask, and there's no point standing up a second consumer of the RAG index before the first one is in production. Don't start building until `ask.html` is live, the Worker is stable, and the incremental cron rebuild is wired.
+
+  **Biggest unresolved design question (decide before building):** maintenance cadence. First-publish is easy; the hard part is week 3 when there are 5 active Tracking pages and 2 of them have new developments. Two options: (a) manual trigger — user decides "refresh the Toledo page today" and runs a regenerator; (b) weekly cron pass that runs "what's new since last update?" against the RAG corpus + a fresh research-agent sweep on each active topic, then surfaces a draft diff via Telegram for human review. (b) is what makes the section feel alive rather than 5 abandoned pages, but it's a bigger build. Pick before writing the generator.
+
+  **Pilot topic:** Karla Toledo's ICE detention (2026-05-19), if it's still developing when Tracking is ready to build. Small enough to be tractable, big enough to test the multi-source / research-agent assembly. Alternative candidate: the Pima County Sheriff Nanos investigation report saga (perjury referral + the May 26 release-the-report vote), which spans multiple meetings already in the corpus.
+
+### Coverage area
+
+The Tucson metro area broadly: City of Tucson, Pima County, Town of Marana, Town of Oro Valley, and their respective governing bodies, commissions, and public records. Not limited to Tucson city limits.
+
+### Editorial model
+
+- **Agenda previews** (forward-looking "What to Watch") publish automatically with no human review. They summarize what's on the agenda — low risk, high value in timeliness.
+- **Post-meeting reporting and all other original journalism** is human-reviewed before publishing — no exceptions. AI drafts and flags; a human reviews, edits, and approves.
+- Each piece carries a clear disclosure about AI involvement.
+
+### Site structure
+
+The homepage at `/` is now a **zoned entry hall** (featured Today's Brief + cross-stream cards + Tools row [gated] + subscribe panel + last 7 daily briefs). Direction B from `REDESIGN.md`. The full daily-brief archive lives at `/briefings.html`. Every section page uses a shared two-row nav: streams on top (terracotta), tools below (sage, hidden behind `SHOW_TOOLS` flag).
+
+- **Daily Brief** (`/`, `/briefings.html`, `posts/`) — daily news synthesis from local sources (live). Homepage features today's brief prominently; full archive at `/briefings.html`
+- **Meeting Watch** (`meeting-watch.html`, `meeting-watch/`) — AI-generated agenda previews for 4 municipalities (live, auto-published)
+- **News Reports** (`news-reports.html`, `news-reports/`) — AI-drafted, human-reviewed post-meeting news reports (pipeline built, first real recordings scheduled April 7, 2026)
+- **Spotted** (`public-record.html`, `public-record/`) — flagged filings surfaced from agendas; v1 covers liquor license applications across Pima County BOS, City of Tucson, Oro Valley (live as of April 11, 2026). Display name changed from "Public Record" to "Spotted" on 2026-05-11; URL preserved
+- **Ask** (`ask.html`) — RAG-powered Q&A surface. Phase 1 (CLI) + Phase 2 (web UI on Fly.io, app `tdb-ask`) both live as of 2026-06-14. **Now publicly linked in the main streams nav site-wide as of 2026-06-23** (promoted out of the `SHOW_TOOLS`-gated Tools row into `_STREAMS`); the shakedown period is effectively over for the nav link
+- **Tucson Responsiveness Index** (`responsiveness.html`) — stub page for the upcoming dashboard. Planning in `responsiveness/PLANNING.md`; no code yet
+- **The Tucson Mini** (`crossword/`) — weekly Tucson-themed 5×5 mini crossword; subscriber perk for the TDB Weekly newsletter; unlisted (noindex, no public links) (v0.4 live as of May 6, 2026; see `CROSSWORD.md`)
+- **The Old Pueblo Speaks** — future outreach-based reporting section (see "Planned content types" above in this doc); not yet building
+- **Deep Read** — AI-assisted analysis of large documents (planned)
+- **About** (`about.html`) — hand-authored editorial page explaining the project (live as of 2026-05-15; **reordered benefit-first 2026-07-11**). Now leads with the reader promise ("The Tucson news you'd otherwise miss" h1 + under-covered-metro lede), then the section guide; the "tool-assisted speedrun" essay (software handles the scale, a working journalist handles the judgment) lives intact under "How this is made" — per the two-brand split in the Marketing & Distribution Strategy section, About is where the industry-facing AI story belongs, but the promise comes first. Linked from the footer on every page. Hand-edit only — NOT generated by any pipeline. Layout note: uses the standard `article.post-page` treatment (terracotta-underlined h1, auto-upgraded bold lede paragraph) but inside a plain `.container` (full width, 1280px) with an inline `max-width: 680px` on the article itself, so the reading column sits flush-left with the masthead's left edge instead of jumping inward to a centered island like `container--reading` would.
+
+### Story ideas
+
+- **"The Accessibility of Public Data in Southern Arizona"** — An investigative deep dive comparing how four municipalities in the same metro area handle public access to government meeting data. Pima County offers a free, unauthenticated REST API (Legistar); Marana has scrapeable HTML pages (Destiny Hosted); Oro Valley pays for proprietary Granicus software with no public API; Tucson (the largest city) locks agendas in PDFs via Hyland OnBase. All of this is taxpayer-funded public record, yet accessibility varies wildly based on vendor choices most residents don't know were made. Could include public records requests for contract amounts to show what each municipality pays for its system.
+
+- **"Tucson's Crime, in the FBI's Database vs. Tucson's Own"** — Two-part story arc developed from research on 2026-05-19. Full notes in `crime.md` and `crime-tpd-data.md`.
+  - **Part one (the federal hole):** Per the FBI's own agency metadata for TPD (ORI AZ0100300), TPD's NIBRS reporting start date is January 1, 2024 — three years after the FBI's hard cutover. TPD's data didn't flow to the FBI for all of 2021, most of 2022, and most of 2023. Downstream aggregators like Crime Explorer (crimeexplorer.com) present that as "0 violent crimes 2019–2024" with internally broken rate math ("97% below national average" — actual Tucson property crime is *above* the national average). A statistician's analysis named Tucson as the only US agency over 250K population that failed to report to the FBI in 2022. Historical precedent: TPD also fell out of the FBI report in 2014 (TPD→AZ DPS→FBI handoff failure) and the FBI left Tucson's property categories blank from 2006–2012 — this is a pattern, not a one-time NIBRS transition.
+  - **Part two (TPD's own numbers):** TPD's PowerBI dashboard shows 54 homicides in 2025, down 22% from 69 in 2024 and below the 2021 peak of 78. Metro-wide (TPD + PCSD + Marana + Oro Valley + Sahuarita) = 62 homicides in 2025, lowest in seven years. 2024 FBI peer comparison: Tucson sits at 589 violent / 3,313 property per 100K, higher than Mesa and El Paso, lower than Fresno/Sacramento/Albuquerque. **The reportable methodology bombshell:** TPD's 2024 city report claims a 97.56% homicide "resolution rate" while the FBI-format clearance it submits to AZ DPS shows 57.45% for the same year — both numbers are accurate but measure different things, and no source explains the gap.
+  - **Three unlocks needed before publishing** (documented at the top of `crime-tpd-data.md`): a browser session capturing the live PowerBI dashboard at policeanalysis.tucsonaz.gov (renders client-side, can't be scraped), a human download of the 2024 TPD Annual Report PDF (city asset server 403s non-browser clients), and a public-records request for the methodology behind the 97.56% figure.
+
+### Constraints
+
+The hardest part is sourcing data, not the AI pipeline. Start with what Tucson/Pima County already publishes in machine-readable formats. Some data requires FOIA/public records requests or lives in terrible PDFs and legacy systems.

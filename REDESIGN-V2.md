@@ -402,3 +402,38 @@ Commission or build a hand-drawn SVG illustration for the subscribe panel. Defer
 `redesign-preview.html` at the repo root is a self-contained proof. Open it directly in a browser (`file://` works). It demonstrates the homepage with real current content. The CSS is embedded so the demo doesn't disturb the live `style.css`. The vanilla JS for scroll-trigger underlines is in the same file. Mobile-responsive.
 
 Once approved, implementation follows the three passes above. Final code will live in `style.css` and the Python renderers — not in this demo file.
+
+
+---
+
+# As-shipped summary (moved from CLAUDE.md 2026-07-17)
+
+The condensed token list now lives in CLAUDE.md; this is the fuller description of the signature moves, including the 2026-05-13 tuning decisions.
+
+## Design
+
+The current visual language is **warm-organic Southwest editorial**, shipped 2026-05-11. The original Daring Fireball-inspired restraint (system fonts, single 600px column, no decoration) is gone. See `REDESIGN-V2.md` for the full plan and `REDESIGN.md` for the IA-only step that preceded it. `redesign-preview.html` at the repo root is a self-contained single-file reference of the visual language.
+
+**Tokens (in `style.css :root`):**
+- Locked palette: sand `#f5f0e6`, tan `#e8dfd1`, terracotta `#c75b39` / dark `#a84a2e`, sage `#7a8b6f`, brown `#3d3029` / light `#5c4a3f`
+- Extensions (warm-only): bone `#faf4e8`, adobe `#d97048`, clay `#8c3a1f`, dusk `#4a382c`, shadow `#251c17`, dust (hairlines) `#c7b9a4`
+- Type: Fraunces (display, with `WONK` axis on for hand-set feel) + Newsreader (body), both variable, both Google Fonts
+- Three container widths: reading 640px, editorial 1040px, full 1280px
+- Mobile breakpoint: `max-width: 880px` (single-column collapse, site-wide)
+- Vertical rhythm: 8px base, sections in multiples of 24px
+
+**Atmospheric signature moves (none of these are required to understand the layout, but they're the brand):**
+- **Sun-cast** — fixed warm radial gradient on `body::before`, slowly drifts via 180s alternating animation
+- **Paper-grain** — SVG turbulence noise overlay on `body::after`, multiply blend, every page
+- **Paper-grain bleed** — denser local noise on `.featured::before`, masked to fade out on the right, concentrating "ink" under the headline
+- **Featured sun motif** (`FEATURED_SUN_SVG`) — desert sun with 12 rays of varied length in the upper-right of the homepage feature; echoes the small sunray dingbat used in kickers. Desktop only (hidden under the 880px breakpoint). Sized down 2026-05-13 (max width 240→180px, top -28px) so the bottom of the sun clears the right-column aside even when the daily-brief headline is short (3 lines)
+- **Hand-drawn SVG underlines** (`HAND_RULE_SVG`) under section heads on daily-brief posts only — animated draw on first viewport entry via IntersectionObserver. Removed 2026-05-13 from the four section index heads (Daily briefings, Meeting Watch, News Reports, Spotted) where they read as awkward decoration on the big titles
+- **Drop caps** on the lede of daily-brief posts (large Fraunces capital, pulled into the column)
+
+**Section nav, footer, masthead** are centralized in `generate_post.py` constants. The masthead kicker reads "From the Old Pueblo" — ties to the "The Old Pueblo Speaks" outreach section under the Roadmap. The masthead tagline reads **"The Tucson news you'd otherwise miss, by Nicholas De Leon."** — changed 2026-07-11 from the old AI-experiment line per the two-brand split (see Marketing & Distribution Strategy); it's baked into every published page, so changing it again means editing `generate_post.py` AND string-replacing across all published HTML (use Python, not sed — `&` entities in replacement text break sed). Footer links (in order): About (`about.html`), Apple Podcasts, YouTube, LinkedIn, Email. X and Bluesky were removed 2026-05-15 — user prefers personal social media (besides LinkedIn) not be connected to the site.
+
+**Feature flag: `SHOW_TOOLS`** in `generate_post.py`. Currently `False`. **Note (2026-06-23): `Ask` has been promoted into the main streams nav (`_STREAMS`) and is now linked site-wide UNCONDITIONALLY — it is no longer gated.** `SHOW_TOOLS` now only gates (a) the secondary Tools nav row, which contains just **Responsiveness**, and (b) the homepage Tools *card* row (where Ask still shows a "Coming soon" card). So the live nav is: Briefings · Meeting Watch · News Reports · Spotted · In Depth · Ask. Flip `SHOW_TOOLS=True` once the Responsiveness dashboard ships.
+
+**Public Record → "Spotted" display rename.** The section's user-facing name is **Spotted** (in the nav, page titles, eyebrows, post-meta). The URL stayed `public-record.html` and the directory stayed `public-record/` so existing links and bookmarks don't break. Internal references in code (file names, Python module names, CSS class `public-record-filing`, etc.) all keep the original `public-record` terminology — only display text changed.
+
+**Analytics:** Google Analytics (GA4) via `gtag.js`, measurement ID `G-MEYSB9GYF2`. Loaded site-wide via `ANALYTICS_HTML` in `generate_post.py`.
