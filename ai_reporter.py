@@ -514,7 +514,7 @@ def render_report_post(title: str, date: datetime, body_html: str, page_slug: st
 
 <main>
 <div class="container container--reading">
-<a class="back-link" href="../news-reports.html">{ARROW_LEFT_SVG} All Local Meeting Reports</a>
+<a class="back-link" href="../news-reports.html">{ARROW_LEFT_SVG} What They Decided</a>
 
 <article id="report-{slug}" class="post-page">
 <p class="post-meta">{escape_html(title)}</p>
@@ -551,9 +551,9 @@ def render_report_index(posts: list[dict]) -> str:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Local Meeting Reports &mdash; Tucson Daily Brief</title>
+<title>What They Decided &mdash; Tucson Daily Brief</title>
 {seo_head_html(
-    title="Local Meeting Reports — Tucson Daily Brief",
+    title="What They Decided — Tucson Daily Brief",
     description="Post-meeting news reports on Tucson-area local government — AI-drafted from full meeting transcripts, reviewed by a human editor before publishing.",
     path="news-reports.html")}
 <link rel="stylesheet" href="style.css">
@@ -570,7 +570,7 @@ def render_report_index(posts: list[dict]) -> str:
 <main>
 <div class="container container--editorial">
 <div style="padding-top:var(--gap-xl);margin-bottom:var(--gap-l)">
-<h1 class="section-head">Local Meeting Reports</h1>
+<h1 class="section-head">What They Decided</h1>
 <p class="section-intro">After each meeting: AI-drafted, human-reviewed coverage of what local government bodies across the Tucson metro actually decided. Every report sees an editor before it&rsquo;s published.</p>
 </div>
 

@@ -2,6 +2,8 @@
 
 Planning doc — **2026-06-24**. Status: **approved, building locally (not yet pushed to prod).**
 
+> **⚠️ Labels superseded 2026-07-18.** The hub *structure* below is current, but three reader-facing labels were renamed again in a second wave (from `sol/sol-new-names.md`): **Local Meeting Previews → What to Watch**, **Local Meeting Reports → What They Decided**, **Deep Dives → In Depth**. URLs, dirs, and `_NAV` keys (`meetings`/`reports`/`indepth`) were preserved both times. Where this doc says "Local Meeting Previews / Local Meeting Reports / Deep Dives," read the current label. See the rename note in CLAUDE.md.
+
 Motivation: the streams nav had grown to 6–7 flat, mixed-register items ("Briefings · Meeting Watch · News Reports · Spotted · In Depth · Ask") and was about to gain a 7th (OV development tracking). The list conflated *content type* with *reader intent* and was headed for 10–12 flat items as roadmap sections land. This reorg collapses it into **five clear, durable hubs**, renames every section in a single plain-spoken register (clarity for a first-time reader over cleverness), and folds the new Oro Valley development coverage in cleanly.
 
 This is the IA + naming step. It pairs with — and sets up — the OV structured-data buildout (`OV-DATA-FEASIBILITY.md`) and the public "we're ramping up suburban coverage" announcement.

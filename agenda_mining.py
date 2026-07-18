@@ -622,7 +622,7 @@ def render_meeting_post(title: str, date: datetime, body_html: str, page_slug: s
 
 <main>
 <div class="container container--reading">
-<a class="back-link" href="../meeting-watch.html">{ARROW_LEFT_SVG} All Local Meeting Previews</a>
+<a class="back-link" href="../meeting-watch.html">{ARROW_LEFT_SVG} What to Watch</a>
 
 <article id="meeting-{slug}" class="post-page">
 <p class="post-meta">{title}</p>
@@ -659,9 +659,9 @@ def render_meeting_index(posts: list[dict]) -> str:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Local Meeting Previews &mdash; Tucson Daily Brief</title>
+<title>What to Watch &mdash; Tucson Daily Brief</title>
 {seo_head_html(
-    title="Local Meeting Previews — Tucson Daily Brief",
+    title="What to Watch — Tucson Daily Brief",
     description="AI-assisted previews of what's on the agenda for local government meetings across Tucson, Pima County, Marana, and Oro Valley — published the morning agendas drop.",
     path="meeting-watch.html")}
 <link rel="stylesheet" href="style.css">
@@ -678,7 +678,7 @@ def render_meeting_index(posts: list[dict]) -> str:
 <main>
 <div class="container container--editorial">
 <div style="padding-top:var(--gap-xl);margin-bottom:var(--gap-l)">
-<h1 class="section-head">Local Meeting Previews</h1>
+<h1 class="section-head">What to Watch</h1>
 <p class="section-intro">Before each meeting: AI-assisted previews of what&rsquo;s on the agenda for local government bodies across Tucson, Pima County, Marana, and Oro Valley. Auto-published the morning agendas drop.</p>
 </div>
 

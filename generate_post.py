@@ -539,11 +539,11 @@ def post_header_html() -> str:
 _NAV = [
     ("briefings", "Daily Briefs", "briefings.html", None),
     ("local-government", "Local Government", "local-government.html", [
-        ("meetings", "Local Meeting Previews", "meeting-watch.html"),
-        ("reports", "Local Meeting Reports", "news-reports.html"),
+        ("meetings", "What to Watch", "meeting-watch.html"),
+        ("reports", "What They Decided", "news-reports.html"),
     ]),
     ("around-town", "Around Town", "around-town.html", None),
-    ("indepth", "Deep Dives", "in-depth.html", None),
+    ("indepth", "In Depth", "in-depth.html", None),
     ("ask", "ChatTDB", "ask.html", None),
 ]
 
@@ -1020,7 +1020,7 @@ _SECTION_GUIDE = [
      "What your council is deciding: previewed before each meeting, reported after."),
     ("Around Town", "around-town.html",
      "New businesses, filings, rezonings and development &mdash; what&rsquo;s opening and changing near you."),
-    ("Deep Dives", "in-depth.html",
+    ("In Depth", "in-depth.html",
      "Standalone feature stories on the issues that matter most across Southern Arizona."),
     ("ChatTDB", "ask.html",
      "Ask anything about Tucson &mdash; answers drawn from, and citing, TDB&rsquo;s own reporting."),
@@ -1079,13 +1079,13 @@ def render_homepage(posts: list[dict],
     cards = []
     if latest_meeting:
         when = "Tomorrow" if latest_meeting["date"].date() == (today.date() + timedelta(days=1)) else format_date_short(latest_meeting["date"])
-        cards.append(_render_stream_card("Local Meeting Previews", when, latest_meeting))
+        cards.append(_render_stream_card("What to Watch", when, latest_meeting))
     if latest_report:
-        cards.append(_render_stream_card("Local Meeting Reports", format_date_short(latest_report["date"]), latest_report))
+        cards.append(_render_stream_card("What They Decided", format_date_short(latest_report["date"]), latest_report))
     if latest_filing:
         cards.append(_render_stream_card("Around Town", format_date_short(latest_filing["date"]), latest_filing))
     if latest_indepth:
-        cards.append(_render_stream_card("Deep Dives", format_date_short(latest_indepth["date"]), latest_indepth))
+        cards.append(_render_stream_card("In Depth", format_date_short(latest_indepth["date"]), latest_indepth))
 
     if cards:
         cross_block = f"""<section class="cross-section">
@@ -1265,11 +1265,11 @@ def render_local_government(latest_meeting: dict | None,
     latest of each surfaced as a card and links to the full archives."""
     cards = []
     if latest_meeting:
-        cards.append(_render_stream_card("Local Meeting Previews",
+        cards.append(_render_stream_card("What to Watch",
                                          format_date_short(latest_meeting["date"]),
                                          latest_meeting))
     if latest_report:
-        cards.append(_render_stream_card("Local Meeting Reports",
+        cards.append(_render_stream_card("What They Decided",
                                          format_date_short(latest_report["date"]),
                                          latest_report))
     cards_block = f'<div class="cross-grid">{"".join(cards)}</div>' if cards else ""
@@ -1305,8 +1305,8 @@ def render_local_government(latest_meeting: dict | None,
 {cards_block}
 
 <p class="hub-links">
-<a href="meeting-watch.html">All Local Meeting Previews {ARROW_SVG}</a>
-<a href="news-reports.html">All Local Meeting Reports {ARROW_SVG}</a>
+<a href="meeting-watch.html">What to Watch {ARROW_SVG}</a>
+<a href="news-reports.html">What They Decided {ARROW_SVG}</a>
 </p>
 
 <div style="margin-top:var(--gap-xl)">{SUBSCRIBE_PANEL_HTML}</div>

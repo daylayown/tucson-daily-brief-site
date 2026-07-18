@@ -118,7 +118,13 @@ python generate_post.py --rebuild-all ~/.openclaw/workspace/briefings/          
 
 **Footer is path-aware:** `footer_html(path_prefix="")` for root pages, `"../"` for nested ones. Renderers producing nested pages must pass the prefix. Nested renderers also take a `page_slug` kwarg so canonical/OG URLs match the real file.
 
-**Feature flag `SHOW_TOOLS`** (currently `False`) gates only the secondary Tools nav row (just Responsiveness) and the homepage Tools card row. Ask is **not** gated — it's in `_STREAMS` and linked site-wide. Live nav: Briefings · Meeting Watch · News Reports · Spotted · In Depth · Ask. Flip when the Responsiveness dashboard ships.
+**Feature flag `SHOW_TOOLS`** (currently `False`) gates only the secondary Tools nav row (just Responsiveness) and the homepage Tools card row. Ask is **not** gated — it's linked site-wide as ChatTDB. Flip when the Responsiveness dashboard ships.
+
+**Live nav (top level): Daily Briefs · Local Government · Around Town · In Depth · ChatTDB.** The Local Government hub has two children, surfaced as a second nav row on hub-child pages: **What to Watch** (meeting previews) and **What They Decided** (post-meeting reports).
+
+**Display-name renames are display-only** (same trick as Spotted): the reader-facing labels changed but URLs, directories, `_NAV` active-keys, module names, and CSS classes kept the original terminology. Two rename waves:
+- **2026-06-24 IA reorg** → the topic-hub structure above (see `IA-REORG.md`).
+- **2026-07-18 reader-facing labels** (from `sol/sol-new-names.md`): Meeting Watch/Local Meeting Previews → **What to Watch**; News Reports/Local Meeting Reports → **What They Decided**; Deep Dives → **In Depth**. URLs stayed `meeting-watch.html`, `news-reports.html`, `in-depth.html`; nav keys stayed `meetings`/`reports`/`indepth`. Renderers plus a one-time HTML sweep over published pages carried the change; "Spotted" and "Daily Briefs" were already good and kept.
 
 **"Spotted" is a display rename only.** URL stayed `public-record.html`, directory stayed `public-record/`, and all code (module names, CSS class `public-record-filing`) keeps the original terminology. Only user-facing text changed.
 
@@ -165,8 +171,8 @@ Every page carries a meta description, canonical URL, OG + Twitter Card tags, an
 The homepage is a **zoned entry hall** (featured brief + cross-stream cards + Tools row [gated] + subscribe panel + last 7 briefs). The full daily archive is `/briefings.html`.
 
 - **Daily Brief** (`/`, `/briefings.html`, `posts/`) — live
-- **Meeting Watch** (`meeting-watch.html`) — agenda previews, 4 municipalities, auto-published
-- **News Reports** (`news-reports.html`) — AI-drafted, human-reviewed
+- **What to Watch** (`meeting-watch.html`) — agenda previews, 4 municipalities, auto-published (under the Local Government hub)
+- **What They Decided** (`news-reports.html`) — post-meeting reports, AI-drafted, human-reviewed (under the Local Government hub)
 - **Spotted** (`public-record.html`) — filings surfaced from agendas; v1 = liquor licenses (Pima, Tucson, Oro Valley). Marana not supported — it handles them administratively, not by council vote
 - **Around Town** — development-watch items (Marana + Oro Valley pollers)
 - **Ask** (`ask.html`) — RAG Q&A, live, linked site-wide
