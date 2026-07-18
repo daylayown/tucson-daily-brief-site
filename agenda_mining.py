@@ -461,6 +461,8 @@ def preview_md_to_html(md_text: str) -> str:
     lines = md_text.strip().split("\n")
     html_parts = []
     i = 0
+    seen_h1 = False  # only the first `#` is the page h1; demote any later ones
+                     # (the LLM analysis sometimes emits its own top-level heading)
 
     while i < len(lines):
         line = lines[i]
@@ -477,9 +479,14 @@ def preview_md_to_html(md_text: str) -> str:
             i += 1
             continue
 
-        # H1
+        # H1 — only the first is the real page heading; demote later ones to H2
+        # so each preview page has exactly one <h1> (SEO: one h1 per page).
         if stripped.startswith("# ") and not stripped.startswith("## "):
-            html_parts.append(f"<h1>{_heading_text(stripped[2:])}</h1>")
+            if seen_h1:
+                html_parts.append(f"<h2>{_heading_text(stripped[2:])}</h2>")
+            else:
+                html_parts.append(f"<h1>{_heading_text(stripped[2:])}</h1>")
+                seen_h1 = True
             i += 1
             continue
 
