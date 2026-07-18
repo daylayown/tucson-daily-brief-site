@@ -471,6 +471,7 @@ def render_filing_html(data: dict, source_meta: dict, meeting_date: str, page_sl
 </main>
 
 <div class="container">
+<div style="margin-bottom:var(--gap-xl)">{SUBSCRIBE_PANEL_HTML}</div>
 {footer_html(path_prefix="../")}
 </div>
 

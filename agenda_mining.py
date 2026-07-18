@@ -632,6 +632,7 @@ def render_meeting_post(title: str, date: datetime, body_html: str, page_slug: s
 </main>
 
 <div class="container">
+<div style="margin-bottom:var(--gap-xl)">{SUBSCRIBE_PANEL_HTML}</div>
 {footer_html(path_prefix="../")}
 </div>
 

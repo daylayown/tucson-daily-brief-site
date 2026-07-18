@@ -157,6 +157,7 @@ def render_indepth_post(title: str, date: datetime, body_html: str, slug: str) -
 </main>
 
 <div class="container">
+<div style="margin-bottom:var(--gap-xl)">{SUBSCRIBE_PANEL_HTML}</div>
 {footer_html(path_prefix="../")}
 </div>
 

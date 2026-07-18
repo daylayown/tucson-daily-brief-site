@@ -58,12 +58,22 @@ def get_credentials():
     return creds
 
 
-def build_description(caption, hashtags):
-    """Assemble a Shorts description from a caption + hashtags (+ #Shorts)."""
+# UTM-tagged link for the daily "Only in Tucson" Short, so GA4 attributes
+# the traffic to this franchise (matches the convention in MARKETING.md and
+# social/generate_agenda_short.py).
+DAILY_SHORT_LINK = ("https://tucsondailybrief.com/"
+                    "?utm_source=youtube&utm_medium=short&utm_campaign=only-in-tucson")
+
+
+def build_description(caption, hashtags, link=DAILY_SHORT_LINK):
+    """Assemble a Shorts description from a caption + hashtags (+ #Shorts).
+    A UTM-tagged site link is appended so signups are attributable in GA4."""
     tags_line = " ".join(hashtags)
     if "#shorts" not in tags_line.lower():
         tags_line = (tags_line + " #Shorts").strip()
-    return f"{caption}\n\n{tags_line}".strip()
+    link_line = f"More Tucson news every morning:\n{link}" if link else ""
+    parts = [caption.strip(), link_line, tags_line]
+    return "\n\n".join(p for p in parts if p).strip()
 
 
 def upload(video, title, description, tags, privacy="public"):

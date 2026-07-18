@@ -350,6 +350,7 @@ def render_case_html(a: dict, summary: str, date: datetime, page_slug: str = "")
 </main>
 
 <div class="container">
+<div style="margin-bottom:var(--gap-xl)">{SUBSCRIBE_PANEL_HTML}</div>
 {footer_html(path_prefix="../")}
 </div>
 

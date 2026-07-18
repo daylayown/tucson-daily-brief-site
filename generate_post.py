@@ -675,10 +675,13 @@ def render_post(date: datetime, body_html: str, headline: str = "") -> str:
 {body_html}
 </div>
 </article>
+
+<!--PREVNEXT-START--><!--PREVNEXT-END-->
 </div>
 </main>
 
 <div class="container">
+<div style="margin-bottom:var(--gap-xl)">{SUBSCRIBE_PANEL_HTML}</div>
 {footer_html(path_prefix=home_href)}
 </div>
 
@@ -686,6 +689,56 @@ def render_post(date: datetime, body_html: str, headline: str = "") -> str:
 </body>
 </html>
 """
+
+
+# ---------------------------------------------------------------------------
+# Prev/next edition navigation (habit loop between daily briefs)
+# ---------------------------------------------------------------------------
+
+# render_post() emits an empty marker pair; restamp_edition_nav() fills it on
+# every rebuild, so the previous newest brief gains its "next" link the moment a
+# newer brief publishes. Self-healing — no per-post source needed to refresh it.
+PREVNEXT_RE = re.compile(r"<!--PREVNEXT-START-->.*?<!--PREVNEXT-END-->", re.DOTALL)
+
+
+def _edition_nav_html(older: dict | None, newer: dict | None) -> str:
+    """Prev/next block for a daily brief. `older`/`newer` are post dicts (or
+    None at the ends). Posts sit side-by-side in posts/, so hrefs are bare slugs."""
+    if not older and not newer:
+        return ""
+    prev_link = ""
+    if older:
+        prev_link = (
+            f'<a class="edition-nav__link edition-nav__prev" href="{older["slug"]}.html" rel="prev">'
+            f'<span class="edition-nav__dir">{ARROW_LEFT_SVG} Previous brief</span>'
+            f'<span class="edition-nav__date">{format_date_long(older["date"])}</span></a>'
+        )
+    next_link = ""
+    if newer:
+        next_link = (
+            f'<a class="edition-nav__link edition-nav__next" href="{newer["slug"]}.html" rel="next">'
+            f'<span class="edition-nav__dir">Next brief {ARROW_SVG}</span>'
+            f'<span class="edition-nav__date">{format_date_long(newer["date"])}</span></a>'
+        )
+    return f'<nav class="edition-nav" aria-label="More daily briefs">{prev_link}{next_link}</nav>'
+
+
+def restamp_edition_nav(posts: list[dict]) -> None:
+    """Refresh the prev/next block inside every daily-brief page. `posts` is the
+    newest-first list from collect_existing_posts(). Idempotent; only rewrites a
+    file whose nav actually changed."""
+    n_posts = len(posts)
+    for i, p in enumerate(posts):
+        newer = posts[i - 1] if i > 0 else None          # chronologically later
+        older = posts[i + 1] if i + 1 < n_posts else None  # chronologically earlier
+        f = POSTS_DIR / f"{p['slug']}.html"
+        if not f.exists():
+            continue
+        html = f.read_text()
+        replacement = f"<!--PREVNEXT-START-->{_edition_nav_html(older, newer)}<!--PREVNEXT-END-->"
+        new_html, count = PREVNEXT_RE.subn(replacement, html)
+        if count and new_html != html:
+            f.write_text(new_html)
 
 
 # ---------------------------------------------------------------------------
@@ -1420,6 +1473,7 @@ def rebuild_homepage() -> None:
     (SITE_DIR / "around-town.html").write_text(
         render_around_town(collect_around_town_items())
     )
+    restamp_edition_nav(posts)
     build_sitemap()
     build_rss(posts)
     print(f"  Rebuilt: index.html + briefings.html + local-government.html + around-town.html + sitemap.xml + rss.xml ({len(posts)} briefing(s))")

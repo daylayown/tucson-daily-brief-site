@@ -1308,6 +1308,58 @@ article.post-page p.source {
 
 .back-link:hover { color: var(--accent-hover); gap: 14px; }
 
+/* ─── Prev/next edition nav (daily-brief habit loop) ─── */
+
+.edition-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--gap-m);
+  margin-top: var(--gap-xl);
+  padding-top: var(--gap-l);
+  border-top: 1px solid var(--rule);
+}
+
+.edition-nav__link {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 48%;
+  text-decoration: none;
+  color: var(--ink);
+  transition: color 200ms ease;
+}
+
+.edition-nav__prev { margin-right: auto; text-align: left; }
+.edition-nav__next { margin-left: auto; text-align: right; }
+
+.edition-nav__link:hover { color: var(--accent); }
+
+.edition-nav__dir {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--serif);
+  font-size: var(--t-small);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+}
+
+.edition-nav__next .edition-nav__dir { justify-content: flex-end; }
+
+.edition-nav__date {
+  font-family: var(--serif);
+  font-size: var(--t-small);
+  color: var(--ink-muted);
+}
+
+@media (max-width: 880px) {
+  .edition-nav { flex-direction: column; }
+  .edition-nav__link { max-width: 100%; text-align: left; }
+  .edition-nav__next { text-align: left; }
+  .edition-nav__next .edition-nav__dir { justify-content: flex-start; }
+}
+
 /* ─── Coming-soon stub pages (ask, responsiveness) ─── */
 
 .coming-soon {

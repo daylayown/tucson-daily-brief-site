@@ -13,3 +13,13 @@ in-depth/*-draft.md
 # Around Town development-watch state
 around-town/.dev_state.json
 around-town/.dev_state_marana.json
+
+# Design exploration mockups (local-only history, not for publishing)
+design-explorations/
+
+# Local strategy/design memos (private working notes)
+kimi-analysis.md
+kimi-operational-advice.md
+DESIGN-DIRECTIONS-2026-07.md
+IG-BTS-STRATEGY.md
+sol-website-redesign.md

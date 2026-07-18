@@ -66,6 +66,7 @@ from generate_post import (
     derive_description,
     ARROW_LEFT_SVG,
     SCROLL_TRIGGER_JS,
+    SUBSCRIBE_PANEL_HTML,
     detect_topics,
     footer_html,
     post_header_html,
@@ -441,6 +442,7 @@ def render_case_html(a: dict, summary: str, date: datetime, page_slug: str = "")
 </main>
 
 <div class="container">
+<div style="margin-bottom:var(--gap-xl)">{SUBSCRIBE_PANEL_HTML}</div>
 {footer_html(path_prefix="../")}
 </div>
 

@@ -22,6 +22,7 @@ CLAUDE.md is the index. Detail lives in these; **when you learn something durabl
 | `SHORT-FORM-VIDEO.md` | Platform automation map + DIY publish-adapter plan |
 | `SOCIAL-AUTOPOST.md` | Auto-posting feasibility per platform; Facebook strategy |
 | `MARKETING.md` | Two-brand split, the distribution loop, content mix, instrumentation TODOs |
+| `IG-BTS-STRATEGY.md` | IG behind-the-scenes content: the "outcome + accountable human, never the tooling" principle, format buckets, founder-post signal, variable-isolation test |
 | `ROADMAP.md` | **Everything queued and gated** — Responsiveness, coverage expansion, structured-data layers, Data Center Watch, Tucson en Breve, off-the-laptop migration, Spotify |
 | `REDESIGN-V2.md` / `REDESIGN.md` | Visual language / information architecture (both shipped 2026-05-11) |
 | `*-DATA-FEASIBILITY.md`, `COVERAGE-EXPANSION.md` | Per-municipality and school-district data scans (OV, Marana, Tucson, schools) |
