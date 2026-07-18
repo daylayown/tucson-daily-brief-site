@@ -1074,6 +1074,153 @@ def _render_section_guide() -> str:
 </section>"""
 
 
+# ---------------------------------------------------------------------------
+# Homepage instrument layer (status strip + week at a glance) — all derived
+# at render time from published content; NO model calls. See DESIGN-DIRECTIONS.
+# ---------------------------------------------------------------------------
+
+def collect_next_meeting() -> dict | None:
+    """Soonest upcoming meeting (date >= today) from meeting-watch/, with the
+    meeting time parsed from the page when present."""
+    if not MEETINGS_DIR.exists():
+        return None
+    today = datetime.now().date()
+    cands = []
+    for f in MEETINGS_DIR.glob("*.html"):
+        m = re.search(r"(\d{4}-\d{2}-\d{2})", f.stem)
+        if not m:
+            continue
+        dt = datetime.strptime(m.group(1), "%Y-%m-%d")
+        if dt.date() >= today:
+            cands.append((dt, f))
+    cands.sort()
+    for dt, f in cands:
+        content = f.read_text()
+        title = _article_h1(content) or f.stem
+        # A canceled meeting isn't a "next meeting to watch" — skip it.
+        if re.search(r"cancel", title, re.I):
+            continue
+        name = re.split(r"\s+[—-]\s+What to Watch", title)[0].strip()
+        tm = re.search(r"(\d{1,2}:\d{2}\s*[ap]\.?m\.?)", content, re.I)
+        time_str = tm.group(1).replace(".", "").upper().replace("  ", " ") if tm else ""
+        return {"date": dt, "name": name, "time": time_str,
+                "href": f"meeting-watch/{f.stem}.html"}
+    return None
+
+
+def extract_weather_status(brief_html: str) -> dict:
+    """From a brief's weather section: {alert, hi, lo}. If the brief says there
+    are no active alerts, alert is None. hi/lo are the nearest forecast values."""
+    t = re.sub(r"<[^>]+>", " ", brief_html).replace("&deg;", "°").replace("&amp;", "&")
+    t = re.sub(r"\s+", " ", t)
+    wi = t.find("Weather")
+    weather = t[wi:] if wi >= 0 else t
+    alert = None
+    if not re.search(r"no active\b[^.]*alert", weather, re.I):
+        am = re.search(
+            r"((?:Flash Flood|Flood|Excessive Heat|Heat|Severe Thunderstorm|"
+            r"Blowing Dust|Dust|Red Flag|High Wind|Wind|Winter Storm)\s+"
+            r"(?:Watch|Warning|Advisory)[^.·]*)", weather, re.I)
+        alert = _unescape_and_truncate(am.group(1), max_len=52) if am else None
+    hi = re.search(r"high near (\d+)", weather, re.I)
+    lo = re.search(r"low near (\d+)", weather, re.I)
+    return {"alert": alert,
+            "hi": hi.group(1) if hi else None,
+            "lo": lo.group(1) if lo else None}
+
+
+def render_status_strip(brief_html: str, next_meeting: dict | None) -> str:
+    """The full-width live status strip. All content derived, never asked."""
+    w = extract_weather_status(brief_html) if brief_html else {"alert": None, "hi": None, "lo": None}
+    parts = []
+    if w["alert"]:
+        parts.append(f'<span class="warn"><span class="dot"></span><b>{escape(w["alert"])}</b></span>')
+    else:
+        parts.append('<span><span class="dot"></span>No active weather alerts</span>')
+    if next_meeting:
+        when = next_meeting["date"].strftime("%a").upper()
+        if next_meeting["time"]:
+            when += f' {next_meeting["time"]}'
+        parts.append(f'<span><span class="dot"></span>Next meeting: '
+                     f'<b>{escape(next_meeting["name"])}</b> &middot; {when}</span>')
+    parts.append('<span class="spacer"></span>')
+    if w["hi"] and w["lo"]:
+        parts.append(f'<span><span class="dot"></span>{w["hi"]}° / {w["lo"]}° &middot; Tucson</span>')
+    return f"""<div class="status"><div class="container container--home">
+{"".join(parts)}
+</div></div>"""
+
+
+def collect_week_items(start, end) -> list[dict]:
+    """All published items dated within [start, end] (inclusive dates), across
+    streams, each tagged with a short mono stream marker + label."""
+    items = []
+
+    def _scan(directory, kind, label):
+        if not directory.exists():
+            return
+        for f in directory.glob("*.html"):
+            m = re.search(r"(\d{4}-\d{2}-\d{2})", f.stem)
+            if not m:
+                continue
+            dt = datetime.strptime(m.group(1), "%Y-%m-%d")
+            if not (start <= dt.date() <= end):
+                continue
+            title = _article_h1(f.read_text()) or f.stem
+            items.append({"date": dt, "mk": kind, "label": label,
+                          "title": title, "href": f"{directory.name}/{f.stem}.html"})
+
+    for p in collect_existing_posts():
+        if start <= p["date"].date() <= end:
+            items.append({"date": p["date"], "mk": "brief", "label": "Brief",
+                          "title": p["lede"], "href": f'posts/{p["slug"]}.html'})
+    _scan(MEETINGS_DIR, "preview", "Preview")
+    _scan(REPORTS_DIR, "report", "Report")
+    for it in collect_around_town_items():
+        if start <= it["date"].date() <= end:
+            mk = "filing" if it["kind"] == "new-business" else "dev"
+            label = "Filing" if it["kind"] == "new-business" else "Development"
+            items.append({"date": it["date"], "mk": mk, "label": label,
+                          "title": it["title"], "href": it["href"]})
+    return items
+
+
+def render_week_glance() -> str:
+    """'The week at a glance' — the current Mon–Fri, each day's items tagged by
+    stream. Returns '' if the week has no items."""
+    today = datetime.now()
+    monday = (today - timedelta(days=today.weekday())).date()
+    days = [monday + timedelta(days=i) for i in range(5)]
+    items = collect_week_items(days[0], days[-1])
+    if not items:
+        return ""
+    by_day = {d: [] for d in days}
+    for it in items:
+        d = it["date"].date()
+        if d in by_day:
+            by_day[d].append(it)
+    # Keep the grid tidy: lead with the highest-signal items (brief/report/
+    # preview) over filings/dev, and cap each day so a busy filing day doesn't
+    # tower over the rest. The full record lives in each section.
+    _rank = {"brief": 0, "report": 1, "preview": 2, "dev": 3, "filing": 4}
+    cells = []
+    for d in days:
+        is_today = d == today.date()
+        day_items = sorted(by_day[d], key=lambda it: _rank.get(it["mk"], 9))[:5]
+        lis = "".join(
+            f'<li><span class="mk {it["mk"]}">{it["label"]}</span>'
+            f'<a href="{it["href"]}">{escape(it["title"])}</a></li>'
+            for it in day_items
+        )
+        dh = f'{d.strftime("%a")} {d.day}' + (" &middot; Today" if is_today else "")
+        cells.append(f'<div class="day{" today" if is_today else ""}">'
+                     f'<p class="dh">{dh}</p><ul>{lis}</ul></div>')
+    note = f'{days[0].strftime("%b %-d").upper()} &ndash; {days[-1].strftime("%b %-d").upper()}'
+    return (f'<div class="wk-h"><h2>The week at a glance</h2>'
+            f'<span class="note">{note}</span></div>\n'
+            f'<section class="week">{"".join(cells)}</section>')
+
+
 def render_homepage(posts: list[dict],
                     latest_meeting: dict | None,
                     latest_report: dict | None,
@@ -1085,7 +1232,15 @@ def render_homepage(posts: list[dict],
     is derived at render time (no model calls). See DESIGN-DIRECTIONS-2026-07."""
     today = datetime.now()
 
-    # ── Edition dateline (weather lives in the status strip — phase 2) ──
+    # ── Live status strip (weather/alert + next meeting) ──
+    brief_html = ""
+    if posts:
+        _bp = POSTS_DIR / f'{posts[0]["slug"]}.html'
+        if _bp.exists():
+            brief_html = _bp.read_text()
+    status_block = render_status_strip(brief_html, collect_next_meeting())
+
+    # ── Edition dateline (weather now lives in the status strip above) ──
     edition_block = f"""<div class="edition">
 <span>{format_date_long(today)}</span><span class="rule"></span>
 <span class="loc">Tucson, Arizona</span>
@@ -1136,8 +1291,8 @@ def render_homepage(posts: list[dict],
     across_block = (f'<h2 class="section-head">Latest across Tucson</h2>\n'
                     f'<section class="across">{"".join(across_cells)}</section>') if across_cells else ""
 
-    # ── The week at a glance (phase 2) ──
-    week_block = ""
+    # ── The week at a glance ──
+    week_block = render_week_glance()
 
     # ── Recent daily briefs — two-column list ──
     recent = posts[1:7]
@@ -1186,6 +1341,8 @@ def render_homepage(posts: list[dict],
 {ANALYTICS_HTML}
 </head>
 <body class="home">
+
+{status_block}
 
 {site_header_html(h1=True)}
 
