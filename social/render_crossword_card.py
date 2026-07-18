@@ -15,16 +15,16 @@ import html as _html
 from render_card import THEMES, FONTS_HREF, SUN_SVG, render, W, H
 
 # --- the puzzle to display ----------------------------------------------------
-# Based on the real 2026-07-12 Tucson Mini (valid grid). Shown empty + numbered,
+# Based on the real 2026-07-19 Tucson Mini (valid grid). Shown empty + numbered,
 # the classic "fresh puzzle" look. Clues carry the Tucson flavor.
 # "#" = block cell. (Block pattern is identical to prior weeks, so NUMBERS below
 # is unchanged — same top-right + bottom-left blocks.)
 GRID = [
-    ["D", "R", "U", "M", "#"],
-    ["R", "A", "N", "C", "H"],
-    ["A", "M", "I", "G", "O"],
-    ["M", "O", "T", "E", "L"],
-    ["#", "N", "E", "E", "D"],
+    ["W", "R", "E", "N", "#"],
+    ["H", "E", "R", "O", "N"],
+    ["E", "L", "O", "T", "E"],
+    ["W", "I", "D", "E", "N"],
+    ["#", "C", "E", "D", "E"],
 ]
 # Cell numbers (standard crossword numbering), keyed by (row, col).
 NUMBERS = {
@@ -36,9 +36,9 @@ NUMBERS = {
 }
 # The Tucson-flavored clues we surface on the card.
 CLUES = [
-    ("5A", "Tanque Verde ___ — a classic Tucson dude ranch"),
-    ("8A", "Vintage neon lodging on Tucson’s Miracle Mile"),
-    ("7A", "Buddy, en español"),
+    ("1A", "Cactus ___ — Arizona’s state bird"),
+    ("5A", "Great blue ___, seen at Sweetwater Wetlands"),
+    ("7A", "Sonoran street corn with cotija & lime"),
 ]
 
 SHOW_LETTERS = False  # False = empty "solve me" grid; True = filled (spoiler)
@@ -164,5 +164,5 @@ PAGE = f"""<!DOCTYPE html>
 
 if __name__ == "__main__":
     print("rendering crossword-promo ...")
-    render("crossword-promo-2026-07-12", PAGE)
+    render("crossword-promo-2026-07-19", PAGE)
     print("done.")

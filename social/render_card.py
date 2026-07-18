@@ -453,6 +453,13 @@ DEMO = [
          headline="We sat in on the whole meeting.",
          dek="Our AI reporter transcribed the full meeting, then a working journalist reviewed and fact-checked the report before we published it. No press release, no secondhand summary — straight from the source.",
          meta_text="tucsondailybrief.com"),
+    # --- 2026-07-18: measles reach post (facts from the day's brief — Arizona
+    # Daily Star / KVOA / KOLD; symptom list + locations deliberately omitted).
+    dict(slug="news-measles-2026-07-18", theme="terracotta",
+         kicker="Public Health",
+         headline="Measles case confirmed in Tucson",
+         dek="Pima County is investigating possible public exposure locations, and urges anyone who may have been in contact to watch for symptoms.",
+         meta_text="tucsondailybrief.com"),
 ]
 
 if __name__ == "__main__":

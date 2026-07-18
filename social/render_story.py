@@ -17,15 +17,17 @@ from render_card import THEMES, FONTS_HREF, SUN_SVG, CARDS_DIR, SCALE
 SW, SH = 1080, 1920
 T = THEMES["terracotta"]
 
-# Today's story: Saturday-night monsoon storm recap (facts from the 2026-07-12
-# brief — KGUN 9 / KOLD / KVOA). Leave bottom open for the poll sticker
-# (e.g. "Did you lose power last night?" -> "Yep" / "Kept the lights on").
-KICKER = "Monsoon · Saturday night"
-HEADLINE = "10,000+ without<br>power. One rescue<br>from a running<br>wash."
-SUBHEAD = ("Saturday night’s storm flooded streets and washes across Tucson and "
-           "downed trees citywide. Crews pulled one person, uninjured, from the "
-           "Alamo Wash — and Tuesday, the county votes on flood-control land.")
-STICKER_HINT = "poll below ↓"
+# Today's story: newsletter-promise Story ahead of the Sunday TDB Weekly send.
+# Topics are pulled from the actual scheduled 2026-07-19 issue. Leave the bottom
+# open for the subscribe link sticker.
+KICKER = "Tomorrow · TDB Weekly"
+HEADLINE = "Tomorrow in<br>TDB Weekly."
+SUBHEAD = ("• Tucson bus drivers avert a strike<br>"
+           "• Pima County backs the border-wall lawsuit<br>"
+           "• What’s on Tuesday’s primary ballot<br>"
+           "+ a fresh Tucson Mini<br><br>"
+           "Free in your inbox, Sunday morning.")
+STICKER_HINT = "subscribe below ↓"
 
 PAGE = f"""<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
@@ -87,5 +89,5 @@ def render_story(slug, html_str):
 
 if __name__ == "__main__":
     print("rendering story ...")
-    render_story("story-monsoon-2026-07-12", PAGE)
+    render_story("story-weekly-preview-2026-07-19", PAGE)
     print("done.")
