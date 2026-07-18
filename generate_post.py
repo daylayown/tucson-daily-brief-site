@@ -481,7 +481,7 @@ SUBSCRIBE_ART_SVG = """<svg viewBox="0 0 240 240" preserveAspectRatio="xMidYMid 
 <rect x="0" y="0" width="240" height="240" fill="url(#sky)"/>
 </svg>"""
 
-SUBSCRIBE_PANEL_HTML = f"""<div class="subscribe__panel">
+SUBSCRIBE_PANEL_HTML = f"""<div class="subscribe__panel" id="subscribe">
 <div class="subscribe__art">{SUBSCRIBE_ART_SVG}</div>
 <div class="subscribe__body">
 <p class="subscribe__eyebrow">TDB Weekly</p>
@@ -498,13 +498,18 @@ SUBSCRIBE_PANEL_HTML = f"""<div class="subscribe__panel">
 # Header used by every page on the site
 def site_header_html(h1: bool = False) -> str:
     # The wordmark is an <h1> only on the homepage; every other page reserves
-    # its <h1> for the page's own title (one h1 per page).
+    # its <h1> for the page's own title (one h1 per page). The homepage (the
+    # only h1=True caller) uses the 1120px home container so the masthead lines
+    # up with the edition/lead grid below it.
     tag = "h1" if h1 else "p"
+    container = "container container--home" if h1 else "container"
     return f"""<header class="masthead">
-<div class="container">
+<div class="{container}">
+<div class="masthead__row">
 <p class="masthead__kicker">From the Old Pueblo</p>
 <{tag} class="masthead__wordmark"><a href="./">Tucson Daily Brief</a></{tag}>
 <p class="masthead__tagline">The Tucson news you&rsquo;d otherwise miss, by Nicholas De Leon.</p>
+</div>
 </div>
 </header>"""
 
@@ -512,9 +517,11 @@ def site_header_html(h1: bool = False) -> str:
 def post_header_html() -> str:
     return """<header class="masthead">
 <div class="container">
+<div class="masthead__row">
 <p class="masthead__kicker">From the Old Pueblo</p>
 <p class="masthead__wordmark"><a href="../">Tucson Daily Brief</a></p>
 <p class="masthead__tagline">The Tucson news you&rsquo;d otherwise miss, by Nicholas De Leon.</p>
+</div>
 </div>
 </header>"""
 
@@ -585,7 +592,7 @@ def section_nav_html(active: str = "", path_prefix: str = "") -> str:
             return f'<span class="active">{label}</span>'
         return f'<a href="{path_prefix}{href}">{label}</a>'
 
-    streams = " &middot; ".join(
+    streams = "".join(
         link_or_text(k, l, h, k == top_active) for k, l, h, _c in _NAV
     )
 
@@ -606,7 +613,10 @@ def section_nav_html(active: str = "", path_prefix: str = "") -> str:
         tools_row = ""
 
     return f"""<nav class="section-nav">
-<div class="streams-nav">{streams}</div>{sub_row}{tools_row}
+<div class="nav-main">
+<div class="streams-nav">{streams}</div>
+<a class="btn-sub" href="{path_prefix}#subscribe">Subscribe free</a>
+</div>{sub_row}{tools_row}
 </nav>"""
 
 
@@ -779,6 +789,26 @@ def collect_existing_posts() -> list[dict]:
         posts.append({"date": dt, "slug": post_slug(dt), "lede": lede})
     posts.sort(key=lambda p: p["date"], reverse=True)
     return posts
+
+
+def collect_brief_rundown(slug: str, n: int = 4) -> list[str]:
+    """The top N story headlines from a brief's HTML, for the homepage
+    'This morning in Tucson' rundown. Skips weather day-labels the same way
+    collect_existing_posts() does. Derived from the published brief, never
+    asked of a model."""
+    path = POSTS_DIR / f"{slug}.html"
+    if not path.exists():
+        return []
+    content = path.read_text()
+    items = []
+    for sm in re.finditer(r"<strong>(.+?)</strong>", content):
+        cand = _unescape_and_truncate(sm.group(1), max_len=0).strip().rstrip(".")
+        if not cand or _is_weather_label(cand):
+            continue
+        items.append(cand)
+        if len(items) >= n:
+            break
+    return items
 
 
 def _newest_html_in(directory: Path) -> Path | None:
@@ -1049,74 +1079,81 @@ def render_homepage(posts: list[dict],
                     latest_report: dict | None,
                     latest_filing: dict | None,
                     latest_indepth: dict | None = None) -> str:
-    """Render the new zoned homepage in the warm-organic design language."""
+    """Render the homepage — the "Morning Edition + instrument" hybrid: an
+    edition dateline, a lead + "This morning in Tucson" rundown, a ruled
+    cross-stream table, the week at a glance, and recent briefs. All content
+    is derived at render time (no model calls). See DESIGN-DIRECTIONS-2026-07."""
     today = datetime.now()
 
-    if not posts:
-        featured_block = '<section class="featured"><div class="container"><p style="color:var(--ink-muted);font-style:italic">No briefings yet.</p></div></section>'
-        recent_block = ""
-    else:
-        featured_block = _render_featured(posts[0])
-        recent = posts[1:8]
-        if recent:
-            recent_items = "\n".join(_render_recent_item(p) for p in recent)
-            recent_block = f"""<section class="recent">
-<div class="container container--editorial">
-<div class="recent__head">
-<h2 class="section-head">Recent Daily Briefs</h2>
-</div>
-<ul class="recent__list">
-{recent_items}
-</ul>
-<p class="recent__see-all">
-<a href="briefings.html">See all Daily Briefs {ARROW_SVG}</a>
-</p>
-</div>
-</section>"""
-        else:
-            recent_block = ""
+    # ── Edition dateline (weather lives in the status strip — phase 2) ──
+    edition_block = f"""<div class="edition">
+<span>{format_date_long(today)}</span><span class="rule"></span>
+<span class="loc">Tucson, Arizona</span>
+</div>"""
 
-    cards = []
+    # ── Lead + "This morning in Tucson" rundown ──
+    if posts:
+        featured = posts[0]
+        # Skip the first headline — it's the lead, already shown to the left.
+        rundown = collect_brief_rundown(featured["slug"], 5)[1:]
+        rundown_lis = "\n".join(
+            f'<li><a href="posts/{featured["slug"]}.html">{escape(it)}</a></li>'
+            for it in rundown
+        ) or f'<li><a href="posts/{featured["slug"]}.html">Read today&rsquo;s brief</a></li>'
+        lead_block = f"""<section class="lead-grid">
+<div class="lead">
+{FEATURED_SUN_SVG}
+<p class="lead__kicker">Today&rsquo;s Brief</p>
+<h2 class="lead__head">{escape(featured["lede"])}</h2>
+<p class="lead__dek">Plus the rest of the day&rsquo;s news from Tucson, Pima County, and beyond.</p>
+<a class="link-arrow" href="posts/{featured["slug"]}.html">Read today&rsquo;s brief {ARROW_SVG}</a>
+</div>
+<aside class="rundown">
+<h2>This morning in Tucson</h2>
+<ol>
+{rundown_lis}
+</ol>
+</aside>
+</section>"""
+    else:
+        lead_block = '<section class="lead-grid"><div class="lead"><p class="lead__dek">No briefings yet.</p></div></section>'
+
+    # ── "Latest across Tucson" — ruled 4-cell cross-stream table ──
+    def _across_cell(eyebrow, cls, item, meta):
+        return (f'<div class="cell"><p class="eyebrow{cls}">{eyebrow}</p>'
+                f'<h3><a href="{item["href"]}">{escape(item["title"])}</a></h3>'
+                f'<p class="meta">{meta}</p></div>')
+    across_cells = []
     if latest_meeting:
         when = "Tomorrow" if latest_meeting["date"].date() == (today.date() + timedelta(days=1)) else format_date_short(latest_meeting["date"])
-        cards.append(_render_stream_card("What to Watch", when, latest_meeting))
+        across_cells.append(_across_cell("What to Watch", "", latest_meeting, when))
     if latest_report:
-        cards.append(_render_stream_card("What They Decided", format_date_short(latest_report["date"]), latest_report))
+        across_cells.append(_across_cell("What They Decided", " sage", latest_report, format_date_short(latest_report["date"])))
     if latest_filing:
-        cards.append(_render_stream_card("Around Town", format_date_short(latest_filing["date"]), latest_filing))
+        across_cells.append(_across_cell("Around Town", " clay", latest_filing, "New filing"))
     if latest_indepth:
-        cards.append(_render_stream_card("In Depth", format_date_short(latest_indepth["date"]), latest_indepth))
+        across_cells.append(_across_cell("In Depth", " sage", latest_indepth, format_date_short(latest_indepth["date"])))
+    across_block = (f'<h2 class="section-head">Latest across Tucson</h2>\n'
+                    f'<section class="across">{"".join(across_cells)}</section>') if across_cells else ""
 
-    if cards:
-        cross_block = f"""<section class="cross-section">
-<div class="container container--editorial">
-<div class="cross-section__head">
-<h2 class="section-head">Latest from across TDB</h2>
-</div>
-<div class="cross-grid">
-{"".join(cards)}
-</div>
-</div>
-</section>"""
-    else:
-        cross_block = ""
+    # ── The week at a glance (phase 2) ──
+    week_block = ""
 
-    if SHOW_TOOLS:
-        tools_block = f"""<section class="tools-section">
-<div class="container container--editorial">
-<div class="tools-section__head">
-<h2 class="section-head">Tools
-{HAND_RULE_SVG}
-</h2>
-</div>
-<div class="tools-grid">
-{_render_tool_card("Coming soon", "Ask Tucson anything.", "Answers from three months &mdash; soon, three years &mdash; of original TDB reporting. Citations included.", "Try it", "ask.html")}
-{_render_tool_card("Coming soon", "How fast does Tucson respond to its residents?", "A living dashboard measuring the city&rsquo;s 311 service requests, code enforcement, and public records.", "See the index", "responsiveness.html")}
-</div>
-</div>
-</section>"""
+    # ── Recent daily briefs — two-column list ──
+    recent = posts[1:7]
+    if recent:
+        recent_items = "\n".join(
+            f'<li><span class="d">{p["date"].strftime("%b %-d")} &middot; {p["date"].strftime("%a")}</span>'
+            f'<a href="posts/{p["slug"]}.html">{escape(p["lede"])}</a></li>'
+            for p in recent
+        )
+        recent_block = f"""<h2 class="section-head">Recent daily briefs</h2>
+<section><ul class="recent-list">
+{recent_items}
+</ul>
+<p class="see-all"><a class="link-arrow" href="briefings.html">See all Daily Briefs {ARROW_SVG}</a></p></section>"""
     else:
-        tools_block = ""
+        recent_block = ""
 
     subscribe_block = f"""<section class="subscribe">
 <div class="container container--editorial">
@@ -1148,21 +1185,23 @@ def render_homepage(posts: list[dict],
 <link rel="stylesheet" href="style.css">
 {ANALYTICS_HTML}
 </head>
-<body>
+<body class="home">
 
 {site_header_html(h1=True)}
 
-<div class="container">
+<div class="container container--home">
 {section_nav_html(active="")}
 </div>
 
 <main>
-{featured_block}
-{cross_block}
-{_render_section_guide()}
-{tools_block}
-{subscribe_block}
+<div class="container container--home">
+{edition_block}
+{lead_block}
+{across_block}
+{week_block}
 {recent_block}
+</div>
+{subscribe_block}
 </main>
 
 <div class="container">

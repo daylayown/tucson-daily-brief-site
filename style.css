@@ -58,7 +58,14 @@
   --reading: 640px;
   --editorial: 1040px;
   --full: 1280px;
+  --home: 1120px;
+
+  /* Redesign 2026-07 (hybrid Morning Edition) */
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --warn: #f5b98f;
 }
+
+.container--home { max-width: var(--home); }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -1561,4 +1568,151 @@ article.post-page p.source {
   .masthead__tagline { animation: none; opacity: 1; }
   .section-head__rule path { stroke-dashoffset: 0 !important; transition: none; }
   *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+
+/* ============================================================================
+   REDESIGN 2026-07 — "Morning Edition" hybrid (DESIGN-DIRECTIONS-2026-07.md)
+   Shared masthead/nav evolve site-wide; homepage (body.home) gets the edition
+   dateline, lead + rundown, ruled cross-stream table, and recent list.
+   Appended last so it wins the cascade over the earlier zoned-homepage rules.
+   ============================================================================ */
+
+/* ── Masthead → compact flex row (site-wide) ── */
+.masthead { padding-top: clamp(24px, 3.5vw, 40px); padding-bottom: 0; }
+.masthead__row {
+  display: flex; align-items: baseline; gap: 20px; flex-wrap: wrap;
+  padding-bottom: 18px; border-bottom: 1px solid var(--rule);
+}
+.masthead__kicker { width: 100%; margin-bottom: 14px; }
+.masthead__wordmark {
+  font-size: clamp(2.1rem, 4.6vw, 3.4rem); margin-bottom: 0; line-height: 0.95;
+}
+.masthead__tagline { margin-left: auto; text-align: right; max-width: none; }
+
+/* ── Nav → padded links + Subscribe button (site-wide) ── */
+.section-nav { border-top: none; padding-top: var(--gap-s); }
+.nav-main { display: flex; align-items: center; gap: var(--gap-s); flex-wrap: wrap; }
+.streams-nav { gap: 2px; }
+.streams-nav a, .streams-nav .active {
+  padding: 6px 11px; border-radius: 3px; font-size: 0.95rem; padding-bottom: 6px;
+}
+.streams-nav a { color: var(--ink-muted); }
+.streams-nav a:hover { background: var(--tan); color: var(--ink); }
+.streams-nav .active { color: var(--accent); box-shadow: inset 0 -2px 0 var(--accent); }
+.streams-nav a::after { display: none; }  /* kill the old sliding underline here */
+.btn-sub {
+  margin-left: auto; background: var(--accent); color: var(--bone);
+  text-decoration: none; font-weight: 600; font-size: 0.92rem;
+  padding: 8px 17px; border-radius: 3px; transition: background 0.15s;
+}
+.btn-sub:hover { background: var(--accent-hover); }
+
+/* ── Homepage: edition dateline ── */
+.edition {
+  display: flex; align-items: center; gap: 14px; padding: 14px 0 0;
+  font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--sage); font-weight: 600;
+}
+.edition .rule { flex: 1; height: 1px; background: var(--rule); }
+.edition .loc { color: var(--ink-muted); letter-spacing: 0.08em; }
+
+/* ── Homepage: lead + rundown ── */
+.lead-grid {
+  display: grid; grid-template-columns: 7fr 5fr; gap: 48px;
+  padding: 34px 0 12px; position: relative;
+}
+.lead { position: relative; }
+.lead-grid .featured__sun {
+  position: absolute; top: -6px; right: -24px; width: 104px; height: 104px;
+  color: var(--accent); opacity: 0.85; margin: 0;
+}
+.lead__kicker {
+  font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--accent); font-weight: 700; margin-bottom: 14px;
+}
+.lead__head {
+  font-family: var(--display); font-weight: 700;
+  font-variation-settings: "opsz" 144, "SOFT" 70, "WONK" 1;
+  font-size: clamp(2.1rem, 4.2vw, 3.5rem); line-height: 1.02;
+  letter-spacing: -0.022em; color: var(--ink); margin-bottom: 16px;
+}
+.lead__dek {
+  font-size: 1.2rem; font-style: italic; color: var(--ink-muted);
+  max-width: 33em; margin-bottom: 22px;
+}
+.link-arrow {
+  font-weight: 600; color: var(--accent); text-decoration: none;
+  border-bottom: 2px solid var(--accent); padding-bottom: 2px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.link-arrow:hover { color: var(--accent-hover); border-color: var(--accent-hover); }
+
+.rundown {
+  background: var(--bone); border: 1px solid var(--rule);
+  border-top: 3px solid var(--accent); border-radius: 4px;
+  padding: 20px 24px 12px; align-self: end;
+  box-shadow: 0 2px 18px rgba(61, 48, 41, 0.06);
+}
+.rundown h2 {
+  font-size: 0.74rem; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-muted); font-family: var(--serif); font-weight: 700; margin-bottom: 10px;
+}
+.rundown ol { list-style: none; counter-reset: rd; }
+.rundown li {
+  counter-increment: rd; display: flex; gap: 12px; padding: 10px 0;
+  border-top: 1px solid var(--tan); font-size: 0.97rem; line-height: 1.38;
+}
+.rundown li::before {
+  content: counter(rd); font-family: var(--display); font-weight: 700;
+  font-variation-settings: "SOFT" 60, "WONK" 1; color: var(--accent);
+  font-size: 1.1rem; line-height: 1.3; min-width: 16px;
+}
+.rundown a { color: var(--ink); text-decoration: none; }
+.rundown a:hover { color: var(--accent); }
+
+/* ── Homepage: section heads (ruled) ── */
+.home .section-head {
+  font-family: var(--display); font-weight: 600;
+  font-variation-settings: "opsz" 72, "SOFT" 30;
+  font-size: clamp(1.5rem, 2.6vw, 1.9rem); letter-spacing: -0.012em;
+  color: var(--ink); padding: 30px 0 16px; border-bottom: 1px solid var(--rule);
+}
+
+/* ── Homepage: "Latest across Tucson" ruled table ── */
+.across { display: grid; grid-template-columns: repeat(4, 1fr); }
+.across .cell { padding: 18px 20px 24px 0; border-right: 1px solid var(--rule); }
+.across .cell + .cell { padding-left: 20px; }
+.across .cell:last-child { border-right: none; }
+.across .eyebrow {
+  font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase;
+  font-weight: 700; color: var(--accent); margin-bottom: 9px;
+}
+.across .eyebrow.sage { color: var(--sage); }
+.across .eyebrow.clay { color: var(--clay); }
+.across .cell h3 {
+  font-family: var(--display); font-weight: 600; font-variation-settings: "SOFT" 30;
+  font-size: 1.16rem; line-height: 1.22; letter-spacing: -0.01em;
+}
+.across .cell h3 a { color: var(--ink); text-decoration: none; }
+.across .cell h3 a:hover { color: var(--accent); }
+.across .cell .meta { font-size: 0.82rem; color: var(--sage); margin-top: 7px; }
+
+/* ── Homepage: recent daily briefs (two-column) ── */
+.recent-list { display: grid; grid-template-columns: 1fr 1fr; column-gap: 44px; list-style: none; }
+.recent-list li {
+  display: flex; gap: 14px; align-items: baseline; padding: 9px 0;
+  border-top: 1px solid var(--rule);
+}
+.recent-list .d { font-size: 0.8rem; color: var(--sage); font-weight: 600; min-width: 92px; letter-spacing: 0.03em; }
+.recent-list a { color: var(--ink); text-decoration: none; font-size: 0.98rem; line-height: 1.32; }
+.recent-list a:hover { color: var(--accent); }
+.home .see-all { padding: 16px 0 8px; }
+
+@media (max-width: 880px) {
+  .masthead__tagline { margin-left: 0; text-align: left; width: 100%; }
+  .lead-grid { grid-template-columns: 1fr; gap: 28px; }
+  .lead-grid .featured__sun { display: none; }
+  .across { grid-template-columns: 1fr 1fr; }
+  .across .cell { border-right: none; padding-left: 0 !important; border-top: 1px solid var(--rule); }
+  .recent-list { grid-template-columns: 1fr; }
 }
