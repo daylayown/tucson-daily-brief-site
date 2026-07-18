@@ -1586,12 +1586,82 @@ def render_around_town(items: list[dict]) -> str:
 """
 
 
+def render_newsletter() -> str:
+    """Standalone TDB Weekly signup landing page — the conversion target for
+    social link stickers and hand-pasted links.
+
+    Why this exists: the site's subscribe form is an inline embed (it POSTs
+    straight to Buttondown), so there's no page a social link can point at that
+    both shows the form AND runs our GA4. This page does. Inbound utm_* params
+    therefore register in GA4 → Acquisition → Traffic acquisition, closing the
+    social→newsletter attribution gap. Link it as:
+      /newsletter.html?utm_source=instagram&utm_medium=story&utm_campaign=tdb-weekly
+    """
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TDB Weekly &mdash; the free Tucson newsletter &mdash; Tucson Daily Brief</title>
+{seo_head_html(
+    title="TDB Weekly — the free Tucson newsletter",
+    description="A free Sunday-morning email: the week's most important Tucson developments, what local government decided, and what's coming next — plus The Tucson Mini crossword, built just for subscribers.",
+    path="newsletter.html")}
+<link rel="stylesheet" href="style.css">
+{ANALYTICS_HTML}
+</head>
+<body>
+
+{site_header_html()}
+
+<div class="container">
+{section_nav_html()}
+</div>
+
+<main>
+<div class="container container--editorial">
+<div style="padding-top:var(--gap-xl);margin-bottom:var(--gap-l)">
+<h1 class="section-head">TDB Weekly</h1>
+<p class="section-intro">One free email, Sunday mornings. The week&rsquo;s most important Tucson developments &mdash; what local government decided, what&rsquo;s coming next, and the stories you&rsquo;d otherwise miss &mdash; gathered into a warm, five-minute read. Plus <strong>The Tucson Mini</strong>, a crossword built just for subscribers.</p>
+</div>
+
+{SUBSCRIBE_PANEL_HTML}
+
+<div class="post-page" style="max-width:680px;margin-top:var(--gap-xl)">
+<h2>What lands in your inbox</h2>
+
+<h3>What was decided</h3>
+<p>The week&rsquo;s consequential votes and decisions from the City of Tucson, Pima County, Marana, and Oro Valley &mdash; drawn from meetings and filings most Tucsonans never hear about.</p>
+
+<h3>What&rsquo;s coming next</h3>
+<p>A look ahead at what&rsquo;s on the agenda in the week to come, so you know what&rsquo;s worth watching before it happens &mdash; not after.</p>
+
+<h3>The Tucson Mini</h3>
+<p>A 5&times;5 crossword built around Tucson vocabulary &mdash; our streets, saguaros, and shared references &mdash; included with every issue, for subscribers only.</p>
+
+<h3>Free, and easy to leave</h3>
+<p>No cost, no spam, one email a week. Unsubscribe anytime with one click.</p>
+</div>
+</div>
+</main>
+
+<div class="container">
+{footer_html()}
+</div>
+
+{SCROLL_TRIGGER_JS}
+</body>
+</html>
+"""
+
+
 def build_sitemap() -> None:
     """Write sitemap.xml covering every indexable page on the site. The
     crossword is deliberately excluded (noindex, subscriber-only)."""
     root_pages = ["", "briefings.html", "local-government.html", "around-town.html",
                   "meeting-watch.html", "news-reports.html", "public-record.html",
-                  "in-depth.html", "ask.html", "about.html", "responsiveness.html"]
+                  "in-depth.html", "ask.html", "about.html", "newsletter.html",
+                  "responsiveness.html"]
     entries = []
 
     def add(path: str, lastmod: str | None = None) -> None:
@@ -1669,10 +1739,11 @@ def rebuild_homepage() -> None:
     (SITE_DIR / "around-town.html").write_text(
         render_around_town(collect_around_town_items())
     )
+    (SITE_DIR / "newsletter.html").write_text(render_newsletter())
     restamp_edition_nav(posts)
     build_sitemap()
     build_rss(posts)
-    print(f"  Rebuilt: index.html + briefings.html + local-government.html + around-town.html + sitemap.xml + rss.xml ({len(posts)} briefing(s))")
+    print(f"  Rebuilt: index.html + briefings.html + local-government.html + around-town.html + newsletter.html + sitemap.xml + rss.xml ({len(posts)} briefing(s))")
 
 
 # ---------------------------------------------------------------------------
