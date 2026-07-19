@@ -449,6 +449,8 @@ def footer_html(path_prefix: str = "") -> str:
 <a href="{path_prefix}about.html">About</a>
 <a href="https://podcasts.apple.com/us/podcast/tucson-daily-brief/id1878173070">Apple Podcasts</a>
 <a href="https://www.youtube.com/@tucsondailybrief">YouTube</a>
+<a href="https://www.facebook.com/tucsondailybrief">Facebook</a>
+<a href="https://www.instagram.com/tucsondailybrief">Instagram</a>
 <a href="https://www.linkedin.com/in/nicholas-de-leon-3b5b6a9">LinkedIn</a>
 <a href="mailto:nicholas@daylayown.org">Email</a>
 </p>

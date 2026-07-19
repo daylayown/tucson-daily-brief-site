@@ -150,7 +150,7 @@ Visual language is **warm-organic Southwest editorial**, shipped 2026-05-11. The
 
 **Masthead tagline: "The Tucson news you'd otherwise miss, by Nicholas De Leon."** Baked into every published page — changing it means editing `generate_post.py` **and** string-replacing across all published HTML (use Python, not sed — `&` entities break sed). Kicker reads "From the Old Pueblo".
 
-**Footer links:** About, Apple Podcasts, YouTube, LinkedIn, Email. X and Bluesky were removed 2026-05-15 — user prefers personal social (besides LinkedIn) not be connected to the site.
+**Footer links:** About, Apple Podcasts, YouTube, Facebook, Instagram, LinkedIn, Email. Facebook (`facebook.com/tucsondailybrief`) + Instagram (`instagram.com/tucsondailybrief`) added 2026-07-19 — these are **brand accounts**, so linking them is consistent with the standing preference that *personal* social not be connected to the site. X and Bluesky were removed 2026-05-15 for that personal-social reason and stay off. Adding/removing a footer link means editing `footer_html()` in `generate_post.py` **and** sweeping it into already-published HTML (Python, not sed — match the adjacent-anchor pair so only the footer is touched; `redesign-preview.html` has no live footer and is skipped).
 
 **Analytics:** GA4 via `gtag.js`, ID `G-MEYSB9GYF2`, site-wide via `ANALYTICS_HTML`.
 
