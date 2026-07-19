@@ -460,6 +460,23 @@ DEMO = [
          headline="Measles case confirmed in Tucson",
          dek="Pima County is investigating possible public exposure locations, and urges anyone who may have been in contact to watch for symptoms.",
          meta_text="tucsondailybrief.com"),
+    # --- 2026-07-19: Sunday "it's out" newsletter-conversion card, led with the
+    # most urgent/useful item in the issue (Tuesday's ballot) rather than a recap.
+    # All facts from the human-reviewed TDB Weekly 2026-07-19 issue that sent this
+    # morning: Prop 425 = permanent 75% hike to the county expenditure limit, first
+    # in 45 yrs; South Tucson = contested three-seat race, eight candidates; OV
+    # mayor = VM Melanie Barrett vs. former Pima County Sheriff Mark Napier; primary
+    # is Tue July 21. IG 4:5 + a crop-proof FB square, same copy.
+    dict(slug="weekly-itsout-2026-07-19", theme="terracotta",
+         kicker="TDB Weekly · Out now",
+         headline="What’s on Tuesday’s ballot",
+         dek="This morning’s issue breaks down the July 21 primary: Prop 425’s 75% county spending-limit hike, South Tucson’s eight-candidate council race, and the Oro Valley mayor’s race — Barrett vs. Napier. Free in your inbox every Sunday.",
+         meta_text="Subscribe · tucsondailybrief.com"),
+    dict(slug="weekly-itsout-2026-07-19-fb", theme="terracotta", size=(1200, 1200),
+         kicker="TDB Weekly · Out now",
+         headline="What’s on Tuesday’s ballot",
+         dek="This morning’s issue breaks down the July 21 primary: Prop 425’s 75% county spending-limit hike, South Tucson’s eight-candidate council race, and the Oro Valley mayor’s race — Barrett vs. Napier. Free in your inbox every Sunday.",
+         meta_text="Subscribe · tucsondailybrief.com"),
 ]
 
 if __name__ == "__main__":
