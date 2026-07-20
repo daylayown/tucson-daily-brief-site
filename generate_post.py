@@ -1223,6 +1223,19 @@ def render_week_glance() -> str:
             f'<section class="week">{"".join(cells)}</section>')
 
 
+# One-day homepage hero override: feature a specific news report as the lead story
+# instead of the daily brief, but ONLY on the given date — the next day's rebuild
+# (e.g. the 6 AM brief run) auto-reverts to the brief. Set to None to disable.
+FEATURED_REPORT_OVERRIDE = {
+    "slug": "downtown-shooting-2026-07-20",
+    "date": "2026-07-20",
+    "kicker": "Public Safety",
+    "dek": ("Nine people were shot outside Empire Pizza early Sunday. David Leroy "
+            "French, 21, faces 19 felony counts — and court records show he was 14 "
+            "months into a four-year probation term for a 2024 aggravated assault."),
+}
+
+
 def render_homepage(posts: list[dict],
                     latest_meeting: dict | None,
                     latest_report: dict | None,
@@ -1249,7 +1262,41 @@ def render_homepage(posts: list[dict],
 </div>"""
 
     # ── Lead + "This morning in Tucson" rundown ──
-    if posts:
+    # One-day override: feature a specific news report as the hero (see
+    # FEATURED_REPORT_OVERRIDE). Active only on its date and only if it's the
+    # current latest_report; otherwise the daily brief leads as usual.
+    hero_report = None
+    if (FEATURED_REPORT_OVERRIDE
+            and FEATURED_REPORT_OVERRIDE.get("date") == today.strftime("%Y-%m-%d")
+            and latest_report
+            and latest_report["href"].endswith(f'{FEATURED_REPORT_OVERRIDE["slug"]}.html')):
+        hero_report = latest_report
+
+    if hero_report and posts:
+        # Report leads; the brief moves into the "This morning in Tucson" aside
+        # (keep all headlines here — none of them is the lead anymore).
+        rundown = collect_brief_rundown(posts[0]["slug"], 5)
+        rundown_lis = "\n".join(
+            f'<li><a href="posts/{posts[0]["slug"]}.html">{escape(it)}</a></li>'
+            for it in rundown
+        ) or f'<li><a href="posts/{posts[0]["slug"]}.html">Read today&rsquo;s brief</a></li>'
+        lead_block = f"""<section class="lead-grid">
+<div class="lead">
+{FEATURED_SUN_SVG}
+<p class="lead__kicker">{escape(FEATURED_REPORT_OVERRIDE.get("kicker", "What They Decided"))}</p>
+<h2 class="lead__head">{escape(hero_report["title"])}</h2>
+<p class="lead__dek">{escape(FEATURED_REPORT_OVERRIDE.get("dek") or hero_report["lede"])}</p>
+<a class="link-arrow" href="{hero_report["href"]}">Read the full report {ARROW_SVG}</a>
+</div>
+<aside class="rundown">
+<h2>This morning in Tucson</h2>
+<ol>
+{rundown_lis}
+</ol>
+<p class="see-all"><a class="link-arrow" href="posts/{posts[0]["slug"]}.html">Read today&rsquo;s brief {ARROW_SVG}</a></p>
+</aside>
+</section>"""
+    elif posts:
         featured = posts[0]
         # Skip the first headline — it's the lead, already shown to the left.
         rundown = collect_brief_rundown(featured["slug"], 5)[1:]
@@ -1284,7 +1331,8 @@ def render_homepage(posts: list[dict],
     if latest_meeting:
         when = "Tomorrow" if latest_meeting["date"].date() == (today.date() + timedelta(days=1)) else format_date_short(latest_meeting["date"])
         across_cells.append(_across_cell("What to Watch", "", latest_meeting, when))
-    if latest_report:
+    if latest_report and hero_report is None:
+        # When the report is already the hero, don't repeat it in the across strip.
         across_cells.append(_across_cell("What They Decided", " sage", latest_report, format_date_short(latest_report["date"])))
     if latest_filing:
         across_cells.append(_across_cell("Around Town", " clay", latest_filing, "New filing"))
