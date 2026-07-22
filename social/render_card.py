@@ -477,6 +477,90 @@ DEMO = [
          headline="What’s on Tuesday’s ballot",
          dek="This morning’s issue breaks down the July 21 primary: Prop 425’s 75% county spending-limit hike, South Tucson’s eight-candidate council race, and the Oro Valley mayor’s race — Barrett vs. Napier. Free in your inbox every Sunday.",
          meta_text="Subscribe · tucsondailybrief.com"),
+    # --- 2026-07-20: downtown mass shooting, confirmed-facts follow-up to the
+    # 2026-07-19 breaking-news Story ("we'll share what's actually confirmed").
+    # Every fact verified 2026-07-20 via web search against KVOA / KOLD / ABC News /
+    # KTAR: nine victims, all ADULTS, shot ~2 a.m. Sunday near Congress St in the
+    # downtown entertainment district, gunshot wounds to extremities, hospitalized
+    # critical; a uniformed TPD officer shot the FLEEING suspect after he ignored
+    # commands — suspect in custody, critical; victim advocates "hopeful all nine
+    # may survive"; officer-involved shooting goes to the Pima County Attorney.
+    # DELIBERATELY OMITTED (not yet confirmed): motive, suspect ID, whether it was
+    # targeted, any death. Sober light-theme news card; attribution in the caption.
+    dict(slug="news-downtown-shooting-2026-07-20", theme="light",
+         kicker="Public Safety",
+         headline="Nine shot in downtown Tucson",
+         dek="Nine people — all adults — were shot early Sunday near Congress Street and hospitalized in critical condition. A Tucson police officer shot the fleeing suspect, who is in custody. Victim advocates say they are hopeful all nine will survive.",
+         meta_text="What we’ve confirmed"),
+    dict(slug="news-downtown-shooting-2026-07-20-fb", theme="light", size=(1200, 1200),
+         kicker="Public Safety",
+         headline="Nine shot in downtown Tucson",
+         dek="Nine people — all adults — were shot early Sunday near Congress Street and hospitalized in critical condition. A Tucson police officer shot the fleeing suspect, who is in custody. Victim advocates say they are hopeful all nine will survive.",
+         meta_text="What we’ve confirmed"),
+    # --- 2026-07-20: BTS "how we know" card for the "How safe is Tucson?" in-depth.
+    # STAGED — do not post until the in-depth publishes (+ TPD right-of-reply clears).
+    # Claims verified: FBI CDE (ORI AZ0100300) pulled live 2026-07-20 shows 2021 fully
+    # null, 2022/2023 partial; "0 violent crimes" aggregator artifact per crime.md.
+    # Outcome-forward + human-accountable per IG-BTS-STRATEGY — deliberately NO
+    # API/script/automation framing on the card (that's the LinkedIn register).
+    dict(slug="bts-fbi-datagap-2026-07-20", theme="terracotta",
+         kicker="How we know",
+         headline="Tucson fell out of the FBI’s crime data.",
+         dek="Some “safety” sites now tell searchers Tucson has had almost no violent crime since 2019 — false. We pulled the city’s own numbers straight from the FBI’s public database and found the gap ourselves: all of 2021 missing, plus stretches of 2022 and 2023. “No data” isn’t “no crime.”",
+         meta_text="In Depth · tucsondailybrief.com"),
+    dict(slug="bts-fbi-datagap-2026-07-20-fb", theme="terracotta", size=(1200, 1200),
+         kicker="How we know",
+         headline="Tucson fell out of the FBI’s crime data.",
+         dek="Some “safety” sites now tell searchers Tucson has had almost no violent crime since 2019 — false. We pulled the city’s own numbers straight from the FBI’s public database and found the gap ourselves: all of 2021 missing, plus stretches of 2022 and 2023. “No data” isn’t “no crime.”",
+         meta_text="In Depth · tucsondailybrief.com"),
+    # --- 2026-07-21: Election Day (civic moat) + heat-ahead (service reach) pair,
+    # from the 2026-07-21 brief. Deliberately NOT the shooting (two heavy days).
+    # Election facts (KVOA/KOLD/Cronkite via the brief): the 2026 Primary is TODAY;
+    # polls open across Pima County; vote at ANY Vote Center; races incl. South Tucson
+    # council, Oro Valley council, AZ legislative seats, and the priciest AZ
+    # schools-chief primary in decades. "7 p.m. close" = A.R.S. 16-565 (statewide AZ
+    # election-day hours). Heat facts (NWS Tucson forecast, via the brief): warming
+    # trend builds midweek, intensifies through the weekend, highs ~107° by Friday;
+    # Wed ~100° w/ heat index ~104°; muggy nights (~79° low). NOTE: brief shows "No
+    # active NWS alerts" — so kicker is "Extreme Heat Ahead" (forecast), NOT a
+    # "Warning" (an NWS product not currently in effect). IG 4:5 + crop-proof FB 1:1.
+    dict(slug="election-day-2026-07-21", theme="light",
+         kicker="Election Day · Pima County",
+         headline="The primary is today.",
+         dek="Polls are open across Pima County — and you can vote at any Vote Center in the county. On the ballot: the South Tucson and Oro Valley council races, Arizona legislative seats, and the most expensive race for state schools chief in decades.",
+         meta_text="Vote by 7 p.m. today"),
+    dict(slug="election-day-2026-07-21-fb", theme="light", size=(1200, 1200),
+         kicker="Election Day · Pima County",
+         headline="The primary is today.",
+         dek="Polls are open across Pima County — and you can vote at any Vote Center in the county. On the ballot: the South Tucson and Oro Valley council races, Arizona legislative seats, and the most expensive race for state schools chief in decades.",
+         meta_text="Vote by 7 p.m. today"),
+    dict(slug="heat-ahead-2026-07-21", theme="terracotta",
+         kicker="Extreme Heat Ahead",
+         headline="107° by Friday.",
+         dek="After a stormy start to the week, a major warming trend builds midweek and intensifies into the weekend — highs near 107° by Friday, with muggy nights offering little relief. Hydrate now, move outdoor work to early morning, and check on older neighbors and pets.",
+         meta_text="Check on your neighbors"),
+    dict(slug="heat-ahead-2026-07-21-fb", theme="terracotta", size=(1200, 1200),
+         kicker="Extreme Heat Ahead",
+         headline="107° by Friday.",
+         dek="After a stormy start to the week, a major warming trend builds midweek and intensifies into the weekend — highs near 107° by Friday, with muggy nights offering little relief. Hydrate now, move outdoor work to early morning, and check on older neighbors and pets.",
+         meta_text="Check on your neighbors"),
+    # --- 2026-07-21: Tucson City Council report promo (news card). Leads with the
+    # meeting's freshest disclosure: City Manager Thomure said 20 TPD officers, 2
+    # CSOs, 5 sergeants + a force commander were already stationed downtown (funded
+    # by the downtown violence-reduction + Ronstadt Transit Center programs) when
+    # Sunday's shooting began. Fact stated flat, not as an implied police failure —
+    # matches the article's approved framing. Headline count 34 -> 80px. Attribution
+    # + newsletter CTA live in the caption, not on the card. IG 4:5 + crop-proof FB 1:1.
+    dict(slug="council-shooting-2026-07-21", theme="light",
+         kicker="Tucson City Council",
+         headline="20 officers were already downtown.",
+         dek="At Tuesday's council meeting, the city manager said 20 police officers, five sergeants and a force commander were already stationed downtown — a presence funded by the city's downtown violence-reduction program — when Sunday's shooting began. We were there for the whole meeting: here's what officials said, and what the council did next.",
+         meta_text="What They Decided · tucsondailybrief.com"),
+    dict(slug="council-shooting-2026-07-21-fb", theme="light", size=(1200, 1200),
+         kicker="Tucson City Council",
+         headline="20 officers were already downtown.",
+         dek="At Tuesday's council meeting, the city manager said 20 police officers, five sergeants and a force commander were already stationed downtown — a presence funded by the city's downtown violence-reduction program — when Sunday's shooting began. We were there for the whole meeting: here's what officials said, and what the council did next.",
+         meta_text="What They Decided · tucsondailybrief.com"),
 ]
 
 if __name__ == "__main__":

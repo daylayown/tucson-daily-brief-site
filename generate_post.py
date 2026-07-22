@@ -1227,12 +1227,14 @@ def render_week_glance() -> str:
 # instead of the daily brief, but ONLY on the given date — the next day's rebuild
 # (e.g. the 6 AM brief run) auto-reverts to the brief. Set to None to disable.
 FEATURED_REPORT_OVERRIDE = {
-    "slug": "downtown-shooting-2026-07-20",
-    "date": "2026-07-20",
-    "kicker": "Public Safety",
-    "dek": ("Nine people were shot outside Empire Pizza early Sunday. David Leroy "
-            "French, 21, faces 19 felony counts — and court records show he was 14 "
-            "months into a four-year probation term for a 2024 aggravated assault."),
+    "slug": "tucson-2026-07-21",
+    "date": "2026-07-21",
+    "kicker": "Tucson City Council",
+    "dek": ("The city manager told the council 20 officers, five sergeants and a "
+            "force commander were already stationed downtown when Sunday's shooting "
+            "began. The council also denied a contentious Tanque Verde rezoning, "
+            "backed the Tohono O'odham Nation's border-wall lawsuit, and approved a "
+            "$7 million federal housing grant."),
 }
 
 
