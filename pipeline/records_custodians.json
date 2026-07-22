@@ -15,6 +15,20 @@
     "source_url": "https://www.tucsonaz.gov/Departments/Police/Police-Services/Request-Tucson-Police-Public-Records",
     "notes": "Download the TPD records-request form PDF from the page, fill it, email it — no portal. Mail: Records Section, 270 S Stone Ave, Tucson, AZ 85701-1917; phone (520) 791-4462. Body-worn camera video: $44.00 per video hour reviewed. Collision reports are separate (Crashdocs). Verified via Wayback 2026-01-13."
   },
+  "Rio Nuevo Multipurpose Facilities District": {
+    "office": "Rio Nuevo District — Dan Meyers, Chief Financial Officer",
+    "channel_type": "email",
+    "email": "info@rionuevo.org",
+    "source_url": "http://rionuevo.org/contact/staff-contact-information/",
+    "notes": "State-appointed multipurpose facilities district (downtown TIF) — a public body subject to A.R.S. § 39-121, but publishes no records officer or request instructions. For financial/disbursement records CC the CFO, Dan Meyers, danielm@rionuevo-tucson.org (note the different rionuevo-tucson.org domain, as printed on their staff page). Address 1703 E. Broadway Blvd, Tucson AZ 85719; phone (520) 623-7336 (office by appointment). No records portal — expect to follow up by phone. Verified live 2026-07-22."
+  },
+  "Pima County Attorney's Office": {
+    "office": "Pima County Attorney's Office — Public Records",
+    "channel_type": "portal",
+    "portal_url": "https://pcao.pima.gov/public-records-request-new/",
+    "source_url": "https://www.pima.gov/2403/Public-Records",
+    "notes": "PCAO runs its own NextRequest portal, separate from the county's GovQA. Route anything prosecutorial here (charging decisions, plea files, OIS reviews) — the Clerk of the Board will just bounce it. Expect work-product and pending-investigation withholdings on open cases; a denial with a stated exemption is still a story fact. Noted on the county public-records page, verified live 2026-07-22."
+  },
   "Pima County": {
     "office": "Clerk of the Board of Supervisors",
     "channel_type": "portal",

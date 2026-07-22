@@ -88,7 +88,7 @@ These are the ones that cost something when forgotten:
 ├── agenda_mining_tucson.py      # City of Tucson (Hyland OnBase PDF + pdftotext)
 ├── check_agendas.sh             # 8 AM cron: 4 miners + Spotted + dev watch + auto-publish + push
 ├── public_record_liquor.py      # Spotted pipeline: liquor filings out of agenda references
-├── foia_lead_spotter.py         # Weekly: trawl news-reports/ for records-request leads → draft §39-121 emails → Telegram
+├── foia_lead_spotter.py         # Weekly: trawl news-reports/ for records-request leads → web-search verify facts/prior-disclosure → draft §39-121 emails → Telegram
 ├── run_foia_spotter.sh          # Cron wrapper (Mondays 9:30 AM)
 ├── records-requests/            # Working dir (gitignored — repo is public, unsent requests stay local)
 ├── dev_watch_marana.py          # Marana development watch (ArcGIS poll/diff)
@@ -197,7 +197,7 @@ The homepage is a **zoned entry hall** (featured brief + cross-stream cards + To
 | 6:10 AM daily | `run_podcast.sh` — Telegram → blog post + push → daily YouTube Short → podcast script (Haiku) → ElevenLabs TTS → RSS/R2 → YouTube | `/tmp/podcast-gen.log` |
 | 8:00 AM daily | `check_agendas.sh` — 4 agenda miners + Spotted + dev watch + auto-schedule live recordings (`ENABLE_AUTO_SCHEDULE=1`); **Mondays** also publish the weekly "Buried in the Agenda" Short | `/tmp/agenda-check.log` |
 | 8:45 AM daily | `refresh_ask_index.sh` — rebuild RAG index + `fly deploy` (baked index would otherwise freeze answers) | `/tmp/ask-index-refresh.log` |
-| 9:30 AM Mon | `run_foia_spotter.sh` — FOIA Lead Spotter: scan new published news reports for records-request leads, draft A.R.S. § 39-121 request emails to `records-requests/drafts/`, Telegram alert. **Nothing sends automatically** — human reviews and sends from `nicholas@daylayown.org` | `/tmp/foia-spotter.log` |
+| 9:30 AM Mon | `run_foia_spotter.sh` — FOIA Lead Spotter: scan new published news reports for records-request leads, **web-search-verify each lead** (facts accurate? already public? — catches AI-paraphrased program names from our own reports), draft A.R.S. § 39-121 request emails to `records-requests/drafts/`, Telegram alert. **Nothing sends automatically** — human reviews and sends from `nicholas@daylayown.org` | `/tmp/foia-spotter.log` |
 | Manual, Sat | `run_newsletter.sh` — **not cron'd.** Run by hand after the Tucson Mini is locked; the generator hard-stops if no puzzle exists for the send date | `/tmp/newsletter-gen.log` |
 | Scheduled | `at` jobs — live reporter for YouTube + Swagit meetings | `/tmp/live-reporter*.log` |
 

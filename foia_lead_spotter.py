@@ -16,6 +16,16 @@ Custodian contact info in that file must be verified against an official
 government page before it is added; a lead pointing at a government we have
 no verified channel for gets flagged "research needed", never a guessed email.
 
+Before a lead becomes a draft, a second web-search-backed pass verifies it
+(see verify_lead): (A) are the anchoring facts accurate — catching cases where
+the source report paraphrased a program/entity name that isn't the official
+one — and (B) have any of the requested records or the questions they answer
+already been made public. This is fail-open: if the check can't run the draft
+is still written (a human reviews everything), but a lead the check believes is
+already fully public is flagged loudly rather than filed blind. Rationale:
+"verify, don't delegate" — the spotter has twice lifted an AI-paraphrased term
+from our own report and shipped it as if it were an official name.
+
 Nothing sends automatically. Drafts land in records-requests/drafts/
 (gitignored — the repo is public, and an unsent request shouldn't be), and a
 consolidated Telegram notification lists what was found. The human reviews,
@@ -55,6 +65,16 @@ CUSTODIANS_PATH = SITE_DIR / "pipeline" / "records_custodians.json"
 SEND_TELEGRAM = Path.home() / ".openclaw/skills/tucson-daily-brief/scripts/send_telegram.py"
 CLAUDE_MODEL = "claude-sonnet-4-6"
 CLAUDE_API_URL = "https://api.anthropic.com/v1/messages"
+# Server-side web-search tool. We use the BASIC version (web_search_20250305),
+# not web_search_20260209: the newer one runs code execution under the hood for
+# "dynamic filtering", which chains many rounds and pushes a multi-search turn
+# past several minutes. Basic search just searches — plenty for fact-checking,
+# and fast enough (~4 searches in under a minute). No beta header, any model.
+WEB_SEARCH_TOOL = {"type": "web_search_20250305", "name": "web_search", "max_uses": 4}
+# Non-streaming turn with several server-side searches; give the HTTP read
+# generous headroom. Unattended Monday cron, so a slow turn is fine — and
+# verify_lead fails open if it times out anyway.
+VERIFY_HTTP_TIMEOUT = 240
 
 REQUESTER_NAME = "Nicholas De Leon"
 REQUESTER_EMAIL = "nicholas@daylayown.org"
@@ -191,6 +211,131 @@ Return a JSON object only, no other text:
         return []
 
 
+def _messages_call(messages: list, tools: list, max_tokens: int, api_key: str) -> dict:
+    """One POST to the Messages API. Raw urllib to match the rest of this file
+    (no anthropic SDK dependency)."""
+    body = json.dumps({
+        "model": CLAUDE_MODEL,
+        "max_tokens": max_tokens,
+        "tools": tools,
+        "messages": messages,
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        CLAUDE_API_URL,
+        data=body,
+        headers={
+            "Content-Type": "application/json",
+            "x-api-key": api_key,
+            "anthropic-version": "2023-06-01",
+        },
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=VERIFY_HTTP_TIMEOUT) as resp:
+        return json.loads(resp.read())
+
+
+def _run_search_prompt(prompt: str, api_key: str, max_tokens: int = 1500) -> str:
+    """Run a web-search-enabled turn and return the model's final text.
+
+    web_search is a server tool: Anthropic runs the searches and returns the
+    results inline. A long search turn can stop with stop_reason 'pause_turn';
+    we resend the accumulated content to resume (no extra 'continue' message,
+    per the server-tool contract), bounded so a wedged turn can't loop forever.
+    """
+    messages = [{"role": "user", "content": prompt}]
+    content = []
+    for _ in range(4):
+        result = _messages_call(messages, [WEB_SEARCH_TOOL], max_tokens, api_key)
+        content = result.get("content", [])
+        if result.get("stop_reason") == "pause_turn":
+            messages.append({"role": "assistant", "content": content})
+            continue
+        break
+    texts = [b.get("text", "") for b in content if b.get("type") == "text"]
+    return "\n".join(t for t in texts if t).strip()
+
+
+def verify_lead(lead: dict) -> dict | None:
+    """Web-search fact/prior-disclosure check on a lead before it becomes a draft.
+
+    Returns a verdict dict, or None if the check couldn't run (no API key,
+    network error, unparseable response) — callers treat None as fail-open.
+    """
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        print("  WARNING: ANTHROPIC_API_KEY not set, skipping verification", file=sys.stderr)
+        return None
+
+    records = "\n".join(f"- {r}" for r in lead.get("records_sought", []))
+    prompt = f"""You are a fact-checker for a Tucson newsroom that is about to file an Arizona public-records request (A.R.S. § 39-121). The request was auto-generated from one of our OWN published meeting reports, so any program, entity, or dollar figure it quotes may be a paraphrase from that report — NOT a verified official name or number. Before it goes out, use web search to check two things.
+
+LEAD: {lead.get('headline', '')}
+GOVERNMENT: {lead.get('responsible_government', '')}
+ANCHORING FACTS (quoted from our report): {lead.get('source_facts', '')}
+RECORDS WE PLAN TO REQUEST:
+{records}
+
+Search recent local news and official government pages, then determine:
+(A) FACTS — Are the anchoring facts accurate? Flag any program/entity name that is described in a way that may not match its official name, and any number that a source contradicts.
+(B) ALREADY PUBLIC — Have any of the specific records, or the questions they would answer, already been reported publicly or posted by the government? Cite URLs.
+
+Return ONLY a JSON object, no other text:
+{{
+  "facts_check": {{"status": "confirmed|contradicted|unclear", "notes": "brief"}},
+  "already_public": {{"status": "fully|partially|no", "notes": "brief", "sources": ["url", ...]}},
+  "recommendation": "proceed|proceed_with_note|skip",
+  "reason": "one sentence"
+}}
+Use "skip" ONLY if the records are already fully public. Use "proceed_with_note" if a fact needs a caveat or the answer is only partially public. Otherwise "proceed"."""
+
+    try:
+        text = _run_search_prompt(prompt, api_key)
+    except Exception as e:  # network, timeout, HTTP error — fail open
+        print(f"  WARNING: verification web-search call failed: {e}", file=sys.stderr)
+        return None
+
+    if text.startswith("```"):
+        text = re.sub(r"^```(?:json)?\n?", "", text)
+        text = re.sub(r"\n?```$", "", text)
+    # The model may wrap the JSON in prose; grab the outermost object.
+    m = re.search(r"\{.*\}", text, re.DOTALL)
+    if m:
+        text = m.group(0)
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError as e:
+        print(f"  WARNING: verification returned unparseable JSON: {e}", file=sys.stderr)
+        return None
+
+
+def verification_block(v: dict | None) -> str:
+    """Render the pre-send verification section for a draft."""
+    if v is None:
+        return (
+            "**Pre-send verification:** ⚠️ automated web check did not run. "
+            "Before sending, confirm the anchoring facts and search for prior "
+            "public disclosure of these records manually."
+        )
+    labels = {
+        "proceed": "✅ PROCEED",
+        "proceed_with_note": "⚠️ PROCEED WITH NOTE",
+        "skip": "⛔ LIKELY ALREADY PUBLIC — review before sending",
+    }
+    rec = v.get("recommendation", "proceed")
+    fc = v.get("facts_check", {})
+    ap = v.get("already_public", {})
+    srcs = ap.get("sources") or []
+    src_block = "".join(f"\n>   - {s}" for s in srcs)
+    return (
+        f"**Pre-send verification (automated web check):** {labels.get(rec, rec)}\n"
+        f"> {v.get('reason', '')}\n"
+        f">\n"
+        f"> - **Facts:** {fc.get('status', '?')} — {fc.get('notes', '')}\n"
+        f"> - **Already public:** {ap.get('status', '?')} — {ap.get('notes', '')}"
+        f"{('  Sources:' + src_block) if srcs else ''}"
+    )
+
+
 def slugify(text: str) -> str:
     text = text.lower()
     text = re.sub(r"[^a-z0-9]+", "-", text)
@@ -225,7 +370,8 @@ Thank you for your time.
 {REQUESTER_EMAIL}"""
 
 
-def render_draft(lead: dict, custodian: dict | None, report_name: str, today: str) -> str:
+def render_draft(lead: dict, custodian: dict | None, report_name: str, today: str,
+                 verification: dict | None = None) -> str:
     """A draft file: structured header the human scans, then the email body."""
     gov = lead["responsible_government"]
     if custodian is None:
@@ -243,9 +389,13 @@ def render_draft(lead: dict, custodian: dict | None, report_name: str, today: st
 
     subject = f"Public Records Request — {lead['headline']}"
     urgency = lead.get("urgency", "normal")
+    if verification and verification.get("recommendation") == "skip":
+        status = "REVIEW — automated web check suggests these records may already be public"
+    else:
+        status = "DRAFT — review and send manually"
 
     return f"""---
-status: DRAFT — review and send manually
+status: {status}
 date: {today}
 to: {to_line}
 from: {REQUESTER_EMAIL}
@@ -265,6 +415,8 @@ source_report: news-reports/{report_name}
 
 **Channel:** {channel_note}
 
+{verification_block(verification)}
+
 ## Email body (copy below the line)
 
 ---
@@ -282,6 +434,13 @@ def send_telegram_summary(drafted: list[dict]) -> None:
         flag = "🔴 " if d["lead"].get("urgency") == "high" else ""
         lines.append(f"{flag}• {d['lead']['headline']}")
         lines.append(f"  {d['lead']['responsible_government']}")
+        rec = (d.get("verification") or {}).get("recommendation")
+        if rec == "skip":
+            lines.append("  ⛔ automated check: may already be public — review")
+        elif rec == "proceed_with_note":
+            lines.append("  ⚠️ automated check: facts need a caveat / partially public")
+        elif d.get("verification") is None:
+            lines.append("  ⚠️ automated check did not run — verify manually")
         lines.append(f"  {d['path']}\n")
     lines.append("Drafts are ready to review — nothing has been sent. Arizona Public Records Law (A.R.S. § 39-121), send from nicholas@daylayown.org.")
     msg = "\n".join(lines)
@@ -295,8 +454,9 @@ def send_telegram_summary(drafted: list[dict]) -> None:
         os.unlink(tmp)
 
 
-def process_report(report_path: Path, custodians: dict, dry_run: bool, today: str) -> list[dict]:
-    """Scan one published report; return list of {lead, path} drafted."""
+def process_report(report_path: Path, custodians: dict, dry_run: bool, today: str,
+                   verify: bool = True) -> list[dict]:
+    """Scan one published report; return list of {lead, path, verification} drafted."""
     text = extract_article_text(report_path.read_text())
     if len(text) < 400:
         print(f"  {report_path.name}: too little article text, skipping")
@@ -322,13 +482,23 @@ def process_report(report_path: Path, custodians: dict, dry_run: bool, today: st
             print(f"    [DRY RUN] {lead['headline']}  ({gov}, {lead.get('urgency')})")
             for r in lead["records_sought"]:
                 print(f"              - {r}")
-            drafted.append({"lead": lead, "path": str(out_path)})
+            drafted.append({"lead": lead, "path": str(out_path), "verification": None})
             continue
 
+        # Verify facts + prior public disclosure before writing the draft.
+        verification = verify_lead(lead) if verify else None
+        if verification:
+            print(f"    Verified: {verification.get('recommendation', '?')} — "
+                  f"{verification.get('reason', '')}")
+
         DRAFTS_DIR.mkdir(parents=True, exist_ok=True)
-        out_path.write_text(render_draft(lead, custodian, report_path.name, today))
+        out_path.write_text(render_draft(lead, custodian, report_path.name, today, verification))
         print(f"    Drafted: {out_path.relative_to(SITE_DIR)}")
-        drafted.append({"lead": lead, "path": str(out_path.relative_to(SITE_DIR))})
+        drafted.append({
+            "lead": lead,
+            "path": str(out_path.relative_to(SITE_DIR)),
+            "verification": verification,
+        })
 
     return drafted
 
@@ -339,6 +509,8 @@ def main():
     parser.add_argument("--force", action="store_true", help="Reprocess all reports, ignoring .processed.txt")
     parser.add_argument("--limit", type=int, help="Process at most N reports")
     parser.add_argument("--report", help="Process one specific report file (name or path)")
+    parser.add_argument("--no-verify", action="store_true",
+                        help="Skip the web-search fact/prior-disclosure check (saves API cost; offline testing)")
     args = parser.parse_args()
 
     custodians = load_custodians()
@@ -361,7 +533,9 @@ def main():
     print(f"Scanning {len(files)} report(s)...")
     all_drafted = []
     for f in files:
-        all_drafted.extend(process_report(f, custodians, args.dry_run, today))
+        all_drafted.extend(
+            process_report(f, custodians, args.dry_run, today, verify=not args.no_verify)
+        )
         if not args.dry_run and not args.report:
             mark_processed(f.name)
 

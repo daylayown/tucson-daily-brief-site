@@ -12,6 +12,7 @@ in-depth/*-draft.md
 
 # Records-request drafts + state — the repo is public; unsent requests stay local
 records-requests/
+EMAIL-SETUP-TDB.md
 
 # Around Town development-watch state
 around-town/.dev_state.json
