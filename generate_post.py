@@ -1227,14 +1227,15 @@ def render_week_glance() -> str:
 # instead of the daily brief, but ONLY on the given date — the next day's rebuild
 # (e.g. the 6 AM brief run) auto-reverts to the brief. Set to None to disable.
 FEATURED_REPORT_OVERRIDE = {
-    "slug": "tucson-2026-07-21",
-    "date": "2026-07-21",
-    "kicker": "Tucson City Council",
-    "dek": ("The city manager told the council 20 officers, five sergeants and a "
-            "force commander were already stationed downtown when Sunday's shooting "
-            "began. The council also denied a contentious Tanque Verde rezoning, "
-            "backed the Tohono O'odham Nation's border-wall lawsuit, and approved a "
-            "$7 million federal housing grant."),
+    "source": "indepth",   # "report" (default) or "indepth"
+    "slug": "marana-data-center-election",
+    "date": "2026-07-22",
+    "kicker": "In Depth",
+    "cta": "Read the full story",
+    "dek": ("Marana nearly split down the middle on the $5 billion Luckett Road "
+            "data center — but the mayor and every incumbent who approved it kept "
+            "their seats, and the slate that fought it won just one of four council "
+            "seats. How a near-even vote produced a lopsided result."),
 }
 
 
@@ -1269,10 +1270,11 @@ def render_homepage(posts: list[dict],
     # current latest_report; otherwise the daily brief leads as usual.
     hero_report = None
     if (FEATURED_REPORT_OVERRIDE
-            and FEATURED_REPORT_OVERRIDE.get("date") == today.strftime("%Y-%m-%d")
-            and latest_report
-            and latest_report["href"].endswith(f'{FEATURED_REPORT_OVERRIDE["slug"]}.html')):
-        hero_report = latest_report
+            and FEATURED_REPORT_OVERRIDE.get("date") == today.strftime("%Y-%m-%d")):
+        _src = FEATURED_REPORT_OVERRIDE.get("source", "report")
+        _cand = latest_indepth if _src == "indepth" else latest_report
+        if _cand and _cand["href"].endswith(f'{FEATURED_REPORT_OVERRIDE["slug"]}.html'):
+            hero_report = _cand
 
     if hero_report and posts:
         # Report leads; the brief moves into the "This morning in Tucson" aside
@@ -1288,7 +1290,7 @@ def render_homepage(posts: list[dict],
 <p class="lead__kicker">{escape(FEATURED_REPORT_OVERRIDE.get("kicker", "What They Decided"))}</p>
 <h2 class="lead__head">{escape(hero_report["title"])}</h2>
 <p class="lead__dek">{escape(FEATURED_REPORT_OVERRIDE.get("dek") or hero_report["lede"])}</p>
-<a class="link-arrow" href="{hero_report["href"]}">Read the full report {ARROW_SVG}</a>
+<a class="link-arrow" href="{hero_report["href"]}">{escape(FEATURED_REPORT_OVERRIDE.get("cta", "Read the full report"))} {ARROW_SVG}</a>
 </div>
 <aside class="rundown">
 <h2>This morning in Tucson</h2>
@@ -1333,12 +1335,12 @@ def render_homepage(posts: list[dict],
     if latest_meeting:
         when = "Tomorrow" if latest_meeting["date"].date() == (today.date() + timedelta(days=1)) else format_date_short(latest_meeting["date"])
         across_cells.append(_across_cell("What to Watch", "", latest_meeting, when))
-    if latest_report and hero_report is None:
-        # When the report is already the hero, don't repeat it in the across strip.
+    if latest_report and latest_report is not hero_report:
+        # When an item is already the hero, don't repeat it in the across strip.
         across_cells.append(_across_cell("What They Decided", " sage", latest_report, format_date_short(latest_report["date"])))
     if latest_filing:
         across_cells.append(_across_cell("Around Town", " clay", latest_filing, "New filing"))
-    if latest_indepth:
+    if latest_indepth and latest_indepth is not hero_report:
         across_cells.append(_across_cell("In Depth", " sage", latest_indepth, format_date_short(latest_indepth["date"])))
     across_block = (f'<h2 class="section-head">Latest across Tucson</h2>\n'
                     f'<section class="across">{"".join(across_cells)}</section>') if across_cells else ""
