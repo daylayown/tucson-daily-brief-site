@@ -29,7 +29,7 @@ from our own report and shipped it as if it were an official name.
 Nothing sends automatically. Drafts land in records-requests/drafts/
 (gitignored — the repo is public, and an unsent request shouldn't be), and a
 consolidated Telegram notification lists what was found. The human reviews,
-edits, and sends from nicholas@daylayown.org.
+edits, and sends from records@tucsondailybrief.com.
 
 Usage:
     python foia_lead_spotter.py                  # Scan new reports, draft leads
@@ -77,7 +77,7 @@ WEB_SEARCH_TOOL = {"type": "web_search_20250305", "name": "web_search", "max_use
 VERIFY_HTTP_TIMEOUT = 240
 
 REQUESTER_NAME = "Nicholas De Leon"
-REQUESTER_EMAIL = "nicholas@daylayown.org"
+REQUESTER_EMAIL = "records@tucsondailybrief.com"
 REQUESTER_OUTLET = "Tucson Daily Brief (tucsondailybrief.com)"
 
 
@@ -442,7 +442,7 @@ def send_telegram_summary(drafted: list[dict]) -> None:
         elif d.get("verification") is None:
             lines.append("  ⚠️ automated check did not run — verify manually")
         lines.append(f"  {d['path']}\n")
-    lines.append("Drafts are ready to review — nothing has been sent. Arizona Public Records Law (A.R.S. § 39-121), send from nicholas@daylayown.org.")
+    lines.append("Drafts are ready to review — nothing has been sent. Arizona Public Records Law (A.R.S. § 39-121), send from records@tucsondailybrief.com.")
     msg = "\n".join(lines)
     with tempfile.NamedTemporaryFile("w", suffix=".md", prefix="records-leads-", delete=False) as f:
         f.write(msg)

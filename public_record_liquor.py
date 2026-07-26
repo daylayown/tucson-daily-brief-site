@@ -463,7 +463,7 @@ def render_filing_html(data: dict, source_meta: dict, meeting_date: str, page_sl
 
 <hr>
 
-<p class="filing-disclosure"><em>This is a public record filing surfaced automatically from the {escape_html(body_name)} agenda. Tucson Daily Brief is interested in talking to the people behind new businesses opening in our community — if you&rsquo;re affiliated with this filing and would like to share more about your plans, <a href="mailto:nicholas@daylayown.org">get in touch</a>.</em></p>
+<p class="filing-disclosure"><em>This is a public record filing surfaced automatically from the {escape_html(body_name)} agenda. Tucson Daily Brief is interested in talking to the people behind new businesses opening in our community — if you&rsquo;re affiliated with this filing and would like to share more about your plans, <a href="mailto:editor@tucsondailybrief.com">get in touch</a>.</em></p>
 
 <p class="filing-meta"><em>Generated {datetime.now().strftime('%Y-%m-%d')} by Tucson Daily Brief&rsquo;s Spotted pipeline using {CLAUDE_MODEL}. AI-extracted from a public meeting agenda. Source: {escape_html(body_name)}.</em></p>
 </article>
@@ -519,7 +519,7 @@ def render_index_html(filings: list[dict]) -> str:
 <div class="container container--editorial">
 <div style="padding-top:var(--gap-xl);margin-bottom:var(--gap-l)">
 <h1 class="section-head">New Businesses &amp; Filings</h1>
-<p class="section-intro">New restaurants, bars, businesses, and filings going through public review &mdash; most of which never get reported on. We pull them automatically from the agendas of Pima County BOS, Tucson Mayor &amp; Council, and Oro Valley Town Council. This is part of <a href="around-town.html">Around Town</a> &mdash; see development &amp; rezonings there too. Spot one near you? <a href="mailto:nicholas@daylayown.org">Let us know</a>.</p>
+<p class="section-intro">New restaurants, bars, businesses, and filings going through public review &mdash; most of which never get reported on. We pull them automatically from the agendas of Pima County BOS, Tucson Mayor &amp; Council, and Oro Valley Town Council. This is part of <a href="around-town.html">Around Town</a> &mdash; see development &amp; rezonings there too. Spot one near you? <a href="mailto:tips@tucsondailybrief.com">Let us know</a>.</p>
 </div>
 
 <div style="margin-bottom:var(--gap-xl)">{SUBSCRIBE_PANEL_HTML}</div>

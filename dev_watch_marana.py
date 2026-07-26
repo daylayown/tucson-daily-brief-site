@@ -434,7 +434,7 @@ def render_case_html(a: dict, summary: str, date: datetime, page_slug: str = "")
 
 <hr>
 
-<p class="filing-disclosure"><em>This development project was surfaced automatically from the {escape_html(BODY_NAME)}&rsquo;s public Current &amp; Proposed Projects records. It is in the town&rsquo;s development pipeline &mdash; nothing here is final or approved. Affiliated with this project and want to share more? <a href="mailto:nicholas@daylayown.org">Get in touch</a>.</em></p>
+<p class="filing-disclosure"><em>This development project was surfaced automatically from the {escape_html(BODY_NAME)}&rsquo;s public Current &amp; Proposed Projects records. It is in the town&rsquo;s development pipeline &mdash; nothing here is final or approved. Affiliated with this project and want to share more? <a href="mailto:editor@tucsondailybrief.com">Get in touch</a>.</em></p>
 
 <p class="filing-meta"><em>Generated {datetime.now().strftime('%Y-%m-%d')} by Tucson Daily Brief&rsquo;s Around Town pipeline. AI-assisted summary, grounded in the town&rsquo;s public project record. Source: {escape_html(BODY_NAME)} Development Services{f" (project {escape_html(num)})" if num else ""}.</em></p>
 </article>
