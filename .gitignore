@@ -12,7 +12,16 @@ in-depth/*-draft.md
 
 # Records-request drafts + state — the repo is public; unsent requests stay local
 records-requests/
+
+# Promise ledger — machine-extracted rows are unreviewed; repo is public
+promise-ledger/
 EMAIL-SETUP-TDB.md
+
+# Pre-publication investigation notebooks — the repo is public; working
+# reporting notes, evidence, and data pulls stay local until a piece ships
+rio-nuevo-investigation/
+downtown-mass-shooting/
+data-center-election-2026/
 
 # Around Town development-watch state
 around-town/.dev_state.json
@@ -27,3 +36,6 @@ kimi-operational-advice.md
 DESIGN-DIRECTIONS-2026-07.md
 IG-BTS-STRATEGY.md
 sol-website-redesign.md
+
+# Provenance-gate working dir: archived source text + shadow log
+brief-inputs/

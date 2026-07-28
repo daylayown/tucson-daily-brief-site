@@ -75,6 +75,11 @@ EDITOR_TIPS = Path(__file__).resolve().parent / "pipeline" / "EDITOR-TIPS.md"
 # Output dir consumed downstream by run_podcast.sh (resolve_brief). Left under
 # ~/.openclaw/workspace by design: a pipeline contract, not version-controlled config.
 BRIEFINGS_DIR = HOME / ".openclaw/workspace/briefings"
+# Provenance-gate working dir (gitignored): the source text each brief was built
+# from, plus the shadow log. Archiving the input is what makes a flag auditable
+# after the fact — RSS feeds roll over within a day or two, so it cannot be
+# reconstructed later. Not under BRIEFINGS_DIR: run_podcast.sh globs that path.
+GATE_ARCHIVE_DIR = Path(__file__).resolve().parent / "brief-inputs"
 
 CLAUDE_MODEL = "claude-sonnet-4-6"
 CLAUDE_API_URL = "https://api.anthropic.com/v1/messages"
@@ -493,6 +498,36 @@ def call_claude(prompt, api_key, max_tokens=4000):
 # Provenance footer — deterministic, Python owns the ground truth
 # ---------------------------------------------------------------------------
 
+def run_provenance_gate(body, sources, date_str):
+    """Check the draft's proper nouns against the source text, and archive both.
+
+    Never raises and never modifies the brief — a bug in the checker must not be
+    able to take down the 6 AM run. Archiving the source text is what makes the
+    shadow log auditable later: without it there is no way to re-derive what the
+    model was actually given.
+    """
+    try:
+        import provenance_gate as pg
+    except Exception as e:
+        print(f"  WARN: provenance gate unavailable: {e}", file=sys.stderr)
+        return
+
+    try:
+        GATE_ARCHIVE_DIR.mkdir(parents=True, exist_ok=True)
+        (GATE_ARCHIVE_DIR / f"{date_str}.sources.txt").write_text(sources)
+
+        result = pg.check(body, sources, mode=pg.Mode.SHADOW)
+        pg.log_jsonl(result, GATE_ARCHIVE_DIR / "shadow.jsonl", date_str)
+
+        print(f"  Provenance gate ({result.mode.value}): {result.summary()}", file=sys.stderr)
+        for f in result.alerts:
+            detail = f" — unverified {f.dropped!r}, sources support {f.supported!r}" \
+                if f.status is pg.Status.PARTIAL else " — no trace in sources"
+            print(f"    ⚠ {f.run}{detail}", file=sys.stderr)
+    except Exception as e:
+        print(f"  WARN: provenance gate failed (brief unaffected): {e}", file=sys.stderr)
+
+
 def build_footer(date_str, fetched, failed, skipped):
     succeeded = [n for n, c in fetched if c > 0]
     empty = [n for n, c in fetched if c == 0]
@@ -610,6 +645,15 @@ def main():
     if not body:
         print("ERROR: synthesis failed", file=sys.stderr)
         sys.exit(1)
+
+    # Provenance gate. Runs against the exact source text the model was given, so
+    # there is no fetch-window drift to produce phantom flags. Shadow mode for
+    # now: classify and log, never alter the brief. See provenance_gate.py.
+    run_provenance_gate(
+        body,
+        sources="\n".join([items_block, weather_block, tips_block]),
+        date_str=brief_date.isoformat(),
+    )
 
     footer = build_footer(brief_date.isoformat(), fetched, failed, skipped)
     brief = body.strip() + "\n\n" + footer + "\n"
