@@ -218,4 +218,20 @@ Failure modes, billing detail, and the editor's-desk hook → `PIPELINE.md`.
 
 ## What's next
 
+**⏰ Dated task — review the provenance-gate shadow log, first week of August 2026.** The gate went live 2026-07-28 in shadow mode and starts logging 2026-07-29, so by Aug 1–7 there are ~3–9 days of data. Read it and decide whether to enforce:
+
+```bash
+cat brief-inputs/shadow.jsonl | python3 -m json.tool --json-lines   # or: jq . brief-inputs/shadow.jsonl
+```
+
+For each entry, check the flagged name against `brief-inputs/<date>.sources.txt` (the exact text the model was given) and judge: **real miss** (the name genuinely wasn't in the sources) or **false positive** (a place/org the person-shaped filter should have excluded). That splits three ways:
+
+- **Mostly real misses** → flip `Mode.SHADOW` → `Mode.ENFORCE` in `generate_brief.py`. PARTIAL findings then auto-trim ("David Barrett" → "Barrett"); UNGROUNDED still only alerts.
+- **Mostly false positives** → tune `_GENERIC_TAIL` / `_PLACE_PREFIX` / `person_shaped()` in `provenance_gate.py` first, then re-review. Do not enforce on a noisy filter.
+- **Empty log** → good news, and worth saying out loud: it's evidence the 7/23 fabrication was genuinely rare rather than merely unnoticed. Leave it in shadow as cheap insurance; revisit only if another one surfaces.
+
+Also queued off the same work: inject `pipeline/local_names.json` into `SYNTHESIS_PROMPT` (lowers the error rate; is **not** a control — see `PIPELINE.md`), and decide whether the newsletter needs its own name check. Note the gate cannot catch an error the newsletter *inherited* from a brief — it reads as grounded there — so the brief gate is the real protection for both.
+
+While reviewing, also confirm the **7:30 AM publication** (moved from 6:10 on 2026-07-28) is still worth the latency; the plan is to pare it back toward ~6:45 once the alert volume is known.
+
 **The next big project is short-form video** (`SHORT-FORM-VIDEO.md` + `MARKETING.md`) — specifically the distribution loop: two social packages per week for eight consecutive weeks, one moat package + one reach package, each converting toward the newsletter. Everything else in `ROADMAP.md` is captured and gated behind it. Don't start those mid-stream without a user go-ahead.
