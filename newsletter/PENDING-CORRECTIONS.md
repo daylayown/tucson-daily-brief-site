@@ -13,11 +13,21 @@ Delete an entry once it has actually sent.
 **Placement:** fold into the opening paragraph, before `## What's worth knowing`.
 
 ```markdown
-One housekeeping note before we start: last week I named the winner of the
-Oro Valley mayor's race as David Barrett. It's **Melanie Barrett**, the
-town's vice mayor, who won 57–43 over Mark Napier. My error, now fixed on
-the site. Apologies to Mayor-elect Barrett.
+Correction: due to a production error, last week's newsletter named the
+winner of the Oro Valley mayor's race as David Barrett. **She is Melanie
+Barrett**, the town's vice mayor. Fixed on the site.
 ```
+
+**Keep "she."** The wrong first name didn't just misspell her — it implied a
+man won the race. A correction that only swaps "David" for "Melanie" leaves a
+reader who skimmed the original still holding the wrong picture. One pronoun
+fixes that at no cost in length.
+
+**On "production error":** in newspaper convention that usually means
+typesetting, layout, or printing — "an editing error" is the closer fit for a
+name introduced in the writing chain. Either is defensible and both are
+routine; use whichever reads better. What matters is that the correct name
+leads.
 
 **Background:** the 2026-07-26 newsletter and the 2026-07-23 daily brief both
 named the Oro Valley mayor-elect as "David Barrett." The winner is Melanie
