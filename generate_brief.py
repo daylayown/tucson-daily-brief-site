@@ -40,7 +40,9 @@ import html
 import json
 import os
 import re
+import subprocess
 import sys
+import tempfile
 import time
 import urllib.error
 import urllib.request
@@ -80,6 +82,12 @@ BRIEFINGS_DIR = HOME / ".openclaw/workspace/briefings"
 # after the fact — RSS feeds roll over within a day or two, so it cannot be
 # reconstructed later. Not under BRIEFINGS_DIR: run_podcast.sh globs that path.
 GATE_ARCHIVE_DIR = Path(__file__).resolve().parent / "brief-inputs"
+# Provenance alerts go out at 6:00, ten minutes ahead of run_podcast.sh, so there
+# is a window to catch a bad name before it publishes. This does NOT conflict with
+# the "Telegram only via run_podcast.sh" rule — that rule exists to stop the
+# *brief itself* being sent twice (PIPELINE.md). An alert is a distinct message
+# type, same as the FOIA and agenda alerts.
+SEND_TELEGRAM = HOME / ".openclaw/skills/tucson-daily-brief/scripts/send_telegram.py"
 
 CLAUDE_MODEL = "claude-sonnet-4-6"
 CLAUDE_API_URL = "https://api.anthropic.com/v1/messages"
@@ -524,8 +532,54 @@ def run_provenance_gate(body, sources, date_str):
             detail = f" — unverified {f.dropped!r}, sources support {f.supported!r}" \
                 if f.status is pg.Status.PARTIAL else " — no trace in sources"
             print(f"    ⚠ {f.run}{detail}", file=sys.stderr)
+
+        if result.alerts:
+            send_provenance_alert(result, date_str, pg.Status)
     except Exception as e:
         print(f"  WARN: provenance gate failed (brief unaffected): {e}", file=sys.stderr)
+
+
+def send_provenance_alert(result, date_str, Status):
+    """Telegram the person-shaped alerts, ~10 minutes before the brief publishes.
+
+    Non-fatal by construction: a Telegram outage must never stop a brief that is
+    otherwise fine. Quiet when there is nothing to report — an alert channel that
+    fires every morning gets muted, and then it protects nothing.
+    """
+    if not SEND_TELEGRAM.exists():
+        print("  WARN: send_telegram.py not found, skipping alert", file=sys.stderr)
+        return
+
+    n = len(result.alerts)
+    lines = [
+        f"🔍 BRIEF NAME CHECK — {n} unverified name{'s' if n != 1 else ''} "
+        f"in the {date_str} brief\n",
+    ]
+    for f in result.alerts:
+        if f.status is Status.PARTIAL:
+            lines.append(f"⚠️ “{f.run}”")
+            lines.append(f"   sources support “{f.supported}” — “{f.dropped}” appears nowhere")
+        else:
+            lines.append(f"🔴 “{f.run}”")
+            lines.append("   no trace in any source fetched for this brief")
+    lines.append(
+        "\nThese names are in the draft but not in the source text it was written "
+        "from, so they may have been invented. The brief publishes at 6:10 — check "
+        "before then if you can.\n"
+        "Shadow mode: nothing was changed automatically."
+    )
+
+    with tempfile.NamedTemporaryFile("w", suffix=".md", prefix="name-check-",
+                                     delete=False, encoding="utf-8") as fh:
+        fh.write("\n".join(lines))
+        tmp = fh.name
+    try:
+        sys.stdout.flush()  # keep parent/child output ordered in cron logs
+        subprocess.run([sys.executable, str(SEND_TELEGRAM), tmp], check=False)
+    except Exception as e:
+        print(f"  WARN: Telegram alert failed (non-fatal): {e}", file=sys.stderr)
+    finally:
+        os.unlink(tmp)
 
 
 def build_footer(date_str, fetched, failed, skipped):

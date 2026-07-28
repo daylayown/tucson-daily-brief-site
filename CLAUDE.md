@@ -89,6 +89,9 @@ These are the ones that cost something when forgotten:
 ├── check_agendas.sh             # 8 AM cron: 4 miners + Spotted + dev watch + auto-publish + push
 ├── public_record_liquor.py      # Spotted pipeline: liquor filings out of agenda references
 ├── foia_lead_spotter.py         # Weekly: trawl news-reports/ for records-request leads → web-search verify facts/prior-disclosure → draft §39-121 emails → Telegram
+├── promise_tracker.py           # "What They Promised" evidence ledger: transcript → validated-verbatim promise rows → human review (ORIGINAL-JOURNALISM.md)
+├── praise_tracker.py            # Praise × pending business: officials praising named private entities, joined vs agendas/filings (ORIGINAL-JOURNALISM.md)
+├── promise-ledger/              # Working dir (gitignored): promises.sqlite + review sheets
 ├── run_foia_spotter.sh          # Cron wrapper (Mondays 9:30 AM)
 ├── records-requests/            # Working dir (gitignored — repo is public, unsent requests stay local)
 ├── dev_watch_marana.py          # Marana development watch (ArcGIS poll/diff)
@@ -203,7 +206,7 @@ The homepage is a **zoned entry hall** (featured brief + cross-stream cards + To
 
 The blog post runs **before and independently of** the podcast, so a podcast failure never blocks the blog. Each distribution step is non-fatal. `atd` must be enabled (`systemctl enable --now atd`) for live recordings.
 
-**Key dependencies:** `pdftotext` (poppler-utils) for Tucson PDFs; `at` + `atd`; `ANTHROPIC_API_KEY` in `~/.config/environment.d/anthropic.conf`; Telegram credentials. Telegram delivery happens **only** through `run_podcast.sh` → `send_telegram.py`.
+**Key dependencies:** `pdftotext` (poppler-utils) for Tucson PDFs; `at` + `atd`; `ANTHROPIC_API_KEY` in `~/.config/environment.d/anthropic.conf`; Telegram credentials. **Delivery of the brief itself** happens only through `run_podcast.sh` → `send_telegram.py` (OpenClaw's own cron delivery was disabled to stop duplicate sends). Other pipelines — `ai_reporter.py`, `foia_lead_spotter.py`, `check_agendas.sh`, `schedule_recording.py`, `poll_tucson_water.py`, and the brief's provenance gate — send their own *alerts* through the same `send_telegram.py` script. That's fine; the rule is about not sending the brief twice, not about restricting the channel.
 
 Failure modes, billing detail, and the editor's-desk hook → `PIPELINE.md`.
 
