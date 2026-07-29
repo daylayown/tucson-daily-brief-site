@@ -33,3 +33,36 @@ Distilled from an external strategy review (full docs live **outside the repo** 
 - **Responsiveness:** market as concrete questions first ("How long does Tucson take to close 311 reports?"), brand the "Index" only after the constituent measurements have earned trust. Amend `responsiveness/PLANNING.md` framing when building.
 - **OPEN — Spanish sequencing:** the review argues for 2 Spanish social posts/week *before* the full tucsonenbreve.com fork (contradicts the current full-fork plan in `TUCSONENBREVE.md`). Needs a deliberate decision, not drift.
 - **✅ "Buried in the Agenda" UN-SHELVED — weekly auto-short SHIPPED 2026-07-11.** `social/generate_agenda_short.py`, run by `check_agendas.sh` every **Monday** after the agenda miners (so fresh previews are included). Flow: scan `agenda-watch/*-preview.md` for meetings in the next 7 days → Sonnet picks the most consequential under-covered item (consent-calendar/big-dollar/low-visibility signals) and writes a 4-beat hedged script (Sol formula: fact → where buried → why it matters → vote date) → **a second Sonnet fact-check pass verifies every claim against the preview text** (added because single-pass runs intermittently speculated consequences not in the source; the verifier catches + rewrites them) → render with the dark `buried-in-the-agenda` series preset → **publish public to YouTube Shorts unattended** (user call 2026-07-11: full-auto, same posture as the daily Short while YouTube-only) → Telegram notification with the URL so a bad one can be pulled fast. Skips cleanly on weeks with no upcoming meetings or no genuinely strong item (the model may return "nothing this week"). Dedup state: `social/cards/.used-agenda-items.json`. Caption carries the meeting-preview URL with the UTM convention (`utm_source=youtube&utm_medium=short&utm_campaign=buried-in-the-agenda`). Cost ~2.5¢/week (two Sonnet calls).
+
+## Editorial register: light vs heavy (2026-07-29)
+
+**TDB is a civic monitor. It cannot become a schoolmarm** haranguing readers
+with every news item. Coverage balances "light" and "heavy," and leads with
+being **maximally helpful, with a positive attitude** — especially on social.
+
+This is a survival constraint, not a preference. Newsrooms that pitch
+everything in the heavy register go out of business, because nobody wants to
+read that all the time.
+
+What it looks like in practice:
+
+- **Instagram is a positive platform.** "Fiber internet is coming to Tucson"
+  beats a card built around what the city and the company aren't saying, even
+  when both are accurate.
+- **Rigor is practiced, not displayed.** Verify to the usual bar, then attribute
+  lightly on the card ("the company says $200M") and put the sourcing trail in
+  the caption. This is the existing `SOCIAL-CARDS.md` rule — attribution lives
+  in the caption, not on the card — and it exists for exactly this reason.
+- **Watch the failure shape:** turning a neutral or good-news item into an
+  exposé, stacking caveats, or spending a slide on media criticism. If a card's
+  job is to inform, let it inform.
+- **Heavy work still ships.** Accountability reporting is the moat; it just
+  doesn't set the tone on every surface. The weekend rule (newsletter promo +
+  light/fun only) is the sharpest case of this.
+- A warm behind-the-scenes beat is usually how to keep depth without weight —
+  "we read the agenda so you don't have to" rather than "here's what they buried."
+
+Caught on the 2026-07-29 Wyyerd fiber cards, whose second slide originally
+separated the public record from the press release under the head "The record,
+and the pitch." Accurate, and far too sour for the feed.
+
