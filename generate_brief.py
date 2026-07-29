@@ -269,9 +269,21 @@ def fetch_weather(sources):
             r.raise_for_status()
             for feat in r.json().get("features", []):
                 p = feat.get("properties", {})
+                # `onset` is load-bearing: NWS headlines read "issued <now> until
+                # <end>" with no start, so an alert that has not begun yet looks
+                # active. On 2026-07-29 that produced "Extreme Heat Warning in
+                # effect through Sunday" for a warning that started the next
+                # morning. The start time is in `description` under WHEN, but 600
+                # characters in — derive it here rather than hoping the model
+                # reads that far.
+                onset = p.get("onset") or p.get("effective") or "?"
+                ends = p.get("ends") or p.get("expires") or "?"
                 alert_lines.append(
                     f"- {p.get('event','Alert')}: {p.get('headline','')} "
-                    f"(severity {p.get('severity','?')}, ends {p.get('expires','?')})\n"
+                    f"(severity {p.get('severity','?')}, "
+                    f"STARTS {onset}, ENDS {ends})\n"
+                    f"  NOTE: if STARTS is in the future, this alert is NOT yet in "
+                    f"effect — say when it begins, not that it is in effect now.\n"
                     f"  {clean_text(p.get('description',''))[:600]}"
                 )
         except Exception as e:
