@@ -10,7 +10,7 @@ CLAUDE.md is the index. Detail lives in these; **when you learn something durabl
 
 | Doc | Covers |
 |---|---|
-| `PIPELINE.md` | Daily brief renderer internals, the 6:00/7:30 AM cron chain, Anthropic billing posture, recurring failure modes (mis-save, no-network, weather-alert briefs, NWS fire-zone fix, editor's desk, self-citation gap) |
+| `PIPELINE.md` | Daily brief renderer internals, the 6:00/6:30 AM cron chain, Anthropic billing posture, recurring failure modes (mis-save, no-network, weather-alert briefs, NWS fire-zone fix, editor's desk, self-citation gap) |
 | `MEETING-WATCH-PIPELINE.md` | The four agenda miners, publishing flow, slug routing, canceled-meeting guard, renderer bugs |
 | `AI-REPORTER.md` | Live + VOD transcription → news report: architecture, usage, schema, scheduler, stream URLs, STT research |
 | `NAMES-BIBLE.md` | `pipeline/local_names.json` — canonical names, Deepgram misreads, the pronouns rule, the queued audit |
@@ -198,7 +198,7 @@ The homepage is a **zoned entry hall** (featured brief + cross-stream cards + To
 | Time (MST) | Job | Log |
 |---|---|---|
 | 6:00 AM daily | `generate_brief.py` via `run_brief.sh` — fetch sources → one Sonnet synthesis call → save to canonical path (retry loop, 5 attempts/60s) | — |
-| 7:30 AM daily | `run_podcast.sh` (moved from 6:10 on 2026-07-28 — see the review window in `PIPELINE.md`) — Telegram → blog post + push → daily YouTube Short → podcast script (Haiku) → ElevenLabs TTS → RSS/R2 → YouTube | `/tmp/podcast-gen.log` |
+| 6:30 AM daily | `run_podcast.sh` (6:10 → 7:30 → **6:30**, both moves 2026-07-28; ~30-min provenance-review window — see `PIPELINE.md`) — Telegram → blog post + push → daily YouTube Short → podcast script (Haiku) → ElevenLabs TTS → RSS/R2 → YouTube | `/tmp/podcast-gen.log` |
 | 8:00 AM daily | `check_agendas.sh` — 4 agenda miners + Spotted + dev watch + auto-schedule live recordings (`ENABLE_AUTO_SCHEDULE=1`); **Mondays** also publish the weekly "Buried in the Agenda" Short | `/tmp/agenda-check.log` |
 | 8:45 AM daily | `refresh_ask_index.sh` — rebuild RAG index + `fly deploy` (baked index would otherwise freeze answers) | `/tmp/ask-index-refresh.log` |
 | 9:30 AM Mon | `run_foia_spotter.sh` — FOIA Lead Spotter: scan new published news reports for records-request leads, **web-search-verify each lead** (facts accurate? already public? — catches AI-paraphrased program names from our own reports), draft A.R.S. § 39-121 request emails to `records-requests/drafts/`, Telegram alert. **Nothing sends automatically** — human reviews and sends from `nicholas@daylayown.org` | `/tmp/foia-spotter.log` |
@@ -233,6 +233,6 @@ For each entry, check the flagged name against `brief-inputs/<date>.sources.txt`
 
 Also queued off the same work: inject `pipeline/local_names.json` into `SYNTHESIS_PROMPT` (lowers the error rate; is **not** a control — see `PIPELINE.md`), and decide whether the newsletter needs its own name check. Note the gate cannot catch an error the newsletter *inherited* from a brief — it reads as grounded there — so the brief gate is the real protection for both.
 
-While reviewing, also confirm the **7:30 AM publication** (moved from 6:10 on 2026-07-28) is still worth the latency; the plan is to pare it back toward ~6:45 once the alert volume is known.
+While reviewing, note the publication time settled at **6:30 AM** (6:10 → 7:30 in the morning of 2026-07-28, pared back to 6:30 that evening at the user's call) — the provenance-review window is now ~30 minutes after the ~6:01 alert.
 
 **The next big project is short-form video** (`SHORT-FORM-VIDEO.md` + `MARKETING.md`) — specifically the distribution loop: two social packages per week for eight consecutive weeks, one moat package + one reach package, each converting toward the newsletter. The moat package is now specced: the **geographic editions** ("What to Watch: Marana / Oro Valley"), a personalization-by-portfolio experiment timed to Meta's video-first feed pivot — framework locked 2026-07-28 in `SHORT-FORM-VIDEO.md`. Everything else in `ROADMAP.md` is captured and gated behind it. Don't start those mid-stream without a user go-ahead.

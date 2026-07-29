@@ -335,4 +335,52 @@ $BIA_URL"
     fi
 fi
 
+# --- Weekly geographic editions: "What to Watch: Marana / Oro Valley" (Mondays) ---
+# Personalization-by-portfolio experiment (SHORT-FORM-VIDEO.md § Geographic
+# editions). Renders each town's weekly ~25s edition from miner output
+# (deterministic lead ladder + grounded phrasing + verify pass), auto-publishes
+# to YouTube Shorts (sanctioned full-auto surface), and Telegrams the MP4 path
+# + ready-to-paste caption for the MANUAL Facebook/Instagram post — manual
+# posting is the human-review gate for Meta surfaces. A skipped town (no
+# meeting, no radar items) is normal and logged. Non-fatal on failure.
+if [ "$(date +%u)" = "1" ]; then
+    for TOWN in marana orovalley; do
+        echo "Monday: generating '$TOWN' edition..."
+        ED_OUTPUT=$(python3 social/generate_edition_short.py "$TOWN" --publish 2>&1) || true
+        echo "$ED_OUTPUT"
+        ED_LINE=$(printf '%s\n' "$ED_OUTPUT" | grep '^EDITION-RENDERED' | tail -1 || true)
+        ED_SKIP=$(printf '%s\n' "$ED_OUTPUT" | grep '^EDITION-SKIPPED' | tail -1 || true)
+        YT_LINE=$(printf '%s\n' "$ED_OUTPUT" | grep '^SHORT-PUBLISHED' | tail -1 || true)
+        if [ -n "$ED_LINE" ]; then
+            IFS=$'\t' read -r _tag ED_TOWN ED_MP4 ED_TITLE <<< "$ED_LINE"
+            ED_CAPTION=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1].replace('.mp4','.json')))['caption'])" "$ED_MP4" 2>/dev/null || true)
+            YT_NOTE=""
+            if [ -n "$YT_LINE" ]; then
+                IFS=$'\t' read -r _t _title YT_URL <<< "$YT_LINE"
+                YT_NOTE="Published to YouTube Shorts: $YT_URL
+"
+            fi
+            NOTIFY_MSG="🗺️ $ED_TOWN edition rendered — post it to Facebook + Instagram
+
+$ED_TITLE
+
+Video file: $ED_MP4
+${YT_NOTE}
+Caption to paste (add the town's location tag when posting):
+
+$ED_CAPTION
+
+Reminder: log reach/watch-time/follows in social/editions-log.md after ~48h."
+            TMPFILE=$(mktemp /tmp/edition-notify-XXXXX.md)
+            printf '%s\n' "$NOTIFY_MSG" > "$TMPFILE"
+            if [ -f "$SEND_TELEGRAM" ]; then
+                python3 "$SEND_TELEGRAM" "$TMPFILE" || echo "WARNING: edition Telegram notification failed (non-fatal)"
+            fi
+            rm -f "$TMPFILE"
+        elif [ -n "$ED_SKIP" ]; then
+            echo "Edition skipped: $ED_SKIP"
+        fi
+    done
+fi
+
 echo "$(date): Done."

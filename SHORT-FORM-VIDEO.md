@@ -77,7 +77,13 @@ Beat 7 (last)   CTA card, inside the Reels safe zone: "Council meets Tuesday,
 
 **Phase 2, earned sequel only: the personal video brief.** If editions demonstrate demand, the addressable version reuses the Matchday Inference stack wholesale: signup form (town/topics/length) → FastAPI+SQLite on Fly.io → weekly per-subscriber render → Cloudflare R2 at unguessable token URLs (custom subdomain — Gmail bounces r2.dev links) → transactional email teaser via Resend (NOT Buttondown — every recipient gets a different link). Do not build ahead of the data.
 
-**Build list (new work only — everything else is inherited):** `editions` SERIES preset + per-town accent config; boundary-SVG cold-open beat (polygons from town ArcGIS); one music theme; beat-script generator implementing the priority ladder + word caps; the safe-zone CTA fix (already an open item below); the measurement log file.
+**BUILT 2026-07-28 (same day the framework locked)** — first scheduled run Monday 2026-08-03 via `check_agendas.sh`:
+- `render_short.py`: `edition-marana` / `edition-orovalley` SERIES presets (light theme, adobe/sage accents, `safe_zone` footer at 380px), three new scene kinds (`boundary` cold-open on dusk, `title` card, `ticker`), optional per-scene `dur` (editions run ~22–26s), small `meta` line on CTA scenes (meeting day/time, only when derivable from the preview).
+- Boundary polygons: `social/assets/boundaries/{marana,orovalley}.json` — Census TIGERweb incorporated-place geometry (BASENAME + STATE='04'), cached, rendered as stroke-only SVG + centroid pin. No map tiles, no attribution burden.
+- Music: `social/assets/music/tdb-editions.mp3` — ElevenLabs Music (music_v2, force_instrumental, 35s, steady/civic), generated 2026-07-28.
+- `generate_edition_short.py`: the ladder (topic-flag → hearing/rezoning → top item → dev-led "no council this week" → EDITION-SKIPPED), radar pool from published Around Town + Spotted pages (mtime window **guarded by filename date ≤90 days** — site-wide HTML sweeps touch every mtime and would otherwise resurface old cases), grounded Sonnet script + verify pass (BIA pattern), hard caps in code (lead ≤90 chars fatal / >70 warns; ticker truncated at 60), standing education line baked into every caption, meeting meta line derived from filename date + time regex over the preview (never invented).
+- `check_agendas.sh` Monday block: renders both towns after the miners, `--publish` to YouTube Shorts, Telegram per edition with the MP4 path + paste-ready caption for the **manual FB/IG post** (the review gate), reminder to fill `social/editions-log.md` (the measurement log) after ~48h.
+- First test renders (2026-07-28, dev-led week): Marana led with the Avra Valley ATC tower, OV with a 56-lot Rancho Vistoso subdivision — both from real pipeline data, ~22s, h264+aac.
 
 ## Decision: build our own thin publish layer; skip paid schedulers
 
