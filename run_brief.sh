@@ -3,7 +3,7 @@
 #
 # Replaces the OpenClaw 6 AM briefing agent (disabled 2026-06-25 in
 # ~/.openclaw/cron/jobs.json). Deterministic: generate_brief.py reads
-# sources.json + EDITOR-TIPS.md, fetches every feed, runs ONE Sonnet synthesis
+# sources.json + EDITOR-TIPS.md, fetches every feed, runs ONE Claude synthesis
 # call, and writes the CANONICAL brief that run_podcast.sh (6:10) consumes:
 #   ~/.openclaw/workspace/briefings/tucson-brief-YYYY-MM-DD.md
 #

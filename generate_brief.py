@@ -89,7 +89,20 @@ GATE_ARCHIVE_DIR = Path(__file__).resolve().parent / "brief-inputs"
 # type, same as the FOIA and agenda alerts.
 SEND_TELEGRAM = HOME / ".openclaw/skills/tucson-daily-brief/scripts/send_telegram.py"
 
-CLAUDE_MODEL = "claude-sonnet-4-6"
+# EXPERIMENT (started 2026-07-29, review ~2026-08-05): running the brief
+# synthesis on Opus 5 to see whether adaptive thinking reduces the comprehension
+# errors that produced three corrections on 2026-07-29 alone ("unanimously" for
+# a 4-0-with-abstention, "in effect" for a warning that had not started, and
+# "remain to be decided" for a source that said "remain intact").
+# To revert: set this back to "claude-sonnet-4-6". Nothing else needs changing —
+# the response parsing and token budget below are correct for both models.
+CLAUDE_MODEL = "claude-opus-5"
+
+# Opus 5 thinks by default and max_tokens caps thinking + response text
+# TOGETHER. The old 4000 was sized for Sonnet 4.6 running thinking-off; on a
+# thinking model that truncates the brief mid-story. Kept non-streaming, so stay
+# near ~16k to avoid HTTP timeouts on the 180s socket.
+MAX_SYNTHESIS_TOKENS = 16000
 CLAUDE_API_URL = "https://api.anthropic.com/v1/messages"
 ANTHROPIC_VERSION = "2023-06-01"
 
@@ -472,7 +485,8 @@ If an item's LINK is "(none)", cite the source name without a link. Never link t
 MAX_RETRIES = 4
 
 
-def call_claude(prompt, api_key, max_tokens=4000):
+def call_claude(prompt, api_key, max_tokens=None):
+    max_tokens = max_tokens or MAX_SYNTHESIS_TOKENS
     body = json.dumps({
         "model": CLAUDE_MODEL,
         "max_tokens": max_tokens,
@@ -492,9 +506,37 @@ def call_claude(prompt, api_key, max_tokens=4000):
         try:
             with urllib.request.urlopen(req, timeout=180) as resp:
                 result = json.loads(resp.read())
-                content = result.get("content", [])
-                if content and content[0].get("type") == "text":
-                    return content[0]["text"]
+
+                # A policy decline is an HTTP 200, not an error: stop_reason is
+                # "refusal" and content is empty or partial. Check it before
+                # reading content.
+                if result.get("stop_reason") == "refusal":
+                    cat = (result.get("stop_details") or {}).get("category")
+                    print(f"  ERROR: Claude declined the request (category {cat!r})",
+                          file=sys.stderr)
+                    return None
+
+                # Scan for the first text block rather than assuming content[0].
+                # Thinking-capable models put a thinking block first — with
+                # display "omitted" its text is empty but the block is still
+                # there, so content[0]["type"] == "text" is False and the old
+                # code returned None, silently killing the 6 AM brief.
+                # Instrument the thinking experiment: how much did it think,
+                # and did it help? thinking_tokens is the whole question.
+                u = result.get("usage", {}) or {}
+                think = (u.get("output_tokens_details") or {}).get("thinking_tokens", 0)
+                print(f"  Synthesis: model={CLAUDE_MODEL} in={u.get('input_tokens')} "
+                      f"out={u.get('output_tokens')} thinking={think} "
+                      f"stop={result.get('stop_reason')}", file=sys.stderr)
+
+                for block in result.get("content", []):
+                    if block.get("type") == "text" and block.get("text"):
+                        return block["text"]
+
+                if result.get("stop_reason") == "max_tokens":
+                    print("  ERROR: response hit max_tokens with no text block — "
+                          "thinking consumed the budget; raise MAX_SYNTHESIS_TOKENS",
+                          file=sys.stderr)
                 return None
         except urllib.error.HTTPError as e:
             if e.code != 429 and 400 <= e.code < 500:
@@ -537,7 +579,7 @@ def run_provenance_gate(body, sources, date_str):
         (GATE_ARCHIVE_DIR / f"{date_str}.sources.txt").write_text(sources)
 
         result = pg.check(body, sources, mode=pg.Mode.SHADOW)
-        pg.log_jsonl(result, GATE_ARCHIVE_DIR / "shadow.jsonl", date_str)
+        pg.log_jsonl(result, GATE_ARCHIVE_DIR / "shadow.jsonl", date_str, model=CLAUDE_MODEL)
 
         print(f"  Provenance gate ({result.mode.value}): {result.summary()}", file=sys.stderr)
         for f in result.alerts:

@@ -334,8 +334,15 @@ def _repairable(f: Finding) -> bool:
 # Logging
 # --------------------------------------------------------------------------
 
-def log_jsonl(result: Result, path, date_str: str) -> None:
-    """Append one record per run. Shadow-mode data for tuning before enforcement."""
+def log_jsonl(result: Result, path, date_str: str, model: str = "") -> None:
+    """Append one record per run. Shadow-mode data for tuning before enforcement.
+
+    `model` records which model produced the brief. Without it the log silently
+    mixes runs from different models, which matters because two experiments now
+    share this file and this window: the enforce/tune decision on the gate
+    itself, and the 2026-07-29 switch of the synthesis call to Opus 5. Entries
+    written before this field existed are Sonnet 4.6.
+    """
     stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
     with open(path, "a", encoding="utf-8") as fh:
         for f in result.suspect:
@@ -343,6 +350,7 @@ def log_jsonl(result: Result, path, date_str: str) -> None:
                 "logged_at": stamp,
                 "brief_date": date_str,
                 "mode": result.mode.value,
+                "model": model,
                 "run": f.run,
                 "status": f.status.value,
                 "supported": f.supported,
