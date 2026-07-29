@@ -1,11 +1,9 @@
 {
   "monitor": "tucson-daily-brief",
   "description": "Hyper-local news feeds for Tucson/Pima County",
-  "last_updated": "2026-04-12",
+  "last_updated": "2026-07-29",
   "notes": "Some URLs may need verification. Agent should test each feed on first run and report failures.",
-
   "sources": {
-
     "tier_1_primary": [
       {
         "name": "Arizona Daily Star",
@@ -13,8 +11,7 @@
         "url": "https://tucson.com/search/?f=rss&t=article&l=25",
         "category": "newspaper",
         "priority": "high",
-        "status": "disabled",
-        "notes": "DISABLED 2026-06-14 (trial) — the main feed is mostly national/wire/sports content and only ~2 of 25 items overlap the local feed, while its size contributed to context compaction dropping Daily Star content mid-run. Keeping only the local-news feed below. To re-enable, remove this status field. Section-specific feeds available by adding &c= parameter; headlines/summaries come through RSS even on paywalled articles."
+        "notes": "Re-enabled 2026-07-29. Disabled 2026-06-14 as an OpenClaw compaction workaround; OpenClaw removed 2026-06-25, so that reason is void. Sampled 2026-07-29: ~6/25 sports, ~8/25 national wire/opinion — noisy, but it surfaced a $176M claim against Pima County alleging reckless policing that the Local News feed missed. Noise is now only tokens."
       },
       {
         "name": "Arizona Daily Star - Local News",
@@ -55,7 +52,7 @@
         "category": "newspaper",
         "priority": "high",
         "status": "broken",
-        "notes": "BROKEN as of 2026-04-12 — entire site is behind Cloudflare managed challenge (403 on all paths, all user agents). No RSS reader can reach this. Independent nonprofit newsroom, would be high-value if they fix it. Check periodically."
+        "notes": "Marked broken as 'Cloudflare-walled' — that is wrong. Probed 2026-07-29: HTTP 200 with body 'Database Error: Unable to connect to the database.' Their server, intermittent. URL is correct. Retry periodically; clear status once it serves entries."
       },
       {
         "name": "AZPM",
@@ -84,7 +81,6 @@
         "notes": "Added 2026-06-25 (verified fresh). Newer Tucson nonprofit newsroom, active. Ghost CMS. Note: tucsonspotlight.org/feed/ 302-redirects here — use this final www + /rss/ URL directly. Also publishes a Spanish 'El Foco' tag feed for the future Tucson en Breve fork."
       }
     ],
-
     "tier_2_broadcast": [
       {
         "name": "KGUN 9 (ABC)",
@@ -111,7 +107,6 @@
         "notes": "Added 2026-06-25 (verified fresh). Gray Television CBS affiliate, Arc Publishing feed. Low item count per fetch (2-4) — benefits from frequent polling. Main feed (drop /category/news) adds some syndicated items."
       }
     ],
-
     "tier_2_officials": [
       {
         "name": "Sen. Ruben Gallego",
@@ -132,7 +127,6 @@
         "notes": "Arizona's senior U.S. Senator. Promotional account — scan for official statements, policy positions, and Arizona-specific news. Not a primary news source; use for context and quotes when relevant to Tucson stories."
       }
     ],
-
     "tier_2_institutional": [
       {
         "name": "City of Tucson - Media (GovDelivery)",
@@ -140,7 +134,8 @@
         "url": "https://public.govdelivery.com/topics/AZTUCSON_9/feed.rss",
         "category": "government",
         "priority": "high",
-        "notes": "Added 2026-06-25 (verified fresh — newest item Jun 24 2026). Official City of Tucson press-release feed. tucsonaz.gov itself hard-403s (WAF), but the AZTUCSON GovDelivery account exposes ~40 keyless per-topic RSS feeds; topic 9 = Media. IMPORTANT: TPD and TFD have no dedicated crime/incident RSS — their press releases land in THIS feed (commingled with all City PR), so this is the best primary-source public-safety signal available. Other live topics if more granularity is wanted later: _10 Transportation, _27 Mayor & Council, _41 Tucson Water (monthly)."
+        "notes": "Added 2026-06-25 (verified fresh — newest item Jun 24 2026). Official City of Tucson press-release feed. tucsonaz.gov itself hard-403s (WAF), but the AZTUCSON GovDelivery account exposes ~40 keyless per-topic RSS feeds; topic 9 = Media. IMPORTANT: TPD and TFD have no dedicated crime/incident RSS — their press releases land in THIS feed (commingled with all City PR), so this is the best primary-source public-safety signal available. Other live topics if more granularity is wanted later: _10 Transportation, _27 Mayor & Council, _41 Tucson Water (monthly). window_hours=96 set 2026-07-29: institutional feed, publishes every few weeks; the default 36h window never caught it.",
+        "window_hours": 96
       },
       {
         "name": "Tucson Electric Power (TEP) - News",
@@ -148,7 +143,8 @@
         "url": "https://www.tep.com/news/feed/",
         "category": "utility",
         "priority": "high",
-        "notes": "Added 2026-06-25 (verified fresh — newest item Jun 24 2026). Dominant electric utility for the metro; catch-all news feed (press releases, community, projects, rate/outage announcements). WordPress feed. (A live outage-count JSON exists via Kubra but the data path rotates each interval, so it's not a static feed — left out of sources for now.)"
+        "notes": "Added 2026-06-25 (verified fresh — newest item Jun 24 2026). Dominant electric utility for the metro; catch-all news feed (press releases, community, projects, rate/outage announcements). WordPress feed. (A live outage-count JSON exists via Kubra but the data path rotates each interval, so it's not a static feed — left out of sources for now.) window_hours=120 set 2026-07-29: institutional feed, publishes every few weeks; the default 36h window never caught it.",
+        "window_hours": 120
       },
       {
         "name": "Sun Tran (Tucson Transit)",
@@ -156,7 +152,8 @@
         "url": "https://www.suntran.com/feed/",
         "category": "transit",
         "priority": "high",
-        "notes": "Added 2026-06-25 (verified fresh — newest item Jun 12 2026). Official Tucson bus-system alerts and news (route closures, service changes). WordPress feed. Note: Sun Link streetcar shares this backend and is a duplicate — do not add it separately."
+        "notes": "Added 2026-06-25 (verified fresh — newest item Jun 12 2026). Official Tucson bus-system alerts and news (route closures, service changes). WordPress feed. Note: Sun Link streetcar shares this backend and is a duplicate — do not add it separately. window_hours=120 set 2026-07-29: institutional feed, publishes every few weeks; the default 36h window never caught it.",
+        "window_hours": 120
       },
       {
         "name": "Regional Transportation Authority (RTA Pima)",
@@ -164,7 +161,8 @@
         "url": "https://rtamobility.com/feed/",
         "category": "transit",
         "priority": "high",
-        "notes": "Added 2026-06-25 (verified fresh — newest item Jun 24 2026). Regional transportation oversight body (road projects, ribbon-cuttings, RTA Next planning). WordPress feed. Overlaps somewhat with PAG (pagregion.com/feed/), held in reserve."
+        "notes": "Added 2026-06-25 (verified fresh — newest item Jun 24 2026). Regional transportation oversight body (road projects, ribbon-cuttings, RTA Next planning). WordPress feed. Overlaps somewhat with PAG (pagregion.com/feed/), held in reserve. window_hours=120 set 2026-07-29: institutional feed, publishes every few weeks; the default 36h window never caught it.",
+        "window_hours": 120
       },
       {
         "name": "University of Arizona News - Campus News",
@@ -172,7 +170,8 @@
         "url": "https://news.arizona.edu/feed/rss/campus-news",
         "category": "university",
         "priority": "high",
-        "notes": "Added 2026-06-25 (verified fresh — newest item Jun 16 2026). The LIVE UA news feed. Replaces the legacy news.arizona.edu/rss.xml, which is a stale 'external-news' reprints feed frozen at Apr 26 2026 — do NOT use rss.xml."
+        "notes": "Added 2026-06-25 (verified fresh — newest item Jun 16 2026). The LIVE UA news feed. Replaces the legacy news.arizona.edu/rss.xml, which is a stale 'external-news' reprints feed frozen at Apr 26 2026 — do NOT use rss.xml. window_hours=120 set 2026-07-29: institutional feed, publishes every few weeks; the default 36h window never caught it.",
+        "window_hours": 120
       },
       {
         "name": "University of Arizona News - Arizona & the Southwest",
@@ -180,7 +179,8 @@
         "url": "https://news.arizona.edu/feed/rss/arizona-southwest",
         "category": "university",
         "priority": "high",
-        "notes": "Added 2026-06-25 (verified fresh — newest item Jun 18 2026). The most locally-relevant UA feed — desert, water, Colorado River, regional research. Pairs with the campus-news feed above."
+        "notes": "Added 2026-06-25 (verified fresh — newest item Jun 18 2026). The most locally-relevant UA feed — desert, water, Colorado River, regional research. Pairs with the campus-news feed above. window_hours=120 set 2026-07-29: institutional feed, publishes every few weeks; the default 36h window never caught it.",
+        "window_hours": 120
       },
       {
         "name": "Pima County Attorney (PCAO)",
@@ -189,10 +189,10 @@
         "category": "government",
         "priority": "medium",
         "insecure_tls": true,
-        "notes": "Added 2026-06-25 (verified fresh — newest item May 22 2026, 'Week 254'). County prosecutor's office WordPress feed. REQUIRES insecure_tls=true: the server presents an incomplete TLS chain (broken intermediate cert), so standard verification fails — generate_brief.py's fetch_rss honors this flag and passes verify=False for this source. Lower cadence (roughly weekly)."
+        "notes": "Added 2026-06-25 (verified fresh — newest item May 22 2026, 'Week 254'). County prosecutor's office WordPress feed. REQUIRES insecure_tls=true: the server presents an incomplete TLS chain (broken intermediate cert), so standard verification fails — generate_brief.py's fetch_rss honors this flag and passes verify=False for this source. Lower cadence (roughly weekly). window_hours=120 set 2026-07-29: institutional feed, publishes every few weeks; the default 36h window never caught it.",
+        "window_hours": 120
       }
     ],
-
     "tier_3_supplemental": [
       {
         "name": "Tucson Weekly",
@@ -252,7 +252,6 @@
         "notes": "Added 2026-06-25 (verified fresh). Santa Cruz County / border news south of Tucson. Lee/TownNews ?f=rss pattern. Filter for items with Tucson-metro relevance."
       }
     ],
-
     "tier_4_weather_safety": [
       {
         "name": "NWS Tucson - Active Alerts (downtown point)",
@@ -279,9 +278,7 @@
         "notes": "Returns metadata with links to hourly/daily forecasts for downtown Tucson (near Hotel Congress, 85701)."
       }
     ]
-
   },
-
   "editorial_priorities": [
     "1. Government actions (city council votes, county decisions, state legislation affecting Tucson)",
     "2. Public safety (police, fire, emergency alerts, severe weather)",
@@ -290,7 +287,6 @@
     "5. Community events (major events, cultural happenings)",
     "6. Weather (daily conditions, notable forecasts, seasonal patterns)"
   ],
-
   "delivery": {
     "channel": "telegram",
     "format": "text_summary_with_audio",
