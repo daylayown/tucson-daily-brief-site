@@ -1,14 +1,17 @@
 {
   "_meta": {
     "purpose": "Canonical names and places for Southern Arizona municipalities. Loaded by ai_reporter.py and injected into the news-report generation prompt to correct Deepgram mistranscriptions.",
-    "last_updated": "2026-07-14",
+    "last_updated": "2026-07-28",
     "deepgram_misreads_note": "Each known misread observed in a transcript should be added to the `deepgram_misreads` array. The pipeline will tell the LLM to replace any of these with the canonical form.",
     "verification_needed": [
       "regional.people: Suzanne Droubie (Pima County Assessor) — re-verify on pima.gov before relying on",
       "pima-county.people: Dan Hunt (CIO) — most recent direct confirmation was 2022; re-verify",
       "pima-county.people: pronouns unset for Carmine DeBonis Jr., Monica Perez, Art Cuaron, Jackson Jenkins, Dan Hunt — confirm on pima.gov before adding (do not infer from name)",
       "regional.people: pronouns unset for Suzanne Droubie, Joe Snell, Laurie Kierstead-Joseph, John Cross, JD Wallace",
-      "pima-county.people: Michael Racy — Deepgram rendered as 'Rossi'/'Rask'; confirm current Pima County lobbying contract status"
+      "pima-county.people: Michael Racy — Deepgram rendered as 'Rossi'/'Rask'; confirm current Pima County lobbying contract status",
+      "pima-county.people: Sarah Feld — named aloud in the 2026-07-28 IDA appointment motion as the affiliated-nonprofits representative (term to 2028). Transcript-only, no external confirmation; deliberately NOT added as canonical. Confirm via Legistar minutes or Clerk of the Board.",
+      "pima-county.people: Daniel Dempsey — nominated for Treasurer 2026-07-28 by Supervisor Cano (motion failed for lack of a second). Transcript-only spelling; withheld from the 2026-07-28 published report rather than printed unverified, same as Sarah Feld.",
+      "pima-county.people: pronouns unset for Nancy Cole, Patrick DeConcini, John H. Payne, Kenneth M. Silverman, Diane Quihuis, Paul Kraft — do not infer from name."
     ],
     "scope_note": "Regional bucket also holds state-level officials (e.g., Arizona Auditor General) since they appear at any municipality's meetings and don't belong in any single municipality bucket.",
     "pronouns_note": "Pronouns are injected so the model does not infer gender from a name (root cause of a 2026-07-14 Pima County draft misgendering Supervisor Andrés Cano). Only add pronouns that are evidenced — transcript honorifics/pronoun use, or documented public record. If unknown, leave the field off and add the person to verification_needed rather than guessing."
@@ -44,7 +47,9 @@
         "title": "Supervisor, District 4",
         "pronouns": "he/him",
         "deepgram_misreads": [
-          "Christie"
+          "Christie",
+          "Christine",
+          "Kristi"
         ]
       },
       {
@@ -58,7 +63,12 @@
           "Kano",
           "Cooner",
           "Koenig",
-          "kind of"
+          "kind of",
+          "Gunnel",
+          "Knoel",
+          "Connell",
+          "Conoco",
+          "Kamna"
         ]
       },
       {
@@ -165,6 +175,70 @@
           "Mister Roxy",
           "Racy Associates"
         ]
+      },
+      {
+        "canonical": "Jorge Soto",
+        "title": "Pima County Treasurer (appointed 2026-07-28)",
+        "pronouns": "he/him",
+        "deepgram_misreads": [
+          "Jorge So to",
+          "So to",
+          "Sotto",
+          "Solfo"
+        ]
+      },
+      {
+        "canonical": "Ellen Moulton",
+        "title": "Director, Pima County Industrial Development Authority (appointed 2026-07-28); retired Pima County Finance Department Director",
+        "pronouns": "she/her"
+      },
+      {
+        "canonical": "Patrick Cavanaugh",
+        "title": "Director, Pima County Industrial Development Authority (appointed 2026-07-28); retired Deputy Director, Pima County Economic Development",
+        "pronouns": "he/him",
+        "deepgram_misreads": [
+          "Patrick Kavanaugh",
+          "Kavanaugh"
+        ]
+      },
+      {
+        "canonical": "Nancy Cole",
+        "title": "Senior Advisor, County Administrator's Office"
+      },
+      {
+        "canonical": "Max W. Larnerd",
+        "title": "General Counsel, Pima County Industrial Development Authority (Miller, Pitt, Feldman & McAnally PC)",
+        "pronouns": "he/him",
+        "deepgram_misreads": [
+          "Max Larnard",
+          "Larnard"
+        ]
+      },
+      {
+        "canonical": "Patrick DeConcini",
+        "title": "Director, Pima County Industrial Development Authority (removed 2026-07-28)"
+      },
+      {
+        "canonical": "John H. Payne",
+        "title": "Vice President, Pima County Industrial Development Authority (removed 2026-07-28)",
+        "deepgram_misreads": [
+          "John Payne"
+        ]
+      },
+      {
+        "canonical": "Kenneth M. Silverman",
+        "title": "Secretary, Pima County Industrial Development Authority (removed 2026-07-28)",
+        "deepgram_misreads": [
+          "Ken Silverman"
+        ]
+      },
+      {
+        "canonical": "Diane Quihuis",
+        "title": "President, Pima County Industrial Development Authority (removed 2026-07-28)"
+      },
+      {
+        "canonical": "Paul Kraft",
+        "title": "Treasurer, Pima County Industrial Development Authority (removed 2026-07-28)"
       }
     ],
     "places": [
