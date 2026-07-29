@@ -3,7 +3,7 @@
 
 Location: Board of Supervisors' Hearing Room
 
-**42 substantive items** (25 for discussion, 17 on consent calendar)
+**43 substantive items** (26 for discussion, 17 on consent calendar)
 
 ---
 ## Public Hearings
@@ -32,11 +32,13 @@ Hearing - Plat Note Modification
 Co12-76-52, RANCHO DEL CERRO (LOT 430)
 Robert Workman and Janice Arnold, represented by Renzo Curay of Galileo Group, request a plat note modification for removal of the one-foot no-access easement along the northeasterly portion of Lot 430 (2.34 acres) of the Rancho Del Cerro subdivision (Bk. 28, Pg. 84). The subject property is zoned CR-1 (Single Residence) and is located southeast of the T-intersection of W. Paseo De Las Estrellas and N. Calle Del Risco, addressed as 5532 W. Placita Acantilada. Staff recommends APPROVAL WITH A CONDITION. (District 3) _Public Hearing Item_
 
-Attachments (4):
+Attachments (6):
 - DSD_Co12-76-52
 - DSD_Co12-76-52_CommLtr_Redacted
 - DSD_Co12-76-52_CommLtr
 - DSD_Co12-76-52_CommLtr_7-13-26_Redacted
+- DSD_Co12-76-52_CommLtr_7-27-26_Redacted
+- DSD_Co12-76-52_CommLtrs_7-28-26_Redacted
 
 [View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21593&GUID=B87E9772-56B0-414C-8E8A-2C737A09EAC1)
 
@@ -86,8 +88,9 @@ Attachments (1):
 ### **20.** Hearing - Code Text Amendment
 ORDINANCE NO. 2026 - 9, of the Board of Supervisors, relating to air quality; amending the Pima County Code by amending Title 17, Chapters 17.04, 17.08, 17.11, 17.12, 17.13, and 17.16, to update and adopt new incorporations by reference of the following federal regulations: Acid Rain, National Emission Standards For Hazardous Air Pollutants (NESHAP), New Source Performance Standards (NSPS), National Ambient Air Quality Standards, and other parts of Title 40 Code of Federal Regulations, and conforming definitions to State Rules. _Public Hearing Item_
 
-Attachments (1):
+Attachments (2):
 - DE_OrdCodeTextAmendment_Title17
+- DE_OrdCodeTextAmendment_Title17_Slides_7-28-26
 
 [View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21599&GUID=2CA7213E-AC3A-49AE-8BF0-4AB0EACE13EB)
 
@@ -139,7 +142,7 @@ Attachments (1):
 Pima County Treasurer
 Appointment of the Pima County Treasurer. _Agenda Item_
 
-Attachments (15):
+Attachments (17):
 - BOS_TRApptMemo_Redacted
 - BOS_TRAppt_CommentLtrs_Redacted
 - BOS_TRAppt_CommLtr_7-8-26_Redacted
@@ -170,16 +173,20 @@ Attachments (2):
 ### **25.** Pima County Industrial Development Authority
 Discussion/Direction/Action regarding Pima County Industrial Development Authority Organizational Structure and Board Membership and Composition. _Agenda Item_
 
-Attachments (1):
+Attachments (3):
 - CA_PCIndustrialDevelopmentAuthority
+- CA_CAMemo_PCIndustrialDevelopmentAuthority_7-23-26
+- CA_CAMemo_PCIndustrialDevelopmentAuthority_7-27-26
 
 [View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21643&GUID=2C86F705-04D9-47AA-9875-C2CDA16AFAC2)
 
 ### **26.** Petition for Relief of Taxes
 Pursuant to A.R.S. §42-11109(E), Grimaldi Enterprises, L.L.C., d.b.a. Via de Dios, has petitioned the Board of Supervisors for relief of taxes and associated interest/penalty for tax years 2024 and 2025, for Tax Parcel No. 112-02-0710. _Agenda Item_
 
-Attachments (1):
+Attachments (3):
 - CL_GrimaldiEnterprisesLLCdbaViadeDios
+- CL_RevisedAssessorReviewForms_7-24-26
+- CL_ContinuationRequest_7-24-26
 
 [View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21645&GUID=6B244A37-F9DC-4BA3-A447-65B88E69C500)
 
@@ -221,6 +228,13 @@ Attachments (1):
 - G-SD-103852
 
 [View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21631&GUID=BFD13E01-3251-40F1-BBEE-9E8DA1AD634E)
+
+### **1.** High Point Networks, L.L.C., Amendment No. 2, to provide for Mitel VoIP system maintenance and support, amend contractual language and scope of services, no cost (SC2400001724) Administering Department: Information Technology _Addendum _
+
+Attachments (1):
+- SC2400001724
+
+[View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21657&GUID=D7BE71A6-ACBF-44E9-A4BF-D22A35C6BE62)
 
 ---
 ## Consent Calendar
@@ -371,5 +385,5 @@ Attachments (2):
 [View in Legistar](https://pima.legistar.com/LegislationDetail.aspx?ID=21586&GUID=C2561AF8-9D49-4F15-9C5E-B42A88032862)
 
 ---
-*Generated 2026-07-23 08:00 by Tucson Daily Brief agenda mining pipeline*
+*Generated 2026-07-28 21:46 by Tucson Daily Brief agenda mining pipeline*
 *Source: [Pima County Legistar](https://pima.legistar.com/Calendar.aspx)*

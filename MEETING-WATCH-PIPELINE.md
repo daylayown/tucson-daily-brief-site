@@ -258,3 +258,53 @@ Spotted's agenda route (`public_record_liquor.py`) can never see Marana — the 
 - `at` + `atd` daemon — required for scheduled live recordings
 - `ANTHROPIC_API_KEY` in `~/.config/environment.d/anthropic.conf`
 - Telegram credentials for notifications
+
+## Agenda documents move after the preview runs
+
+**The 8 AM pass mines a meeting once and then never looks again.** `main()` used
+to `continue` past any meeting whose `-preview.md` already existed, skipping the
+full reference too. Agenda attachments are not static, so that guard quietly
+froze our picture of a meeting at whatever staff had filed by the first run.
+
+The case that exposed it: Pima's 2026-07-28 IDA item (Legistar matter 21643)
+drew three documents — 7/15, 7/23 and **7/27**. The 7/27 memo revised the
+proposed board slate, replacing two named appointees with two others, and landed
+about 26 hours before the vote. Our preview went out on 7/23 describing the
+superseded slate, and the post-meeting drafter never saw the revision, so the
+appointee names had to be reconstructed from Deepgram audio. One came out wrong
+("Kavanaugh" for Cavanaugh).
+
+### Day-of refresh
+
+`run_agenda_refresh.sh` (cron, 9:15 AM daily) runs `agenda_mining.py --refresh`:
+
+- refreshes `<base>-full.md` and `<base>-attachments.md` for meetings **today**
+- diffs the attachment manifest and Telegrams anything added or revised
+- **never republishes the preview** — a revised memo is a heads-up for the
+  human, not a trigger to silently rewrite a live page
+
+The first refresh on a given meeting records a baseline and stays silent; alerts
+begin on the second run.
+
+Pima only. Marana, Oro Valley and Tucson are scraped rather than served by a
+Legistar API, so they have no attachment feed to diff.
+
+### `agenda_attachments.py` — two non-obvious rules
+
+**Newest attachment first.** When staff files a revision, the later document
+governs. Sorting by filing order buries it: on 7/28 the operative revision was
+3,574 characters and the superseded version it replaced ran 18,440, so reading
+in order would have spent the item's budget on the stale one.
+
+**Every discussion item gets a guaranteed share of the character budget.**
+Agendas are ordered by procedure, not importance — proclamations and zoning
+hearings come first, the consequential business comes last. The first build
+spent all 60,000 characters on items 6–14 and never reached the item 25 memos
+that motivated the whole thing. Per-item allocation fixed it; the total budget
+is now 120,000 characters, which still leaves the full drafter prompt near
+60k tokens against a ~110,000-character transcript.
+
+Digests and manifests are gitignored — regenerable, bulky, and
+`check_agendas.sh` does a wholesale `git add agenda-watch/` that would otherwise
+commit them into the public repo daily.
+

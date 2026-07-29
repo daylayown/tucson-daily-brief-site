@@ -42,3 +42,10 @@ sol-website-redesign.md
 
 # Provenance-gate working dir: archived source text + shadow log
 brief-inputs/
+
+# Agenda attachment digests + diff manifests. Extracted text of public Legistar
+# PDFs — regenerable, bulky (~58KB per meeting), and check_agendas.sh does a
+# wholesale `git add agenda-watch/`, so without this they would auto-commit
+# into the public repo daily. Legistar is the system of record.
+agenda-watch/*-attachments.md
+agenda-watch/*-attachments.json

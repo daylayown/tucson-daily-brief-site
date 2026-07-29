@@ -224,3 +224,53 @@ The 10-15 minute session cap is even worse than OpenAI's 60 minutes — would ne
 **No municipality publishes verbatim transcripts as official records** — all four produce summary/action minutes only. For full meeting content, video/audio recordings + transcription is the only path.
 
 **Transcript availability timing (Marana, tested March 2026):** Marana's policy is recordings within 3 working days. In practice, the March 3 (Tuesday evening) meeting had a full Swagit transcript available by March 8 (Sunday). Transcripts are auto-generated from closed captions, so they're likely available as soon as the video is posted — estimated **1-3 business days** after the meeting. Pipeline approach: morning-after cron check, retry daily until transcript appears, then draft and send to Telegram for human review.
+
+## Source documents in the drafter prompt (added 2026-07-29)
+
+The drafter used to build its prompt from two things: the formatted transcript
+and the `local_names.json` block. It never saw the agenda. Every fact that
+existed only on paper had to be recovered from Deepgram audio.
+
+`load_agenda_context(slug)` now injects, when present:
+
+- `agenda-watch/<slug>-full.md` — the clerk's agenda (from `agenda_mining.py`)
+- `agenda-watch/<slug>-attachments.md` — staff memo text (from
+  `agenda_attachments.py`)
+
+Both are optional; other municipalities produce no attachment digest and the
+report still generates. The block tells the model the documents **outrank the
+transcript** for name spellings, dollar amounts, dates, term lengths, official
+program names and item descriptions — with two cautions: a later modification
+stamp supersedes an earlier one, and documents describe what staff *proposed*
+while only the transcript records what the board actually *did*.
+
+### What this fixed, and what it did not
+
+Measured by regenerating the 2026-07-28 Pima report, whose manual edit had
+required eight corrections.
+
+**Fixed:** PEEPs (not "PEPS"), Cavanaugh (not "Kavanaugh"), the INVEST contract
+at $220,000 with Arizona Rehab Campus (not "$250,000 for intensive outpatient
+services"), all five removed IDA members named, and correct recognition that the
+7/27 memo superseded the 7/23 one.
+
+**Not fixed.** More context did not stop fabrication. The same run invented
+*"Nicole Pina, also recently elected to the Oro Valley Town Council"* — the
+transcript has a Nicole Olvera and a Nicole Fye, and "Pina" appears in no
+source. It also still wrote "Monday" for a Tuesday meeting. Three added
+guidelines cleared both: no biographical detail absent from the sources, weekday
+only from the agenda's own date, and rank by newsworthiness rather than agenda
+placement.
+
+That last one is load-bearing. Under an 800-word ceiling the model first dropped
+the no-bid contract story entirely because it sat on the consent calendar — a
+consent item pulled for questioning is often the best story in the room.
+
+**The 800-word ceiling is a target the model approximates, not a constraint.**
+Test runs landed at 791 and 964 words. Fine for a draft a human edits; do not
+rely on it.
+
+The standing lesson: document context eliminates document-derived errors almost
+completely and does nothing for attribution errors or invention. Editorial
+review still has to assume the draft contains a confident falsehood.
+

@@ -17,6 +17,7 @@ import argparse
 import json
 import os
 import re
+import subprocess
 import sys
 import urllib.parse
 import urllib.request
@@ -767,6 +768,84 @@ def publish_preview(preview_path: str) -> None:
     rebuild_homepage()
 
 
+SEND_TELEGRAM = Path.home() / ".openclaw/skills/tucson-daily-brief/scripts/send_telegram.py"
+
+
+def build_attachment_digest(items: list[dict], base: str) -> dict:
+    """Extract agenda attachment text for the drafter. Never fatal."""
+    try:
+        import agenda_attachments
+        _, manifest = agenda_attachments.build_digest(items, base)
+        return manifest
+    except Exception as exc:  # noqa: BLE001 - context is a nice-to-have
+        print(f"  WARNING: attachment digest failed: {exc}", file=sys.stderr)
+        return {}
+
+
+def send_change_alert(base: str, event: dict, changes: list[str]) -> None:
+    if not SEND_TELEGRAM.exists():
+        print("  WARNING: send_telegram.py not found, skipping alert", file=sys.stderr)
+        return
+    lines = [f"📄 AGENDA CHANGED — {base}", ""]
+    when = " ".join(filter(None, [event.get("EventDate", "")[:10], event.get("EventTime") or ""]))
+    if when:
+        lines.append(f"Meeting: {when}")
+    lines.append(f"{len(changes)} document(s) added or revised since the preview ran:")
+    lines += [f"  • {c}" for c in changes[:12]]
+    if len(changes) > 12:
+        lines.append(f"  ... and {len(changes) - 12} more")
+    lines += [
+        "",
+        f"Refreshed: agenda-watch/{base}-full.md",
+        f"           agenda-watch/{base}-attachments.md",
+        "",
+        "The published preview was NOT changed. A revised staff memo can "
+        "supersede the slate or recommendation the preview described — worth a "
+        "look before the meeting.",
+    ]
+    try:
+        subprocess.run([sys.executable, str(SEND_TELEGRAM), "\n".join(lines)],
+                       check=False, timeout=30)
+        print(f"  Telegram alert sent ({len(changes)} change(s))")
+    except (subprocess.SubprocessError, OSError) as exc:
+        print(f"  WARNING: telegram alert failed: {exc}", file=sys.stderr)
+
+
+def refresh_meeting_context(event: dict, items: list[dict], base: str) -> None:
+    """Re-mine reference material on meeting day and alert on document changes."""
+    try:
+        import agenda_attachments
+        previous = agenda_attachments.load_manifest(base)
+    except Exception:  # noqa: BLE001
+        previous = {}
+
+    full_report = generate_full_report(event, items)
+    full_path = os.path.join(OUTPUT_DIR, f"{base}-full.md")
+    with open(full_path, "w") as f:
+        f.write(full_report)
+    print(f"  Refreshed full reference: {full_path}")
+
+    manifest = build_attachment_digest(items, base)
+
+    if not previous:
+        print("  No prior attachment manifest — baseline recorded, no alert.")
+        return
+
+    try:
+        import agenda_attachments
+        changes = agenda_attachments.diff_manifests(previous, manifest)
+    except Exception:  # noqa: BLE001
+        changes = []
+
+    if changes:
+        print(f"  {len(changes)} document change(s) since last run:")
+        for c in changes:
+            print(f"    {c}")
+        send_change_alert(base, event, changes)
+    else:
+        print("  No document changes since last run.")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Pima County agenda mining pipeline")
     parser.add_argument("--event-id", type=int, help="Analyze a specific Legistar event ID")
@@ -774,7 +853,15 @@ def main():
     parser.add_argument("--list", action="store_true", help="List upcoming meetings without generating reports")
     parser.add_argument("--no-llm", action="store_true", help="Skip LLM editorial analysis")
     parser.add_argument("--publish", type=str, metavar="PREVIEW_FILE", help="Publish a preview markdown file to the site as HTML")
+    parser.add_argument("--refresh", action="store_true",
+                        help="Day-of re-mine: refresh the full reference and attachment digest "
+                             "for meetings whose preview already exists, and alert on any "
+                             "document added or revised since. Never republishes the preview.")
+    parser.add_argument("--days-refresh", type=int, default=1, metavar="N",
+                        help="With --refresh, look ahead N days (default: 1, i.e. today)")
     args = parser.parse_args()
+    if args.refresh:
+        args.days = args.days_refresh
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
@@ -828,8 +915,19 @@ def main():
             suffix = f"-{comment.lower().replace(' ', '-')}"
         base = f"pima-county-{event_date}{suffix}"
 
-        # Check if preview already exists (idempotency guard)
         preview_path = os.path.join(OUTPUT_DIR, f"{base}-preview.md")
+
+        if args.refresh:
+            # Day-of pass. Agenda documents keep moving after the preview goes
+            # out: on 2026-07-28 the operative IDA membership slate was filed
+            # ~26 hours before the meeting, five days after the preview ran, and
+            # the drafter never saw it. Refresh the reference material the
+            # reporter and the drafter read, alert on what moved, and leave the
+            # published preview alone.
+            refresh_meeting_context(event, items, base)
+            continue
+
+        # Idempotency guard for the normal (pre-meeting) pass.
         if os.path.exists(preview_path):
             print(f"  Preview already exists: {preview_path}")
             continue
@@ -840,6 +938,8 @@ def main():
         with open(full_path, "w") as f:
             f.write(full_report)
         print(f"  Saved full reference: {full_path}")
+
+        build_attachment_digest(items, base)
 
         # LLM analysis → publishable preview
         if not args.no_llm:

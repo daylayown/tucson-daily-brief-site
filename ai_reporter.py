@@ -46,6 +46,7 @@ SITE_DIR = Path(__file__).resolve().parent
 TRANSCRIPTS_DIR = SITE_DIR / "transcripts"
 REPORTS_DIR = SITE_DIR / "news-reports"
 LOCAL_NAMES_PATH = SITE_DIR / "pipeline" / "local_names.json"
+AGENDA_DIR = SITE_DIR / "agenda-watch"
 SEND_TELEGRAM = Path.home() / ".openclaw/skills/tucson-daily-brief/scripts/send_telegram.py"
 
 CLAUDE_API_URL = "https://api.anthropic.com/v1/messages"
@@ -64,6 +65,58 @@ def municipality_from_slug(slug: str) -> str | None:
         if slug.startswith(key):
             return key
     return None
+
+
+def load_agenda_context(slug: str) -> str:
+    """Return the agenda and attachment text for this meeting, if mined.
+
+    The drafter used to work from the transcript alone, which meant every fact
+    that existed only on paper — contract amounts, vendor names, program
+    acronyms, appointee spellings, the day of the week — had to be recovered
+    from audio. The 2026-07-28 Pima County report needed five corrections that
+    were all sitting in documents like these.
+
+    Files come from agenda_mining.py (`<slug>-full.md`) and
+    agenda_attachments.py (`<slug>-attachments.md`). Missing files are normal:
+    other municipalities' miners do not produce attachment digests, and the
+    report should still generate without them.
+    """
+    parts = []
+    full_path = AGENDA_DIR / f"{slug}-full.md"
+    attach_path = AGENDA_DIR / f"{slug}-attachments.md"
+
+    if full_path.exists():
+        parts.append("OFFICIAL AGENDA (as published by the clerk):\n\n"
+                     + full_path.read_text().strip())
+    if attach_path.exists():
+        parts.append("AGENDA ATTACHMENT TEXT (staff memos and exhibits):\n\n"
+                     + attach_path.read_text().strip())
+
+    if not parts:
+        return ""
+
+    header = """
+SOURCE DOCUMENTS — THESE OUTRANK THE TRANSCRIPT.
+
+The transcript is machine-generated from audio and is unreliable for anything
+written down. Whenever the documents below and the transcript disagree, the
+documents are correct. Specifically, take from the documents rather than the
+audio:
+  - spellings of people's names, organizations, vendors and firms
+  - dollar amounts, vote thresholds, dates, term lengths and deadlines
+  - official program names and acronyms, and contract or item descriptions
+  - the meeting's day of the week and agenda item numbering
+
+Two cautions. Attachments can be revised: where two versions of the same memo
+appear, the one with the later modification stamp supersedes the earlier, and
+you should report the later one. And the documents describe what staff PROPOSED
+— the transcript is the only record of what the board actually DID. Never
+report a proposal as though it were adopted; check the vote in the transcript.
+
+If a fact appears in neither the documents nor clearly in the transcript, leave
+it out rather than inferring it.
+"""
+    return header + "\n\n" + "\n\n".join(parts) + "\n"
 
 
 def load_local_names_reference(slug: str) -> str:
@@ -223,6 +276,11 @@ def generate_news_report(data: dict, force: bool = False) -> str | None:
         speaker_note = "No speaker diarization is available. Attribute statements generically (e.g., 'a spokesperson said', 'one official noted')."
 
     names_reference = load_local_names_reference(slug)
+    agenda_context = load_agenda_context(slug)
+    if agenda_context:
+        print(f"  Agenda context: {len(agenda_context):,} chars")
+    else:
+        print("  Agenda context: none found (transcript-only draft)")
 
     prompt = f"""You are a local government reporter writing in AP style for the Tucson Daily Brief.
 
@@ -237,7 +295,22 @@ Guidelines:
 6. Note any contentious items with disagreement or heated discussion
 7. Do NOT editorialize — report what happened factually
 8. Use past tense throughout (this already happened)
-9. Keep it concise — a reader should get the key takeaways in under 3 minutes
+9. Hard ceiling of 800 words. This is a news report, not minutes — a meeting
+   with four real stories should drop the routine business, not compress
+   everything evenly. Cut proclamations, recognitions, routine code
+   conformance and procedural calendars entirely.
+10. Never state a person's job title, employer, board membership, past role or
+    any other biographical detail unless it appears in the source documents or
+    is stated plainly in the transcript. If you know only a name, use only the
+    name.
+11. Give the day of the week only if it matches the agenda's own date. If the
+    documents do not state it, write the date instead.
+12. Rank by newsworthiness, not by agenda placement. A split vote, a no-bid or
+    sole-source award, a removal or termination, a reversal, money moved
+    outside the normal budget cycle, or any item an official openly challenged
+    outranks a routine unanimous approval — even when it sits on the consent
+    calendar and the routine item led the meeting. Consent items pulled for
+    questioning are often the best story in the room.
 
 {speaker_note}
 {names_reference}
@@ -253,7 +326,7 @@ Meeting info:
 - Event: {title}
 - Date: {meeting_date}
 - Duration: {duration_str}
-
+{agenda_context}
 TRANSCRIPT:
 
 {formatted_transcript}"""
