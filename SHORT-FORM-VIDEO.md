@@ -19,6 +19,8 @@ Researched 2026-06-23 (parallel platform-automation scans + audience landscape).
 
 **Bench series (add later, same templates):** "Desert 101" (evergreen, batchable explainers — e.g. "your tap water traveled 300 miles to get here"; the dry-day insurance), "Opening Soon" (food/business from Spotted + brief, map-zoom), "What They Decided" (council accountability recaps from meeting coverage; flagship once vote-tracker data exists).
 
+**Third series family, framework locked 2026-07-28: the geographic editions ("What to Watch: Marana / Oro Valley")** — weekly town-specific clips run as a personalization-by-portfolio experiment against Meta's video-first feed pivot. Full spec in its own section below.
+
 **Craft decisions (locked):**
 - **Text-only motion first** (animated card system; no TTS) — works muted, cheapest, fastest, sidesteps "AI voice reads the news" weirdness. Add VO later, mainly for "Desert 101."
 - **Music = own AI-generated tracks** (ElevenLabs Music, `POST /v1/music`, `model_v2`, `force_instrumental`). Commercial-licensed on the paid plan, **no attribution, no Content-ID claims** — the whole point (not about owning copyright, which AI output can't have). Trained on licensed data, so no Suno/Udio-style training-data lawsuit cloud. Strategy: a **small reusable per-series library** (one warm theme for "Only in Tucson", one tense theme for "Buried in the Agenda") = sonic brand identity, not per-video gen. Tracks in `social/assets/music/` (gitignored). NOTE: the ElevenLabs API key needs the `music_generation` scope (the TTS key didn't have it by default).
@@ -27,6 +29,55 @@ Researched 2026-06-23 (parallel platform-automation scans + audience landscape).
 - **Bilingual:** lead Spanish cuts with "Only in Tucson" + "Opening Soon" + "Desert 101" (broad, not time-locked — travel furthest with the Spanish audience).
 
 **First prototype:** an **"Only in Tucson"** clip — highest odds of landing, lowest risk, teaches what the muted-caption format needs before spending differentiation capital on the agenda series. Then establish "Buried in the Agenda" as the recurring signature.
+
+## Geographic editions — "What to Watch: {Town}" (framework locked 2026-07-28)
+
+The third series family, and the one with a thesis attached. Talked out 2026-07-28 against Meta's announcement (7/24) that Facebook will test **opening directly into a full-screen video feed**, Classic Feed demoted to a second tab — i.e., the feed becomes a pure recommendation surface where volume-of-relevant-video is the currency.
+
+**The thesis: personalization by portfolio.** You can't address individual viewers on Facebook (no organic targeting exists), but you can hand the recommendation algorithm a portfolio of genuinely different town-specific videos and let *it* do the per-viewer matching. This is the zoned edition of the print era — killed decades ago by print economics — reborn as AI-rendered video at one-person cost. No Tucson-market competitor can cut a different video for every suburb every week; a cron job can. Run it as a **public experiment**: does town-level video earn differentiated distribution in Meta's video-first feed? Either answer is a finding, and the write-up (LinkedIn / industry track, per the two-brand rule) is a portfolio artifact with numbers attached — which is what distinguishes this from a demo.
+
+**Editions: Marana + Oro Valley first — chosen by data-layer depth, not audience size.** Both have agenda miners + dev watch + Spotted (OV via agendas; Marana via the DLLC database diff, added 2026-07-28 — see `MEETING-WATCH-PIPELINE.md`), so every clip is derivable end-to-end from structured sources. "The editions follow the data layer" is itself the editorial-AI principle. Tucson wards/Pima can join later as their data layers justify it.
+
+**Cadence: weekly, Monday morning, both towns** — after the 8 AM `check_agendas.sh` run so previews are fresh; render ~8:30, Telegram one-tap review, post to FB that morning. Forward-looking framing ("here's what your town decides this week") keeps every clip preview-grade — the auto-publish-safe tier of the editorial model — so review is a glance. This respects the locked not-chained-to-daily-news cadence decision: weekly, not daily. Skip rules for quiet weeks: no council meeting → lead with dev watch ("No council this week — but three new cases hit the map"); genuinely nothing → skip honestly and log it (a skipped week is experiment data, not a failure; the canceled-meeting guard says when this applies).
+
+**Format: lead-plus-ticker, NOT a roundup** (respects the one-sharp-idea rule — the lead carries the clip; the ticker says "we see everything in your town," which is the moat message). ~30–40s; lean 30 — completion rate is the kingmaker signal in 2026 ranking. Storyboard:
+
+```
+Beat 1 (0–3s)   Boundary cold-open: town's actual boundary draws in as a
+                hand-drawn-style SVG stroke (terracotta on dusk), pin drops.
+                Kicker: WHAT TO WATCH. Boundary polygon from the same town
+                ArcGIS portals the dev-watch pollers hit — no map tiles, no
+                attribution, matches the site's hand-drawn SVG language.
+Beat 2 (3–6s)   Title card: MARANA (Fraunces, huge) · Week of {date}
+Beats 3–5       LEAD STORY, 2–3 scenes: headline → key number/detail (the
+(6–~22s)        $25→$46 animated-stat treatment) → the stakes
+Beat 6 (~22–30s) ALSO ON THE RADAR: 2–3 one-liners, icon + text
+Beat 7 (last)   CTA card, inside the Reels safe zone: "Council meets Tuesday,
+                6 PM" · "We read every Marana agenda so you don't have to" ·
+                tucsondailybrief.com
+```
+
+**Visual identity:** the editions should look like tucsondailybrief.com in motion — light/bone theme, Fraunces, terracotta accents (utility register; the dark/tense treatment stays reserved for Buried in the Agenda). **Per-town identity is one accent variable, not a separate design:** Marana = adobe, Oro Valley = sage. Adding an edition is a config line, not a design project — that's the scalability story. One new "editions" music theme (ElevenLabs Music, per-series-library approach), steady and civic. Text-only motion per the locked craft decision. Implementation: a new `SERIES` preset + per-town accents in `render_short.py`, plus a beat-script generator that reads miner output.
+
+**Content rules (derive, don't ask):** lead chosen by a deterministic priority ladder — topic-flagged items (data-center etc.) → public-hearing/rezoning items → the preview's top item → biggest dev-watch diff; ticker takes the next 2–3 off the same ranked list. The model's only job is phrasing; every proper noun and number must appear in miner output; hard on-screen word caps enforced in code (lead ≤ ~40 words, ticker items ≤ ~12). Candidate later hardening: run scripts through `provenance_gate.py`. **Never mix towns in one clip** — a hybrid clip muddies both engagement clusters.
+
+**Distribution + the algorithm-legibility playbook.** Meta learns what a clip is from platform-level signals (caption, hashtags, location tag) plus content extraction (OCR of on-screen text, visual/audio embeddings); embedded MP4 file metadata is NOT a signal. Per-viewer serving is engagement clustering — watch time/completion above all, plus likes and the 2026 in-feed interest surveys (UTIS). So make the town machine-legible in every clip:
+1. Town name in the first caption line, plain words, keyword-rich.
+2. Town hashtag set per the locked 2026-07-19 system: `#Marana`/`#OroValley` + `#Tucson` + `#TucsonNews`, ≤5.
+3. Location-tag every Reel with the town's actual Place.
+4. Identical series title-card wording every week ("WHAT TO WATCH: ORO VALLEY") — it's OCR'd, so it's a machine topic signal, not just branding.
+5. Hold the weekly cadence; clusters form on consistency.
+6. **Standing caption line (audience education — decided 2026-07-28):** "Like the videos about your part of town and you'll see more of them. Every video: tucsondailybrief.com." Honest, feeds exactly the signals the ranking model uses, and doubles as the owned-surface CTA.
+
+**One Page, no per-town Pages (decided 2026-07-28).** Within one Page you can't *guarantee* a viewer an OV-only diet — Meta decides per-user, per-post. Separate per-town Pages would make the guarantee real but fragment brand, followers, and workflow. Not for a two-edition test. Revisit only if eight weeks of data shows the clusters never diverge — and that outcome would itself be the finding.
+
+**Posting: manual first.** FB/IG Reels adapters are build-order step 3 and unbuilt; two uploads a week is trivially manual, mirrors the TikTok learn-by-hand logic, and manual posting *is* the human-review gate for Meta surfaces. Cross-post the same MP4 to YouTube Shorts (full-auto there is already sanctioned). Facebook is the experiment's measurement surface. Build the Meta adapter only when the format stops changing.
+
+**Measurement (decide-before-first-post):** per-post log — edition, date, reach, avg watch time / completion, follows, shares, notable geo-revealing comments ("that's my HOA's case" is the best geo evidence FB gives; per-Reel viewer geography isn't exposed). Eight-week window aligned with the MARKETING.md distribution loop, where the editions ARE the weekly moat package (reach slot stays Only in Tucson, preserving the front-load-feel-good decision). Success signal: divergence between the editions' reach/retention/comment patterns vs each other and vs generic clips. Conversion signal: edition viewers crossing to an owned channel (newsletter, site).
+
+**Phase 2, earned sequel only: the personal video brief.** If editions demonstrate demand, the addressable version reuses the Matchday Inference stack wholesale: signup form (town/topics/length) → FastAPI+SQLite on Fly.io → weekly per-subscriber render → Cloudflare R2 at unguessable token URLs (custom subdomain — Gmail bounces r2.dev links) → transactional email teaser via Resend (NOT Buttondown — every recipient gets a different link). Do not build ahead of the data.
+
+**Build list (new work only — everything else is inherited):** `editions` SERIES preset + per-town accent config; boundary-SVG cold-open beat (polygons from town ArcGIS); one music theme; beat-script generator implementing the priority ladder + word caps; the safe-zone CTA fix (already an open item below); the measurement log file.
 
 ## Decision: build our own thin publish layer; skip paid schedulers
 
