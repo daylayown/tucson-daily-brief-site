@@ -382,6 +382,8 @@ def _inline_format(text: str) -> str:
     """Handle bold and inline formatting."""
     text = escape_html(text)
     text = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", text)
+    # Single-asterisk italics, after bold so ** is already consumed.
+    text = re.sub(r"\*(?=\S)([^*]+?)(?<=\S)\*", r"<em>\1</em>", text)
     return text
 
 
