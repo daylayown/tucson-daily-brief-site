@@ -56,13 +56,14 @@
       },
       {
         "name": "AZPM",
-        "type": "bluesky",
-        "url": "https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed?actor=azpm.org&limit=30",
+        "type": "scrape",
+        "url": "https://news.azpm.org/",
         "profile": "https://bsky.app/profile/azpm.org",
         "category": "public_media",
         "priority": "high",
-        "window_hours": 120,
-        "notes": "Arizona Public Media (PBS/NPR affiliate for Southern AZ). When a post embeds an article link (embed.external.uri), follow through to the article for full context. No auth — Bluesky public API. No working direct RSS feed exists on azpm.org (their CMS emits no RSS/sitemap; their Mastodon @azpm@mastodon.social mirrors this same Bluesky stream, so it's no fresher — Bluesky is the path). LOW-CADENCE: posts in bursts every few days, often ~4-5 days apart at the recent edge, so window_hours=120 (added 2026-06-25) gives a longer lookback than the 36h default to actually catch its bursts; limit raised 20->30 to match."
+        "window_hours": 72,
+        "notes": "Switched from bluesky to scrape 2026-07-29. Their Bluesky (azpm.org) went dormant 2026-06-27 and a dormant feed returns success with no items forever — AZPM went from 12 of 27 June briefs to 0 of 29 in July without anything erroring. AZPM publishes no RSS at all, so the story index is the only channel. window_hours=72 because the index gives a calendar day, not a timestamp, so items are stamped at local midnight.",
+        "scraper": "scrape_azpm"
       },
       {
         "name": "Arizona Luminaria",

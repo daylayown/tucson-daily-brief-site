@@ -93,3 +93,45 @@ Telegram delivery happens **only** through `run_podcast.sh` → `send_telegram.p
 The podcast script is condensed from a full ~7,500-char read (~8 minutes) to a tight ~1,400-char read (~90 seconds) using Claude Haiku. This was implemented to stay within the ElevenLabs Creator tier (100K chars/month, $22/mo). The `condense_script()` function in `generate_podcast.py` sends the full script to Haiku with instructions to pick the top 5 most newsworthy stories, drop weather/source attributions/section transitions, and write in broadcast style. Cost: ~$0.01/day. Falls back to the full script if the API call fails.
 
 **ElevenLabs budget:** Creator tier, 100K chars/month. Condensed podcast uses ~45K chars/month (with Turbo v2.5 at 0.5 credits/char, that's ~22.5K credits/month). Usage-based billing enabled at 25,000 credit threshold as safety net.
+
+## Sources that look healthy while delivering nothing (2026-07-29)
+
+One day produced three variants of the same failure, and none of them raised an
+error. Check for all three when auditing sources — a green log line is not
+evidence that a source is working.
+
+**1. Silently skipped.** `load_sources()` read each tier with
+`data["sources"].get(tier, [])` against a hardcoded `tier_order`.
+`tier_2_institutional` was never added to that list, so seven feeds — City of
+Tucson, TEP, Sun Tran, RTA, UA News x2, PCAO, six of them priority=high — were
+absent from every brief for 34 days. No error, no log line. Now raises on any
+tier not in `tier_order`, and an unrecognised source `type` fails loudly instead
+of `continue`-ing.
+
+**2. Live URL, dead content.** Congressional and Senate `rss.xml` files return
+HTTP 200 with content months old — Ciscomani stopped at 2026-05-28 while his
+press page was current to 07-24, Grijalva at 01-29 against a 07-22 page, Kelly
+at 06-02 against 07-28. A feed reader sees success. Reading them would have
+injected stale content into a daily brief. This is why `officials_watch.py`
+scrapes pages and never feeds.
+
+**3. Dormant channel.** AZPM was read through their Bluesky account, which went
+quiet on 2026-06-27. A dormant account returns success with zero items forever.
+AZPM went from 12 of 27 June briefs to **0 of 29 in July** and nothing surfaced
+it — the failure was only visible by counting citations per month. They publish
+no RSS at all, so `scrape_azpm.py` now reads their story index.
+
+**The audit that finds these** is not "did the fetch succeed" but "when did this
+source last actually appear in a brief":
+
+```bash
+for m in 2026-05 2026-06 2026-07; do
+  printf "%s: %s of %s\n" "$m" \
+    "$(grep -l -i "SOURCE NAME" posts/$m-*.html | wc -l)" \
+    "$(ls posts/$m-*.html | wc -l)"
+done
+```
+
+A high-priority source at zero for a month is the signal. Nothing else caught any
+of these three.
+

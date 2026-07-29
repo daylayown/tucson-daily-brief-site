@@ -745,7 +745,20 @@ def main():
             items, err = fetch_rss(src, src_cutoff)
         elif stype == "bluesky":
             items, err = fetch_bluesky(src, src_cutoff)
+        elif stype == "scrape":
+            # Outlets with no feed at all. `scraper` names a module exposing
+            # fetch(src, cutoff) -> (items, err) in fetch_rss's shape.
+            try:
+                mod = __import__(src["scraper"])
+                items, err = mod.fetch(src, src_cutoff)
+            except Exception as e:
+                items, err = [], f"scraper {src.get('scraper')!r} failed: {e}"
         else:
+            # An unrecognised type used to `continue` — no error, no log line,
+            # the source simply absent from every brief. That is the same silent
+            # drop that hid tier_2_institutional for 34 days. Make it loud.
+            failed.append((name, f"unknown source type {stype!r}"))
+            print(f"  FAIL  {name}: unknown source type {stype!r}", file=sys.stderr)
             continue
         if err:
             failed.append((name, err))
