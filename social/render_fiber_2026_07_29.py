@@ -36,7 +36,25 @@ VERIFICATION (2026-07-29). Two tiers, and the cards keep them apart:
   fact anywhere.
 
 Deliberately NOT on the cards: "Arizona's fastest," "8 GIG," and any speed
-claim. Unverifiable marketing.
+claim sourced to the company. Unverifiable marketing.
+
+Card 3 speed figures, two different sourcing tiers:
+  ARIZONA (solid) -- Ookla state row supplied by the editor: median download
+    276.98 Mbps, median upload 53.99, latency 23.72 ms, consistency 91.1%,
+    provider column Wyyerd Fiber. Rounded to 277 / 54 on the card.
+  US MEDIAN (weaker) -- ~306.86 Mbps, Ookla Speedtest Global Index, May 2026.
+    Could NOT be verified against a primary source: speedtest.net, ookla.com,
+    and Light Reading are all unfetchable from this environment. Four secondary
+    sources agree (Allconnect, Optimum, Ezee Fiber, WorldPopulationReview), all
+    ISP-marketing-adjacent. Hedged as "about 307" on the card. Re-verify before
+    reusing this number.
+
+Say MEDIAN, never "average" -- Ookla publishes medians, and on speed
+distributions a handful of multi-gig lines drag the mean well above what a
+typical household sees.
+
+Note the card credits Ookla, not the company, for the fastest-provider line:
+the identical claim in the joint press release stays off the cards.
 """
 from render_card import build_card, render
 
@@ -56,6 +74,15 @@ BTS_DEK = (
     "actually lives — and reading it every morning is the whole job."
 )
 
+SPEED_KICKER = "How fast is yours?"
+SPEED_HEAD = "Arizona runs slower than the country."
+SPEED_DEK = (
+    "Ookla clocks Arizona’s median home connection at 277 Mbps down, 54 up — "
+    "under the US median of about 307. The fastest provider in the state: "
+    "Wyyerd, the company Tucson just cleared to build here. How fast is yours? "
+    "Drop it in the comments 👇"
+)
+
 CARDS = [
     dict(slug="fiber-2026-07-29", theme="light",
          kicker=NEWS_KICKER, headline=NEWS_HEAD, dek=NEWS_DEK,
@@ -65,9 +92,15 @@ CARDS = [
          meta_text="tucsondailybrief.com"),
     dict(slug="fiber-checked-2026-07-29", theme="terracotta",
          kicker=BTS_KICKER, headline=BTS_HEAD, dek=BTS_DEK,
-         meta_text="tucsondailybrief.com"),
+         meta_text="swipe →"),
     dict(slug="fiber-checked-2026-07-29-fb", theme="terracotta", size=(1200, 1200),
          kicker=BTS_KICKER, headline=BTS_HEAD, dek=BTS_DEK,
+         meta_text="tucsondailybrief.com"),
+    dict(slug="fiber-speed-2026-07-29", theme="light",
+         kicker=SPEED_KICKER, headline=SPEED_HEAD, dek=SPEED_DEK,
+         meta_text="tucsondailybrief.com"),
+    dict(slug="fiber-speed-2026-07-29-fb", theme="light", size=(1200, 1200),
+         kicker=SPEED_KICKER, headline=SPEED_HEAD, dek=SPEED_DEK,
          meta_text="tucsondailybrief.com"),
 ]
 
