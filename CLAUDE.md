@@ -19,6 +19,7 @@ CLAUDE.md is the index. Detail lives in these; **when you learn something durabl
 | `NEWSLETTER.md` | TDB Weekly — voice, format, pipeline, Buttondown, sender architecture |
 | `CROSSWORD.md` | The Tucson Mini — editorial posture, generation, wordbank, Saturday ritual |
 | `SOCIAL-CARDS.md` | `social/` renderers, themes, aspect ratios, render-sharpness lessons |
+| `MASCOT.md` | The friendly-saguaro brand character (parked 2026-07-28): decision trail, local-only assets, the patch-compositing animation pipeline, viseme lip-sync plan, prompt kit, resume checklist, light-content-only rule |
 | `SHORT-FORM-VIDEO.md` | Platform automation map + DIY publish-adapter plan |
 | `SOCIAL-AUTOPOST.md` | Auto-posting feasibility per platform; Facebook strategy |
 | `MARKETING.md` | Two-brand split, the distribution loop, content mix, instrumentation TODOs |
