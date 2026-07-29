@@ -31,6 +31,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 import time
 import urllib.error
 import urllib.request
@@ -124,12 +125,28 @@ def send_to_telegram(text, meta):
             f"thinking {meta.get('thinking')} tok · gate: {meta.get('gate','n/a')}\n"
             f"Compare against today's published brief (Opus 5).\n"
             f"{'─' * 28}\n\n")
+    # send_telegram.py takes a FILE PATH (sys.argv[1] -> md_path), not message
+    # text. Passing the text directly makes it try to open a 5,000-character
+    # string as a filename; it fails and, because we were not checking the exit
+    # code, we reported success anyway. Match the house pattern in
+    # generate_brief.send_provenance_alert(): temp file, pass the path, unlink.
+    with tempfile.NamedTemporaryFile("w", suffix=".md", delete=False,
+                                     encoding="utf-8") as fh:
+        fh.write(head + text)
+        tmp = fh.name
     try:
-        subprocess.run([sys.executable, str(SEND_TELEGRAM), head + text],
-                       check=False, timeout=120)
-        print("  Telegram: challenger brief sent", file=sys.stderr)
+        sys.stdout.flush()
+        r = subprocess.run([sys.executable, str(SEND_TELEGRAM), tmp],
+                           check=False, timeout=120)
+        if r.returncode == 0:
+            print("  Telegram: challenger brief sent", file=sys.stderr)
+        else:
+            print(f"  WARN: telegram send exited {r.returncode} — NOT delivered",
+                  file=sys.stderr)
     except (subprocess.SubprocessError, OSError) as e:
         print(f"  WARN: telegram send failed: {e}", file=sys.stderr)
+    finally:
+        os.unlink(tmp)
 
 
 def main():
