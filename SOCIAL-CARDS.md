@@ -42,3 +42,40 @@ The evidence says hashtags are a **low-leverage** knob now — don't over-invest
 - Sources: [Manychat](https://manychat.com/blog/instagram-hashtag-strategy/), [Later](https://later.com/blog/ultimate-guide-to-using-instagram-hashtags/), [Social Media Today (5-tag limit)](https://www.socialmediatoday.com/news/instagram-implements-new-limits-on-hashtag-use/808309/), [Hashtag Tools (local strategy)](https://hashtagtools.io/blog/small-business-instagram-hashtags-growth-strategy-2026). Platform behavior shifts — re-verify if this is >6 months old.
 
 - **Auto-posting feasibility + Facebook strategy — full writeup: `SOCIAL-AUTOPOST.md` (2026-06-26).** Key findings: **auto-postable** to FB Page (Graph API `/photos` + first-comment link via `/comments`), Instagram feed+Stories (Content Publishing API, image from R2), Threads (Threads API), and Bluesky (zero gate) — all own-account. **NOT automatable: FB/IG Groups** (Meta sunset the Groups API in 2024 → Groups stay a manual move). LinkedIn stays its own track. ~70% of the pieces already exist (`render_card.py`, R2 hosting, the `upload_to_youtube.py` OAuth precedent, the fully-unattended daily Short, the Telegram approve flow). **Recommended posture: tiered** — full-auto for evergreen/safe content (as the daily Short already does), **5-second Telegram one-tap approve for news/civic cards** (protects the no-fabrication bar). Build order: Bluesky → Threads → FB Page → IG (Meta app review = the only real calendar-time variable). This is the publish layer of the short-form-video project — build it alongside that, not as a separate detour. **Facebook itself is likely TDB's #1 organic channel** for actual Tucsonans (Southern AZ skews old → FB-heavy); FB rewards native image cards + nostalgia/community posts + the first-comment link trick (Meta throttles in-body links), with Groups as the manual distribution unlock.
+
+## Build interactivity into every package (2026-07-29)
+
+**Every social package should try to include something the reader can answer.**
+This is not decoration on top of the package — it is the reach mechanism. The
+hashtag research above found that tags no longer drive reach and that
+distribution comes from **saves, shares/DM-sends, comments, and watch time**. A
+package with nothing to answer generates none of those signals.
+
+**The prompt has to be answerable from the reader's own life, not from civic
+knowledge.** That is the whole difference between an invitation and a quiz:
+
+- ✅ *"Ookla clocks Arizona's median home connection at 277 Mbps. How fast is
+  yours?"* — everyone has an answer, no expertise needed.
+- ❌ *"What do you think of the IDA restructuring?"* — requires the reader to
+  already know something, so almost nobody replies.
+
+The reliable shape is **a number the reader can compare themselves against**.
+State or national benchmarks work well, and they double as a way to keep a
+civic story light rather than lecturing (see `MARKETING.md` → Editorial
+register).
+
+Mechanism by format: feed carousels get a comment prompt on the final slide;
+Stories get poll or question stickers (polls have the highest completion) plus
+the link sticker; Reels get the ask in the caption.
+
+Any stat used to set up the prompt still clears the no-fabrication bar. On the
+2026-07-29 fiber carousel the Arizona figure was solid (Ookla state data) while
+the US median could not be verified against a primary source — so it shipped
+hedged as "about 307" and flagged in the renderer docstring.
+
+Don't force it. If a story has no genuine personal hook, ship without one
+rather than bolting on a hollow "thoughts?"
+
+First use: the Wyyerd fiber carousel (`social/render_fiber_2026_07_29.py`),
+slide 3.
+
