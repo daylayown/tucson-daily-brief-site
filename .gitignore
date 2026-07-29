@@ -49,3 +49,6 @@ brief-inputs/
 # into the public repo daily. Legistar is the system of record.
 agenda-watch/*-attachments.md
 agenda-watch/*-attachments.json
+
+# Model A/B: challenger briefs + metrics. Regenerable, never published.
+model-ab/
