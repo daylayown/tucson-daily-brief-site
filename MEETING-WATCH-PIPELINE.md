@@ -244,6 +244,14 @@ Each script has a `--publish` flag that converts a markdown preview to HTML usin
 
 Republishing every preview from its existing markdown is safe and free — it's deterministic md→HTML with no API calls, and the 2026-07-11 SEO retrofit survives regeneration (verified). That's the way to push a renderer fix to already-published pages.
 
+### Spotted: the Marana DLLC route (added 2026-07-28)
+
+Spotted's agenda route (`public_record_liquor.py`) can never see Marana — the town approves liquor licenses administratively, nothing reaches a council agenda, and the clerk's site publishes no application list (checked 2026-07-28; the clerk pages are process-info only, and maranaaz.gov 403s non-browser fetchers anyway). Marana coverage instead comes from `public_record_liquor_dllc.py`, which polls the **state DLLC public license database** (`dllc.azliquor.gov`, POSSE/Computronix, no auth) daily from `check_agendas.sh`:
+
+- **Enumeration trick:** the search's Premises field matches business *names* only, but License Number is a *prefix* match and AZ license numbers encode series + county (`10` = Pima). Two prefix queries per consumer-facing series (legacy `0610` + modern `00610` formats) enumerate every Pima license of that series (~1,700 rows across 11 series). Rows come back as clean structured spans; filter to premises addresses containing `MARANA, AZ`, diff license numbers against `public-record/.dllc_state_marana.json` (gitignored), publish newly appearing **Active** licenses. **Zero AI calls** — every published field is a state database record. Protocol details (the POSSE `datachanges` tuple POST) are in the module docstring.
+- **First run seeds silently** (53 Marana licenses at seed time, including a liquor store licensed in 1961) — republishing history as "news" is the failure mode. `--seed` re-seeds deliberately; a result set under 100 licenses is treated as a source failure and leaves state untouched, so a DLLC outage or layout change can't wipe the baseline and cause a republish flood.
+- **Known limitations:** DLLC's premises city is the *mailing* city, so Marana-limits businesses with Tucson mailing addresses (e.g. Casa Marana Craft Beer, `TUCSON, AZ 85741`) are missed — deliberate under-match. This route also surfaces licenses at *issuance*, not application; the forward-looking version (pending applications) died with DLLC's 2025-ish site migration and now requires a clerk relationship (records request / standing weekly list — in progress).
+
 ### Key dependencies
 
 - `pdftotext` (poppler-utils) — required for Tucson PDF extraction

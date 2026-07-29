@@ -27,6 +27,9 @@ data-center-election-2026/
 around-town/.dev_state.json
 around-town/.dev_state_marana.json
 
+# Spotted: Marana DLLC liquor-license snapshot (diff baseline)
+public-record/.dllc_state_marana.json
+
 # Design exploration mockups (local-only history, not for publishing)
 design-explorations/
 

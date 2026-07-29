@@ -88,6 +88,7 @@ These are the ones that cost something when forgotten:
 ├── agenda_mining_tucson.py      # City of Tucson (Hyland OnBase PDF + pdftotext)
 ├── check_agendas.sh             # 8 AM cron: 4 miners + Spotted + dev watch + auto-publish + push
 ├── public_record_liquor.py      # Spotted pipeline: liquor filings out of agenda references
+├── public_record_liquor_dllc.py # Spotted: Marana liquor licenses via AZ DLLC database diff (no AI calls)
 ├── foia_lead_spotter.py         # Weekly: trawl news-reports/ for records-request leads → web-search verify facts/prior-disclosure → draft §39-121 emails → Telegram
 ├── promise_tracker.py           # "What They Promised" evidence ledger: transcript → validated-verbatim promise rows → human review (ORIGINAL-JOURNALISM.md)
 ├── praise_tracker.py            # Praise × pending business: officials praising named private entities, joined vs agendas/filings (ORIGINAL-JOURNALISM.md)
@@ -182,7 +183,7 @@ The homepage is a **zoned entry hall** (featured brief + cross-stream cards + To
 - **Daily Brief** (`/`, `/briefings.html`, `posts/`) — live
 - **What to Watch** (`meeting-watch.html`) — agenda previews, 4 municipalities, auto-published (under the Local Government hub)
 - **What They Decided** (`news-reports.html`) — post-meeting reports, AI-drafted, human-reviewed (under the Local Government hub)
-- **Spotted** (`public-record.html`) — filings surfaced from agendas; v1 = liquor licenses (Pima, Tucson, Oro Valley). Marana not supported — it handles them administratively, not by council vote
+- **Spotted** (`public-record.html`) — liquor licenses via two routes: agenda mining (Pima, Tucson, Oro Valley) + a state-DLLC database diff for Marana (added 2026-07-28 — Marana handles licenses administratively, so they never hit an agenda; see `public_record_liquor_dllc.py`)
 - **Around Town** — development-watch items (Marana + Oro Valley pollers)
 - **Ask** (`ask.html`) — RAG Q&A, live, linked site-wide
 - **Responsiveness** (`responsiveness.html`) — stub only

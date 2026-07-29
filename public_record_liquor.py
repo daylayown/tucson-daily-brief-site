@@ -7,10 +7,12 @@ agenda mining pipelines, identifies liquor license items, extracts
 structured data via Claude, and auto-publishes individual filings to
 the Public Record section of the site.
 
-Coverage (v1): Pima County BOS, City of Tucson, Oro Valley Town Council.
-Marana is not yet supported — Marana handles liquor licenses
-administratively through the Town Clerk and does not agendize them
-for council vote. Future expansion: scrape the Marana clerk page directly.
+Coverage: Pima County BOS, City of Tucson, Oro Valley Town Council (this
+module, agenda-based). Marana handles liquor licenses administratively —
+no council vote, nothing on the agendas, and no feed on the clerk's page
+(checked 2026-07-28) — so Marana coverage comes from a separate poller,
+public_record_liquor_dllc.py, which diffs the state DLLC license database
+directly.
 
 Idempotency: tracks processed source files in public-record/.processed.txt.
 A given full agenda reference file is only processed once unless --force.
@@ -519,7 +521,7 @@ def render_index_html(filings: list[dict]) -> str:
 <div class="container container--editorial">
 <div style="padding-top:var(--gap-xl);margin-bottom:var(--gap-l)">
 <h1 class="section-head">New Businesses &amp; Filings</h1>
-<p class="section-intro">New restaurants, bars, businesses, and filings going through public review &mdash; most of which never get reported on. We pull them automatically from the agendas of Pima County BOS, Tucson Mayor &amp; Council, and Oro Valley Town Council. This is part of <a href="around-town.html">Around Town</a> &mdash; see development &amp; rezonings there too. Spot one near you? <a href="mailto:tips@tucsondailybrief.com">Let us know</a>.</p>
+<p class="section-intro">New restaurants, bars, businesses, and filings going through public review &mdash; most of which never get reported on. We pull them automatically from the agendas of Pima County BOS, Tucson Mayor &amp; Council, and Oro Valley Town Council, plus the state liquor-license database for Marana. This is part of <a href="around-town.html">Around Town</a> &mdash; see development &amp; rezonings there too. Spot one near you? <a href="mailto:tips@tucsondailybrief.com">Let us know</a>.</p>
 </div>
 
 <div style="margin-bottom:var(--gap-xl)">{SUBSCRIBE_PANEL_HTML}</div>

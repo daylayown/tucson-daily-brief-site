@@ -203,6 +203,36 @@ View at: https://tucsondailybrief.com/public-record.html"
     PUBLISHED=$((PUBLISHED + PR_COUNT))
 fi
 
+# --- Spotted: Marana liquor licenses (state DLLC database poll) ---
+# Marana never agendizes liquor licenses (handled administratively), so the
+# agenda scan above can't see them. This poller enumerates Pima County
+# licenses in the Arizona DLLC public database by license-number prefix,
+# filters to Marana premises addresses, and diffs against
+# public-record/.dllc_state_marana.json. First run seeds silently; after
+# that, newly appearing Active licenses publish as Spotted filings. No AI
+# calls — all fields are structured state records. Non-fatal on failure.
+echo "Checking Marana liquor licenses (DLLC)..."
+DLLC_OUTPUT=$(python3 public_record_liquor_dllc.py 2>&1) || true
+echo "$DLLC_OUTPUT"
+DLLC_COUNT=$(echo "$DLLC_OUTPUT" | grep -oP 'DLLC Marana: published \K\d+' | tail -1)
+DLLC_COUNT=${DLLC_COUNT:-0}
+
+if [ "$DLLC_COUNT" -gt 0 ]; then
+    NOTIFY_MSG="🥂 $DLLC_COUNT new Marana liquor license(s) published
+
+Newly issued liquor license(s) at Marana addresses were surfaced from the Arizona DLLC license database and auto-published to Tucson Daily Brief. Marana handles these administratively, so they never appear on a council agenda.
+
+View at: https://tucsondailybrief.com/public-record.html"
+
+    TMPFILE=$(mktemp /tmp/dllc-notify-XXXXX.md)
+    echo "$NOTIFY_MSG" > "$TMPFILE"
+    if [ -f "$SEND_TELEGRAM" ]; then
+        python3 "$SEND_TELEGRAM" "$TMPFILE" || echo "WARNING: DLLC Telegram notification failed (non-fatal)"
+    fi
+    rm -f "$TMPFILE"
+    PUBLISHED=$((PUBLISHED + DLLC_COUNT))
+fi
+
 # --- Around Town: Oro Valley development cases (ArcGIS poll) ---
 # Polls Oro Valley's public ArcGIS Development_Cases layer, diffs against prior
 # state (around-town/.dev_state.json), and publishes new/changed cases under
