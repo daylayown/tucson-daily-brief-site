@@ -132,6 +132,7 @@ def load_sources():
         "tier_1_primary",
         "tier_2_broadcast",
         "tier_2_officials",
+        "tier_2_institutional",
         "tier_3_supplemental",
         "tier_4_weather_safety",
     ]
@@ -141,6 +142,23 @@ def load_sources():
             src = dict(src)
             src["_tier"] = tier
             out.append(src)
+
+    # A tier present in sources.json but missing from tier_order was silently
+    # dropped by the .get() above — no error, no log line, just absent from every
+    # brief. That is exactly the failure this module was written to make
+    # impossible ("nothing can be silently dropped, because Python guarantees
+    # every feed reaches the prompt"), and it happened anyway: tier_2_institutional
+    # was added 2026-06-25 and never reached tier_order, so seven official feeds —
+    # City of Tucson, TEP, Sun Tran, RTA, UA News x2, PCAO, six of them
+    # priority=high — were absent from every brief for 34 days.
+    # Fail loudly instead of guessing an order for an unknown tier.
+    unknown = [t for t in data["sources"] if t not in tier_order]
+    if unknown:
+        raise SystemExit(
+            f"ERROR: sources.json has tier(s) not in tier_order: {unknown}. "
+            f"Add them to tier_order in load_sources() — an unlisted tier is "
+            f"silently skipped and its feeds never reach the brief."
+        )
     return out
 
 
