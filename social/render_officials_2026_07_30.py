@@ -32,6 +32,49 @@ FACTS, all verified 2026-07-29 while building officials_watch.py:
 Deliberately NOT on the cards: candidate names, poll numbers, party labels. This
 is an announcement about how the brief works, not election coverage, and putting
 a toss-up race's names on a promo card invites a fight we have no reason to pick.
+
+CAPTIONS (drafted 2026-07-29 for a 07-30 post; kept here so the cards and the
+copy that ships with them do not live in separate places).
+
+INSTAGRAM
+  Something new in tomorrow's brief 📢
+
+  "What Your Officials Are Saying" — press releases from the people who
+  represent Tucson, gathered every morning. Both senators, both members of
+  Congress, the governor.
+
+  They put these out several times a week. Funding, legislation, things that
+  actually land here. Most of it never gets past a press list.
+
+  One rule we're holding ourselves to: in races rated competitive we carry both
+  candidates, and when one campaign posts and the other doesn't, the brief says
+  so. Silence isn't the same as balance.
+
+  What would you want to ask your rep? Tell us below 👇
+
+  #Tucson #TucsonNews #PimaCounty
+
+FACEBOOK
+  Starting tomorrow, the Tucson Daily Brief has a new section: What Your
+  Officials Are Saying.
+
+  Every morning it carries press releases from the people who represent Tucson —
+  Sens. Mark Kelly and Ruben Gallego, Reps. Juan Ciscomani and Adelita Grijalva,
+  and Gov. Katie Hobbs. They publish several times a week, and most of it never
+  reaches anyone outside a press list.
+
+  Two things about how we're doing it. Everything is reported as a claim — "said
+  in a release" — never as established fact. And in races that independent raters
+  call competitive, we carry both candidates; when one campaign posts and the
+  other doesn't, the brief says so rather than running one side quietly.
+
+  It sits just above the weather. What would you want to ask your representative?
+
+  tucsondailybrief.com
+
+⚠️ BEFORE POSTING: the section is skipped on mornings when nobody posted in the
+previous 48 hours. Check that day's brief actually carries it — do not announce
+a section that happens to be absent.
 """
 from render_card import build_card, render
 
