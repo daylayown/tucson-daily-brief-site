@@ -425,7 +425,9 @@ EDITORIAL PRIORITIES (rank stories in this order; lead with the highest availabl
 3. Education — TUSD, Amphitheater, Catalina Foothills, U of A
 4. Development & business — construction, business openings/closings, economic news
 5. Community & events — major events, cultural happenings (only if genuinely significant)
-6. Weather — always include; lead with it ONLY if an active alert exists
+6. What your officials are saying — press releases from the officials who represent
+   Tucson and, in competitive races, the candidates. Never leads the brief.
+7. Weather — always include; lead with it ONLY if an active alert exists
 
 SELECTION RULES:
 - Target 7-12 stories. Quality over quantity. Omit empty sections rather than padding.
@@ -444,6 +446,23 @@ local today — that is fine; never invent stories to balance them.)
 EDITOR TIPS: The blocks under "=== EDITOR TIPS ===" are hand-submitted leads. Treat \
 each as a candidate story ranked normally. Follow each tip's own editor note (attribution, \
 hedging, what to withhold). Do not invent details beyond the tip and its links.
+
+OFFICIALS: Write the 📢 section from "=== OFFICIALS ===" if that block is present; \
+omit the whole section if it is absent or empty. Rules, all of them load-bearing:
+- Everything there is a CLAIM, not a fact. Write "said in a release" / "announced" — \
+never restate a press release as established fact, and never adopt its framing.
+- Keep the two groups distinct. Officials speak as officeholders; candidates speak as \
+campaigns. Say which. An incumbent may legitimately appear in both.
+- Contested races travel in pairs. If the block carries a NOTE that one side posted \
+nothing, SAY SO in the brief — "X's campaign did not post this week." Reporting one \
+side silently, with no mention of the other, is the failure this rule exists to stop.
+- 1-2 sentences per item, 4-6 items total. Prefer items with Tucson-area consequence \
+over national message discipline.
+- Draw this section ONLY from the "=== OFFICIALS ===" block. Do not promote a story \
+or a social post out of the news items into it — those belong in their own sections, \
+and an item pulled across arrives without the URL this section requires.
+- Every item needs its markdown link, same as everywhere else. If an item has no URL, \
+leave it out.
 
 WEATHER: Write the ⛈️ section from the NWS data under "=== WEATHER ===". If an active \
 alert exists, lead that section with a ⚠️ callout in bold. Include today's \
@@ -476,6 +495,12 @@ Tucson Daily Brief — {today_human}
 
 ───
 
+📢 What Your Officials Are Saying
+**[Name (role).]** [1-2 sentences on what they said, attributed as a release.]
+📰 [Source](url)
+
+───
+
 ⛈️ Weather — Tucson
 [alert callout if any, then forecast as described]
 
@@ -490,6 +515,10 @@ If an item's LINK is "(none)", cite the source name without a link. Never link t
 
 === EDITOR TIPS ===
 {tips_block}
+
+=== OFFICIALS ===
+
+{officials_block}
 
 === NEWS ITEMS (grouped by source) ===
 {items_block}
@@ -739,6 +768,18 @@ def main():
 
     items_block = build_items_block(by_source)
     tips_block = "\n\n".join(tips) if tips else "(none)"
+
+    # Officials + candidates. Non-fatal by design: a site redesign should cost us
+    # one section, never the brief.
+    try:
+        import officials_watch as ow
+        ow_items, ow_errs = ow.fetch_all()
+        officials_block = ow.build_block(ow_items)
+        print(f"  ok    Officials watch: {len(ow_items)} release(s), "
+              f"{len(ow_errs)} error(s)", file=sys.stderr)
+    except Exception as e:
+        officials_block = ""
+        print(f"  WARN  officials watch unavailable: {e}", file=sys.stderr)
     total_items = sum(c for _, c in fetched)
     print(f"Total items in window: {total_items} across "
           f"{sum(1 for _, c in fetched if c)} source(s) with content", file=sys.stderr)
@@ -746,6 +787,7 @@ def main():
     if args.dry_run:
         print("\n=== WEATHER ===\n" + weather_block)
         print("\n=== EDITOR TIPS ===\n" + tips_block)
+        print("\n=== OFFICIALS ===\n" + (officials_block or "(none)"))
         print("\n=== ITEMS ===\n" + items_block)
         return
 
@@ -764,6 +806,7 @@ def main():
         weather_block=weather_block,
         tips_block=tips_block,
         items_block=items_block,
+        officials_block=officials_block or "(none in window — omit the 📢 section)",
     )
     print(f"Prompt: ~{len(prompt):,} chars (~{len(prompt)//4:,} tokens). Calling Claude...", file=sys.stderr)
 
@@ -777,7 +820,8 @@ def main():
     # now: classify and log, never alter the brief. See provenance_gate.py.
     run_provenance_gate(
         body,
-        sources="\n".join([items_block, weather_block, tips_block]),
+        sources="\n".join([items_block, weather_block, tips_block,
+                           officials_block]),
         date_str=brief_date.isoformat(),
     )
 

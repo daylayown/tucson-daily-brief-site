@@ -293,5 +293,8 @@
     "schedule": "daily_6am_mst",
     "max_items": 10,
     "summary_style": "concise wire-service prose, no fluff, lead with most important story"
+  },
+  "_meta": {
+    "see_also": "officials_watch.py holds 8 additional sources not configurable here: press releases for Sens. Kelly and Gallego, Reps. Ciscomani (CD6) and Grijalva (CD7), Gov. Hobbs, and the campaigns of Hobbs, Biggs and Mendoza. They need per-site HTML parsers rather than a feed URL, so they live in that module. Feeds the brief's 'What Your Officials Are Saying' section. Do not audit sources without also reading that file."
   }
 }
