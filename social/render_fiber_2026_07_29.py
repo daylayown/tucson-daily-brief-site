@@ -3,10 +3,16 @@
 Tucson fiber-deal social pair for 2026-07-29.
 
 Two slides, each in IG 4:5 (1080x1350) + a crop-proof FB square (1200x1200):
-  1. The news — what the Mayor and Council actually approved.
-  2. "What's confirmed, what's the pitch" — separating the public record from
-     the press release. BTS/how-we-know framing performs well for TDB
-     (IG-BTS-STRATEGY), and here it doubles as the accountability angle.
+  1. The news — fiber is coming, plainly and positively.
+  2. "We read the agenda so you don't have to" — warm BTS, which over-indexes
+     on TDB's IG (IG-BTS-STRATEGY).
+
+Keep this copy LIGHT. A first pass put the verification trail on the cards
+themselves — resolution numbers, the emergency clause, and a whole slide
+separating the public record from the press release. It read as a memo, and the
+second slide read as cynical. Instagram is a positive platform; the detail
+belongs in the caption, which is also what SOCIAL-CARDS.md already says
+("source attribution lives in the caption, not on the card").
 
 VERIFICATION (2026-07-29). Two tiers, and the cards keep them apart:
 
@@ -34,32 +40,26 @@ claim. Unverifiable marketing.
 """
 from render_card import build_card, render
 
-NEWS_KICKER = "City of Tucson"
-NEWS_HEAD = "Tucson opened its streets to a fiber build."
+NEWS_KICKER = "Good news"
+NEWS_HEAD = "Fiber internet is coming to Tucson."
 NEWS_DEK = (
-    "On July 21 the Mayor and Council approved Resolution 24150 — a license "
-    "letting Wyyerd Connect, LLC install fiber-optic infrastructure in the "
-    "city’s public right-of-way, city-wide. It passed with an emergency clause, "
-    "so it took effect immediately rather than after the usual waiting period. "
-    "The company says it will invest more than $200 million over five years at "
-    "no cost to taxpayers."
+    "The city just cleared the way for Wyyerd to run fiber-optic lines through "
+    "Tucson neighborhoods — city-wide. The company says it’s putting in more "
+    "than $200 million over five years, at no cost to taxpayers."
 )
 
-BTS_KICKER = "What we checked"
-BTS_HEAD = "The record, and the pitch."
+BTS_KICKER = "How we found it"
+BTS_HEAD = "We read the agenda so you don’t have to."
 BTS_DEK = (
-    "The agreement is public and specific — we read it in the city’s own July 21 "
-    "agenda: Resolution 24150, Wyyerd Connect, LLC, city-wide right-of-way. "
-    "The headline numbers are a different thing. “$200 million,” “zero cost to "
-    "taxpayers” and “Arizona’s fastest” all trace to one joint announcement from "
-    "the city and the company. Both can be true — they aren’t the same kind of "
-    "fact, and we’ll keep telling you which is which."
+    "This one was item “b” on a July 21 council agenda, tucked under a "
+    "communication number. No press conference. That’s where most Tucson news "
+    "actually lives — and reading it every morning is the whole job."
 )
 
 CARDS = [
     dict(slug="fiber-2026-07-29", theme="light",
          kicker=NEWS_KICKER, headline=NEWS_HEAD, dek=NEWS_DEK,
-         meta_text="swipe → what we could confirm"),
+         meta_text="swipe →"),
     dict(slug="fiber-2026-07-29-fb", theme="light", size=(1200, 1200),
          kicker=NEWS_KICKER, headline=NEWS_HEAD, dek=NEWS_DEK,
          meta_text="tucsondailybrief.com"),
