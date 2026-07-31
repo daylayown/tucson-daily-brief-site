@@ -23,6 +23,24 @@ rio-nuevo-investigation/
 downtown-mass-shooting/
 data-center-election-2026/
 
+# "How safe is Tucson?" In Depth — staged assets for an UNPUBLISHED piece that
+# is gated on TPD's right-of-reply. Committing these would put the artwork, the
+# evidence image, and the BTS carousel's framing of the FBI-reporting finding
+# into a public repo before the subject of the story has had a chance to answer.
+#
+# ⛔ DELETE THIS BLOCK when the article publishes — the assets ship with it.
+# Listed file-by-file on purpose: a glob (in-depth/*.png) would go on silently
+# swallowing artwork for every future In Depth piece long after this one is out.
+in-depth/SOCIAL-PLAN-how-safe-is-tucson.md
+in-depth/evidence-me-homicides-pima-2026-07-20.jpg
+in-depth/exec-3aa6ab2d-db3c-4751-86ab-3c05656a0796.png
+in-depth/exec-5e0ba2c9-60aa-4f47-9c85-50cd3350f5ee.png
+in-depth/fig-fbi-reporting-gap.svg
+in-depth/hero-violence-datagap.svg
+in-depth/hero-violence-what-we-know.png
+in-depth/social-violence-desert-src.png
+social/render_bts_datagap_carousel.py
+
 # Around Town development-watch state
 around-town/.dev_state.json
 around-town/.dev_state_marana.json

@@ -136,7 +136,7 @@ python generate_post.py --rebuild-all ~/.openclaw/workspace/briefings/          
 
 **Display-name renames are display-only** (same trick as Spotted): the reader-facing labels changed but URLs, directories, `_NAV` active-keys, module names, and CSS classes kept the original terminology. Two rename waves:
 - **2026-06-24 IA reorg** → the topic-hub structure above (see `IA-REORG.md`).
-- **2026-07-18 reader-facing labels** (from `sol/sol-new-names.md`): Meeting Watch/Local Meeting Previews → **What to Watch**; News Reports/Local Meeting Reports → **What They Decided**; Deep Dives → **In Depth**. URLs stayed `meeting-watch.html`, `news-reports.html`, `in-depth.html`; nav keys stayed `meetings`/`reports`/`indepth`. Renderers plus a one-time HTML sweep over published pages carried the change; "Spotted" and "Daily Briefs" were already good and kept.
+- **2026-07-18 reader-facing labels** (from `~/claude-code-projects/tucson-daily-brief-notes/sol-new-names.md`): Meeting Watch/Local Meeting Previews → **What to Watch**; News Reports/Local Meeting Reports → **What They Decided**; Deep Dives → **In Depth**. URLs stayed `meeting-watch.html`, `news-reports.html`, `in-depth.html`; nav keys stayed `meetings`/`reports`/`indepth`. Renderers plus a one-time HTML sweep over published pages carried the change; "Spotted" and "Daily Briefs" were already good and kept.
 
 **"Spotted" is a display rename only.** URL stayed `public-record.html`, directory stayed `public-record/`, and all code (module names, CSS class `public-record-filing`) keeps the original terminology. Only user-facing text changed.
 
