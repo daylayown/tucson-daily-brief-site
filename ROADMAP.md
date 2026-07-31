@@ -79,6 +79,20 @@ Captured from a strategy discussion. These extend the "structured data + AI" the
 - **Council Vote & Promise Tracker.** From transcripts/minutes already captured: AI extracts (a) every vote → "how did Member X vote, what's the pattern," and (b) **commitments** officials make ("we'll revisit in 90 days") and surfaces when they come due or quietly die. Almost impossible manually; trivial for an agent watching transcripts. Depends on the OV vote-data work (#2 above).
 - **Anomaly detection on structured data.** Once OV crime/permit/budget data flows, an AI pass flags outliers (a crime-category spike, an unusual sole-source contract, a permit anomaly). Where the data-collection and AI-tooling threads converge.
 
+## Roadmap: TDB Evidence Desk (captured 2026-07-23 from next-gen-tdb.md — GATED)
+
+**Gate: behind the distribution push / short-form video**, same as everything else in this file. Full argument in `next-gen-tdb.md`; already acted on from it: the `in-depth/` RAG-index gap (fixed 2026-07-23) and the evidence-discipline rules folded into `RIO-NUEVO-PIPELINE-PLAN.md`.
+
+**Core idea:** a private **evidence ledger** as connective tissue across everything already collected — each record = canonical entity + event + immutable source (doc hash, page/timecode, verbatim span) + status (machine-extracted → human-confirmed) + follow-up date. LLMs propose entries; deterministic validators + a human confirm; prose is generated *from* confirmed evidence, never used *as* the database. Generalizes `k3-data-plan.md` and the Rio Nuevo Tier-3 ledger rather than replacing them.
+
+**The eight AI uses** (each section-scale; none started): records-return auditor (inventory/OCR returned files, detect gaps vs the request) · contract-drift detector (agreement vs amendments/invoices) · silent-edit monitor (packet versioning + semantic redline of late uploads) · regional influence graph (entity resolution across jurisdictions — start narrow, Rio Nuevo/data-center universe only) · policy-lineage detector (where ordinance wording first appeared) · crisis timeline compiler (multi-source clock alignment) · local-impact radar (state/federal actions joined to local projects) · adversarial reporting agent (skeptical-editor pass before every In Depth).
+
+**Public formats when ready:** The Receipts (highlighted source passages + playable timestamps) · What They Promised (living register of dated commitments — overlaps the Vote & Promise Tracker above) · Redline Tucson · Public Record of Public Records (agency responsiveness scorecard) · living case files.
+
+**Likely first exception if one is granted:** the **government promise audit** — extract every "report back in 90 days" from the existing transcript corpus. It's the smallest build that actually requires the ledger shape, it's already roadmapped as the Promise Tracker, and a passed deadline drafts its own records request from confirmed evidence.
+
+**Reuse, don't build:** DocumentCloud (OCR/annotation/embeds/Add-Ons) as the primary-document layer; Stanford Big Local News as a possible data-sharing path. Links in `next-gen-tdb.md`.
+
 ## Roadmap: Move TDB off the laptop
 
 TDB has graduated past "laptop project" status — real readers, paid services (ElevenLabs, Buttondown, API costs), automated pipelines, a subscriber newsletter. A closed lid or a coffee-shop trip shouldn't be able to break it. Plan is to migrate everything off the laptop in **two stages**, not one, so a single failure doesn't cascade across all the moving parts at once.
@@ -168,3 +182,70 @@ The current YouTube thumbnail (`~/.openclaw/skills/tucson-daily-brief/assets/you
 **To-do:** Get the Tucson Daily Brief podcast onto Spotify. The podcast already publishes an RSS feed (generated + uploaded to R2 in the `run_podcast.sh` flow) and is live on Apple Podcasts and YouTube. Spotify ingests standard podcast RSS — the work is submitting the existing feed URL through Spotify for Creators (the rebranded Spotify for Podcasters / Anchor, at `creators.spotify.com`), validating it, and confirming episodes flow automatically thereafter. No pipeline code change expected; it's a one-time submission of the RSS feed already being produced.
 
 **Status (2026-06-30): feed validated + ready to submit; blocked only on a Spotify-side login bug.** Full do-it-later checklist (feed URL, validation results, submission steps, login-loop fixes, post-launch tasks) lives in **`SPOTIFY-SUBMISSION.md`**. Short version: feed `https://pub-9552aa4d76834cea9f9e35f908b604e4.r2.dev/feed.xml` passed every requirement (128 episodes, reachable MP3 enclosures, owner email `nicholas@daylayown.org`, 3000×3000 cover, News/en-us). Submission is blocked by a **known Spotify for Creators login redirect loop** (Spotify support confirmed 2026-06-30 it's a current issue on their side, not our account/feed). Pick-up: retry the portal login next day → paste feed URL → enter the verification code emailed to `nicholas@daylayown.org` → submit. Once live, add the Spotify show URL to the site footer + social link-in-comments.
+
+- **Bug (captured 2026-07-29, not started):** Spotted filings are hardcoded `New business` (`public_record_liquor.py:454`, `public_record_liquor_dllc.py:317`, `generate_post.py:941`). In AZ liquor licensing "New License" is an action type describing the license, not the business — established restaurants and wholesalers get mislabeled. Honest label = the action type we already parse, or a neutral "Liquor filing". Touches 2 renderers + collector + section intro + CSS class + published pages.
+
+## Roadmap: Character animation stack + possible HeyGen alternative (captured 2026-07-30 — GATED)
+
+Full note: **`CHARACTER-ANIMATION-STACK.md`**. Came out of the 2026-07-29 HeyGen
+bake-off. Headline finding: **generative video is the wrong tool for cel art** —
+HeyGen's Avatar IV held one mouth shape and wobbled it (aperture correlated
+−0.12 with speech; mouth near-closed on only 8% of frames) and morphed the arms,
+while our deterministic viseme pipeline scored +0.24 correlation and closed on
+44%. Diffusion invents pixels; for drawn characters we already have the art, so
+that freedom is pure drift. Right architecture = rig + timing + compositing.
+
+Three tiers costed in the doc: (1) no ML at all — Character Animator's
+architecture, half-built already, plus off-the-shelf WhisperX/MFA and SAM
+auto-rigging; (2) LoRA fine-tune of open talking-head models (LivePortrait,
+SadTalker, Hallo…) on the **RTX 5080**, with training data *generated
+synthetically by the Tier-1 rig* — the one real moat here; (3) train from
+scratch — ruled out.
+
+**Do first, independent of everything else: WhisperX vs Rhubarb A/B.** Free, and
+it improves the existing mascot pipeline regardless. Then slice the mouth sheet
+into Character Animator layers; then Hedra's free tier (the one image→video model
+built for cartoons/non-human faces). Caveat recorded in the doc: this is a tools
+company, not a local-news company.
+
+## Roadmap: Post-publication article enrichment (captured 2026-07-30 — GATED behind the distribution push)
+
+User idea, sharpened against the croton.news precedent (a colleague's friend's site —
+Matthew Broudy's one-person AI civic outlet for Croton-on-Hudson, NY; see
+https://croton.news/article/238 for the pattern working in production with 20+
+timestamped citations per article). Two-stage publish for AI-reporter articles:
+report ships the night of the meeting exactly as today; an enrichment pass runs
+later in the week when the VOD lands. **Enrichment adds media and links but never
+alters the human-reviewed prose** — that rule is what keeps it an update, not a
+stealth edit.
+
+Three enrichment stages, in build order:
+
+1. **Video embed** (small lift): iframe of the meeting VOD + a provenance-status
+   line. Tucson (@cityoftucson YouTube) and Pima (Granicus + YouTube) are
+   zero-unknown; Marana/OV are Swagit — embed exists, deep-link support
+   unverified (croton made deep links work against a ChampDS archive, so likely
+   solvable).
+2. **Timestamped quote citations**: every direct quote gets a link to the second
+   it was said. Reuses `promise_tracker.py`'s verbatim-span discipline — locate
+   the quote character-for-character in the Deepgram transcript, derive the
+   timestamp from the located span (never from a model), fail closed (no match →
+   no footnote). One wrinkle: our capture clock vs the VOD clock needs a
+   constant per-meeting offset — v1 = one human-supplied anchor point, v2 =
+   Deepgram-batch the first ~3 min of VOD and align (~pennies). croton.news
+   independently converged on the same verbatim-quote gate, which is decent
+   evidence it's the right guardrail.
+3. **Official-minutes reconciliation** (croton-inspired, new): when the official
+   minutes publish weeks later, diff them against our report — confirms our
+   account and generates a story when the minutes omit something we covered.
+
+**Labeling: graduated status checklist, not a two-date line** (better idea stolen
+from croton's "✓ Transcript checked ◯ Official minutes not yet published"): TDB
+articles would open stronger — "✓ Human-reviewed before publication" on day one —
+then flip "◯ Video citations pending VOD" to ✓ mid-week. `dateModified` in
+JSON-LD; sitemap lastmod free via rebuild_homepage().
+
+Posture notes: keep review-before-publish (croton spot-checks after publication —
+our conservatism is a differentiator, not a lag) and keep About-page-only AI
+disclosure (croton stamps the model per-article; ours is settled policy,
+feedback_ai_disclosure_about_page).

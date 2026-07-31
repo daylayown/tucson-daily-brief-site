@@ -68,6 +68,12 @@ Cost: ~$0.07/run. Output: ~950 words drafted directly in markdown.
 
 Auth: `BUTTONDOWN_API_KEY` from `~/.config/environment.d/buttondown.conf`.
 
+**⚠️ Never PATCH an existing Buttondown draft with markdown — delete and recreate instead.** (Learned 2026-07-25.) On create, Buttondown prepends `<!-- buttondown-editor-mode: fancy -->` to the stored body. That marker is sticky. If you later `PATCH /v1/emails/<id>` with a raw markdown body, Buttondown keeps the `fancy` flag but treats the incoming markdown as HTML — it wraps the **entire issue in a single `<p>`**, and every `##` heading and blank-line paragraph break collapses into one run-on block. The API returns 200 and the body length looks plausible, so this fails silently; you only catch it by eye in the editor.
+
+The correct flow for post-generation edits is: **edit the local `newsletter/drafts/*.md`, `DELETE /v1/emails/<id>`, then re-run `upload_to_buttondown.py`** on the file. The create path does the markdown→fancy conversion properly.
+
+Verify a draft is healthy by fingerprinting its stored body against an already-*sent* issue — a good TDB Weekly reads `## ` × 5, `\n\n` × 18–19, `<p>` × 0. A body with `<p>` ≥ 1 and `\n\n` × 0 is the collapsed failure mode.
+
 **3. `run_newsletter.sh` — manual Saturday-ritual wrapper (NOT cron'd)**
 
 Loads env vars from `~/.config/environment.d/`, runs the generator with `--force`, finds the latest draft, and uploads it. Logs to `/tmp/newsletter-gen.log`. Single `--dry-run` flag for manual testing.

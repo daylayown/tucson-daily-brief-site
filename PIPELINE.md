@@ -1,6 +1,6 @@
 # Daily Brief Pipeline — renderer, automation, failure modes
 
-The `generate_post.py` renderer, the 6:00/6:30 AM cron chain, Anthropic billing posture, and the recurring failure modes (brief mis-save, no-network, weather-alert-led briefs, the NWS fire-zone fix, editor's desk, the self-citation gap).
+The `generate_post.py` renderer, the 6:00/6:10 AM cron chain, Anthropic billing posture, and the recurring failure modes (brief mis-save, no-network, weather-alert-led briefs, the NWS fire-zone fix, editor's desk, the self-citation gap).
 
 Reference doc split out of CLAUDE.md on 2026-07-17 to keep the always-loaded context lean. Prose is preserved verbatim from CLAUDE.md; CLAUDE.md now carries a short pointer to this file.
 
@@ -26,7 +26,7 @@ The synthesis prompt **already** said *"NEVER fabricate facts, names, dates, quo
 `run_provenance_gate()` extracts every capitalized multi-word run from the draft and checks it against the exact `items_block + weather_block + tips_block` that produced it. Three outcomes: **GROUNDED** (full string in sources), **PARTIAL** (only a shorter suffix is — "Barrett" but not "David Barrett", i.e. a modifier was invented), **UNGROUNDED** (no trace). Notes:
 
 - **Currently SHADOW mode** — it classifies, logs, and prints warnings; it never alters the brief and never fails the run (all exceptions swallowed; a bug in the checker must not take down the 6 AM cron). Review `brief-inputs/shadow.jsonl` before enabling `Mode.ENFORCE`.
-- **Telegram alert at ~6:01, about 30 minutes before the brief publishes.** `send_provenance_alert()` fires only when there are person-shaped alerts — silent on a clean brief, because a channel that pings every morning gets muted and then protects nothing. Timing is the point, and it is why `run_podcast.sh` moved off 6:10 on 2026-07-28 (first to 7:30 in the morning, pared back to **6:30** that evening at the user's call): ten minutes was not a realistic window for a human to check a flagged name, thirty is workable. The whole publication chain takes ~48s (measured), so the start still clears `check_agendas.sh` at 8:00 and `refresh_ask_index.sh` at 8:45 — the brief is live well before the RAG index rebuilds. Nothing waits on the review: an unread alert publishes anyway at 6:30, so this is a soft gate, not a block. This does **not** violate the "Telegram only via `run_podcast.sh`" rule — that rule prevents the *brief itself* being sent twice; alerts are a separate message type, exactly like the FOIA and agenda alerts, and go through the same `send_telegram.py`. Non-fatal throughout: a missing sender or a Telegram outage warns and continues.
+- **Telegram alert at ~6:01, about 30 minutes before the brief publishes.** `send_provenance_alert()` fires only when there are person-shaped alerts — silent on a clean brief, because a channel that pings every morning gets muted and then protects nothing. Timing was the point, and it is why `run_podcast.sh` moved off 6:10 on 2026-07-28 (first to 7:30 in the morning, pared back to 6:30 that evening). **Reverted to 6:10 on 2026-07-30 at the user's call** — after two days the gate had produced only false positives ("Arizona Constitution", "Tucson Electric Power"), and the split between the 6:05 A/B send and the 6:30 publication was confusing to read in Telegram. The review window is back to ~8 minutes, i.e. effectively none: treat the alert as after-the-fact notification, not a gate. If the gate is ever flipped to ENFORCE, revisit this — enforcement plus no review window means the trim ships unreviewed. The whole publication chain takes ~48s (measured), so the start still clears `check_agendas.sh` at 8:00 and `refresh_ask_index.sh` at 8:45 — the brief is live well before the RAG index rebuilds. Nothing waits on the review: an unread alert publishes anyway, so this is a soft gate, not a block. This does **not** violate the "Telegram only via `run_podcast.sh`" rule — that rule prevents the *brief itself* being sent twice; alerts are a separate message type, exactly like the FOIA and agenda alerts, and go through the same `send_telegram.py`. Non-fatal throughout: a missing sender or a Telegram outage warns and continues.
 - **Log everything, alert narrowly.** Every finding is logged, but only *person-shaped* runs raise a warning — misnaming a human is the harm worth interrupting for; an unmatched street or program name is usually noise. Measured on real briefs: ~44 runs/brief, ~14 unverified, **~0–3 person-shaped alerts/day**.
 - **Auto-repair is deliberately narrow.** Trimming works for people ("David Barrett" → "Barrett") but produces gibberish for orgs and places ("Sahuarita Unified School District" → "District"). `_repairable()` therefore requires a single invented given name leaving a single bare surname, no punctuation, no acronyms. A botched repair is worse than the unverified name it fixes.
 - **`brief-inputs/` archives the source text per brief** (gitignored). Mandatory, not optional: RSS feeds roll over within a day or two, so a flag is unauditable after the fact without it. It is *not* under `BRIEFINGS_DIR` because `run_podcast.sh` globs that path.
@@ -82,7 +82,7 @@ This site is part of a daily pipeline with two stages:
 
    **Sketch of the durable fix (not built, discuss first):** before synthesis, `generate_brief.py` scans `news-reports/` (and plausibly `meeting-watch/` + `public-record/`) for pieces published in the last ~48h, and passes them to the model as a **"TDB already reported this"** block with an instruction to lead with our own link and treat feed items on the same story as corroboration. The matching is the hard part (headline/entity overlap, not exact strings) and it's the same shape as the agenda-vs-transcript cross-reference described under the AI Reporter's "deaf to items that pass without discussion" gap — both are "diff what we know against what we said." Worth considering whether one utility serves both.
 
-2. **6:30 AM MST** — System cron triggers `~/.openclaw/skills/tucson-daily-brief/scripts/run_podcast.sh`, which waits for the `.md` file, then runs in this order: sends to Telegram (via `send_telegram.py`) → generates blog post + git push → **generates + auto-publishes the daily short-form video to YouTube Shorts** (`social/generate_short.py --publish`) → generates condensed podcast script (via Claude Haiku) → generates podcast audio (ElevenLabs TTS) → uploads RSS/R2 → generates YouTube video → uploads to YouTube. The blog post runs **before** and **independently of** the podcast, so a podcast failure (e.g. ElevenLabs quota exceeded) never blocks the blog. Each distribution step is non-fatal.
+2. **6:10 AM MST** — System cron triggers `~/.openclaw/skills/tucson-daily-brief/scripts/run_podcast.sh`, which waits for the `.md` file, then runs in this order: sends to Telegram (via `send_telegram.py`) → generates blog post + git push → **generates + auto-publishes the daily short-form video to YouTube Shorts** (`social/generate_short.py --publish`) → generates condensed podcast script (via Claude Haiku) → generates podcast audio (ElevenLabs TTS) → uploads RSS/R2 → generates YouTube video → uploads to YouTube. The blog post runs **before** and **independently of** the podcast, so a podcast failure (e.g. ElevenLabs quota exceeded) never blocks the blog. Each distribution step is non-fatal.
 
    **Daily Short (auto, added 2026-06-23):** after the blog post, `social/generate_short.py --publish` has Haiku pick an *evergreen feel-good* story from the last 14 days of `posts/`, write a facts-only beat script (anti-hype + dedup against already-used stories), render a 1080×1920 "Only in Tucson" clip with its own AI music, and **publish it public to YouTube Shorts unattended** (no review gate — user's call, full auto while it's YouTube-only). Exits non-zero (non-fatal) on days with no fresh feel-good story. See the "Social Media Cards" / `SHORT-FORM-VIDEO.md` for the full design. **"Buried in the Agenda" (the moat series) went live 2026-07-11 as a weekly Monday auto-short** — `social/generate_agenda_short.py`, run by `check_agendas.sh` on Mondays (see the "Marketing & Distribution Strategy" section for the full design).
 
@@ -135,3 +135,159 @@ done
 A high-priority source at zero for a month is the signal. Nothing else caught any
 of these three.
 
+
+## Model cost + the bake-off (re-baselined 2026-07-30)
+
+`CLAUDE.md` carries the summary table; this is the detail and the method.
+
+**Measure, don't estimate.** The synthesis call already logs its own usage —
+`Synthesis: model=… in=… out=… thinking=… stop=…` in `/tmp/brief-gen.log`. Read
+that line before quoting any cost figure. Two estimation traps, both hit on
+2026-07-30 and both worth ~2x:
+
+1. **Opus 5 thinks by default.** `call_claude()` sends no `thinking` param.
+   On Opus 4.8/4.7 that meant no thinking; on **Opus 5 it runs adaptive
+   thinking**. 4,879 of 8,091 output tokens on the 7/30 run were thinking,
+   billed as output. Reduce with `output_config.effort` if wanted — untested.
+2. **Tokenizers are not comparable.** The identical 79,643-char prompt is
+   **34,908 tokens to Claude and 21,647 to GPT-5.6** (~61% more for Claude).
+   Comparing vendors on $/MTok alone is meaningless; compare measured $/run.
+
+### Per-model cost for one brief (measured 2026-07-30)
+
+| model | in | out | $/run | $/month |
+|---|---:|---:|---:|---:|
+| Opus 5 (production) | 30,043 | 8,091 | 0.3525 | $10.57 |
+| GPT-5.6 Sol | 21,647 | 3,810 | 0.2225 | $6.68 |
+| GPT-5.6 Terra | 21,647 | 3,350 | 0.0835 | **$2.50** |
+| Sonnet 4.6 (est., no thinking) | 30,043 | ~3,200 | 0.1381 | $4.14 |
+
+OpenAI cut Terra 20% and Luna 80% on 2026-07-30 (Sol unchanged). Prices in
+`brief_model_ab.py` are **short-context** rates; OpenAI charges roughly double
+for long context without publishing the boundary. Re-check if the prompt grows.
+
+### The bake-off harness
+
+`brief_model_ab.py` runs challengers on the **byte-identical** prompt the
+published brief was built from, captured by monkeypatching `generate_brief.
+call_claude` (the `ERROR: synthesis failed` line in the log is that working as
+designed). Publishes nothing; writes only to `brief-bake-off/`.
+
+- `--models sol,terra` / `--cheap` / `--no-telegram`; **cron names its arms
+  explicitly** (`--models sol,terra,flash --no-telegram` as of 2026-07-31, in
+  `run_brief_ab.sh`) — leaving it bare would run every challenger and silently
+  multiply the daily cost. `run_brief_ab.sh` is the source of truth for which
+  arms actually run; check it before quoting the set here.
+- The `opus` arm exists for when the prompt has changed since publication (a
+  prompt or source-layer edit). Otherwise the copied champion brief stands in.
+- The provenance gate runs on every arm and is the one automated quality signal.
+  **Caveat: as of 7/30 every gate finding across four models was a false
+  positive** — `Tucson Daily Brief` (our own masthead), `Two A-10s` (an
+  aircraft), `Pascua Yaqui Tribe's`, `National Weather Service`. Tune
+  `person_shaped()` before trusting it or enforcing on it.
+
+### State of the experiment (2026-07-30, n=1 — decide nothing yet)
+
+Luna is out: it buried a four-day Extreme Heat Warning last in the brief on the
+morning it took effect, consistently across runs. Judgment failure, not polish.
+
+Sol vs Terra is the live race. After the officials-block fix Terra produced 823
+words at **97% grounded** — the best rate of the three — for $0.084/run against
+Opus 5's $0.419. Opus 5 remains the most complete (1,147 words) but is ~4.2x
+Terra's cost and spends ~4x the reasoning tokens, so the arms are not
+like-for-like on effort. Needs several more days before any decision.
+
+### DeepSeek V4 arms (added 2026-07-31)
+
+DeepSeek shipped **V4-Flash-0731** the morning of 2026-07-31 (`deepseek-v4-flash`,
+public beta; V4 itself landed 2026-04-24). Two arms are wired: `flash` and
+`dspro`. Both are 1M context / 384K max output and **think by default**, left on
+because the champion does too.
+
+| arm | model | in $/MTok | out $/MTok | est. $/mo at the brief's workload |
+|---|---|---:|---:|---:|
+| `flash` | deepseek-v4-flash | 0.14 | 0.28 | **~$0.20** |
+| `dspro` | deepseek-v4-pro | 0.435 | 0.87 | ~$0.61 |
+
+That is ~1/50th of Opus 5 and cheaper than Luna, the previous floor. Notes that
+cost something when forgotten:
+
+- **The endpoint is OpenAI-compatible**, so the arm reuses `run_chat()`.
+  `PROVIDERS` now carries per-provider url/env/`token_param` — DeepSeek wants
+  `max_tokens`, GPT-5.x rejects it and needs `max_completion_tokens`. There is
+  also an Anthropic-shaped endpoint at `https://api.deepseek.com/anthropic`,
+  unused here.
+- **Cache-hit input is priced 50x lower** ($0.0028 vs $0.14). `run_one` applies
+  the split only for specs carrying `cache_price`, so the OpenAI/Anthropic arms
+  keep pricing all input at full rate and stay comparable to earlier
+  `ab.jsonl` rows.
+- **⚠ Peak-hour surcharge: 2x on everything** during Beijing 09:00–12:00 and
+  14:00–18:00 = **18:00–21:00 and 23:00–03:00 MST**. The 6:05 AM cron lands at
+  21:05 Beijing, off-peak; ad-hoc evening runs may not be.
+- **The "Opus-level" framing is a coding claim, and it is about Pro, not Flash.**
+  V4-Pro beats Opus 4.8 on competitive programming and long-context retrieval
+  but trails it on SWE-bench Pro (52.1 vs 69.2); Flash sits well below both.
+  None of that predicts news synthesis from a 30K-token source pile — which is
+  the whole reason this harness reads briefs instead of benchmarks.
+- **PRC hosting is a settled question — don't re-raise it.** The user weighed it
+  2026-07-31 and is fine with it: the inputs are already-public news text. Judge
+  these arms on output quality like every other challenger.
+
+#### First Flash run (2026-07-31, n=1)
+
+`in=19,367 out=36,625 thinking=34,316 finish=stop 328s $0.0123`, 880 words.
+
+- **It thinks ~7x harder than Opus 5** — 34,316 thinking tokens against Opus's
+  4,879, and **93% of its output tokens were thinking**. The first attempt
+  returned **empty text** at the shared 16K budget: `finish=length`, all 16,000
+  tokens spent reasoning. The V4 arms therefore carry `max_tokens=48000`. If
+  another thinking model is ever added, check this before trusting a null result.
+- **Latency is the real cost, not dollars.** 328s vs the ~30-60s the other arms
+  take. Still fine for a 6:05 AM batch job that publishes nothing; would matter
+  if it were ever promoted to the 6:00 AM production path, which has a retry
+  loop and a podcast chained behind it.
+- **Two harness bugs this surfaced,** both fixed: `max_tokens` was a single
+  shared constant, and `run_one` counted a billed-but-empty response as a
+  success ("1/1 arms succeeded" for a run that wrote no brief).
+- **Do not read this run as a head-to-head.** It was a manual re-run ~45 min
+  after the 6:00 AM fetch, so Flash saw a *larger* news window than the champion
+  did — it correctly reported the Pueblo High interim-principal story (Alma
+  Mejia-Garcia / Frank Rosthenhausler, verified against the cited Star URL) that
+  simply did not exist in production's source pull. Only the cron run, on the
+  byte-identical prompt, is a fair comparison.
+
+**Editorial read, Flash vs the 7/31 champion** (16 story items each — Flash is
+not covering less, it is covering *differently* and writing ~30% tighter):
+
+| | Flash | Opus 5 champion |
+|---|---|---|
+| Missed by the other | AZ Supreme Court clergy ruling, Hobbs-declines-to-debate as its own item, Gehrke family interview, hunger-relief merger, KXCI blues show | bat-exposure record, Tucson Fire call volume, $174M city bonds, back-to-school, Wyyerd fiber deal, Sun Tran Aug. 16 changes, Community on Wheels closing |
+| Lean | courts + human interest | institutional + service journalism |
+
+- **Flash caught the clergy ruling and Opus dropped it** — churches, not judges,
+  decide when a confession of child abuse must be reported (Cochise County
+  case). Four outlets carried it and **all four were in the 6:00 AM sources**,
+  so this is a real champion miss, not a timing artifact. Verified by grepping
+  `brief-inputs/<date>.sources.txt` — do that before crediting either arm with
+  a "find."
+- **Opus is better where depth shows:** the weather item (issue time, hard
+  expiry, named zones, cooling-center/pet gap vs Flash's bare "through Sunday" —
+  the most actionable item on a 111° day), explanatory asides ("a notice of
+  claim is a required precursor to a lawsuit, not a filed suit"), naming the ICE
+  arrestee as the Star did, and crediting **Votebeat** as originating the ballot
+  story that Luminaria and Mirror republished. Flash credited the republishers.
+- **Latency (328s) is not a real objection** — the user's call 7/31. This is a
+  batch job with an 8-hour runway that publishes nothing. Judge these arms on
+  brief quality.
+
+#### The bracket bug was ours, not Flash's
+
+Flash emitted `**[Headline.]**` on every story, which `md_to_html()` renders as
+literal `<strong>[Headline.]</strong>`. Root cause was **`SYNTHESIS_PROMPT`
+overloading square brackets** — placeholder notation (`**[Headline.]**`) on the
+same line as literal markdown link syntax (`[Source Name](url)`). Opus resolved
+the ambiguity; Flash took it literally, which is the correct reading of what the
+prompt actually said. Fixed 2026-07-31 by showing real output instead of
+placeholders, plus an explicit "no brackets" line; verified live on both flash
+and sol. **General lesson: a challenger rendering the prompt literally is a
+prompt bug, not a model defect — check the instruction before blaming the arm.**

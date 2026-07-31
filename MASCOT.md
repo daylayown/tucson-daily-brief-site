@@ -62,16 +62,54 @@ Demonstrated working 2026-07-28 with the blink loop:
    through the feather.)
 2. **Loops via ffmpeg concat** with per-frame durations (see
    `blink-list.txt`): open 2.0s / blink 0.12s / … / double-blink cluster.
-3. **Lip-sync (designed, not yet built): the viseme system.** ~9 mouth
+
+   **⚠️ Align patches on the EYES (head position), never on the mouth.**
+   Learned 2026-07-29 building the talking demo. The `surprised` pose has its
+   mouth drawn ~11px lower on the face than `smile` does, so mouth-anchored
+   alignment threw the whole head ~15px out of register and the mask's feather
+   bled mismatched eyes and cheek blush over the base. Eye-anchored alignment
+   keeps every feature in register, so any feather bleed is benign — it bleeds
+   matching content. Measured pupil anchors (289×506 pose space):
+   `smile` eyecx 167.0 / pupil-floor 171.5 · `delight` 175.8 / 168.0 ·
+   `surprised` 166.3 / 166.5 → eye-align shifts `delight` (−9,+4),
+   `surprised` (+1,+5). Derive these by dark-blob detection, don't eyeball them.
+
+   Corollary: shift the **source pose**, then cut with ONE fixed mask. Shifting
+   the *mask* per viseme is what walks the feather up into the eyes.
+3. **Lip-sync — timing engine PROVEN 2026-07-29.** **Rhubarb 1.14.0 is
+   installed** (`~/.local/bin/rhubarb` → `~/.local/share/rhubarb`; GitHub
+   release, not in the Arch repos). It produced 237 viseme cues across all 9
+   Preston-Blair shapes from a 36s track: `rhubarb -f json -o visemes.json
+   --extendedShapes GHX --dialogFile line.txt vo.wav` (wants mono 16-bit WAV;
+   passing the dialog text improves accuracy). `render.py` in
+   `design-explorations/bakeoff-2026-07-29/` maps cues → mouth states → frames
+   → 9:16 H.264.
+
+   Two findings from the first end-to-end render:
+   - **Enforce a minimum 2-frame hold.** Raw Rhubarb output gave 18 one-frame
+     mouth changes out of 179 runs, which reads as buzzy flicker, not speech.
+     `apply_min_hold()` absorbs short runs into the preceding state — 0 one-frame
+     runs after.
+   - **Three mouth shapes is not enough.** Standing in with closed / round-O /
+     wide-open (cut from `smile` / `surprised` / `delight`) produced clean,
+     pixel-stable compositing but mechanical alternation, and the mouth sits
+     open ~91% of frames with no true slight-open. **This is the evidence that
+     the 9-viseme sheet is required, not optional.**
+
+4. **The viseme system as designed:** ~9 mouth
    shapes (rest, M/B/P closed, slight-open, AH, EE, OH, OO, F/V, L) as
    patches over the hero pose; timing from **Rhubarb Lip Sync** (open
    source, offline, audio→viseme timeline) or ElevenLabs character
    timestamps; a script swaps mouth patches per frame; blinks + brow raises
    layer independently on top. Quality register = charming limited/TV
    animation, not Disney-feature articulation — correct for 30s social.
-4. **Voice: a distinct licensed ElevenLabs character voice — NOT the
-   founder's clone.** The clone is the accountable-founder surface (podcast,
-   BTS); the mascot must never blur into it.
+5. **Voice: a distinct licensed ElevenLabs character voice — NOT the
+   founder's clone** (`Apm0doIVFfoMAodKmEYB`, used by `run_podcast.sh`). The
+   clone is the accountable-founder surface (podcast, BTS); the mascot must
+   never blur into it. **Note the repo's ElevenLabs key is TTS-scoped only** —
+   it lacks `voices_read`, so the voice library can't be enumerated from the
+   CLI; pick the character voice in the ElevenLabs UI and record the ID here.
+   Stock voice IDs do work for throwaway timing tracks.
 
 ## Resume checklist (in order)
 

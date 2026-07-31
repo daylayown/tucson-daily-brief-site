@@ -274,3 +274,16 @@ The standing lesson: document context eliminates document-derived errors almost
 completely and does nothing for attribution errors or invention. Editorial
 review still has to assume the draft contains a confident falsehood.
 
+
+## Designed, not built: post-publication enrichment (2026-07-30)
+
+Full design + gate in `ROADMAP.md` ("Post-publication article enrichment").
+Summary for this doc: after the VOD lands, published reports gain (1) a video
+embed, (2) per-quote timestamped citation links derived by locating each quoted
+span verbatim in the Deepgram transcript (promise_tracker discipline — derive
+the timestamp, never trust a model's), and (3) eventually an official-minutes
+reconciliation diff. Enrichment never edits the reviewed prose. Labeling is a
+graduated provenance checklist (croton.news pattern), not just an "updated on"
+date. Key implementation wrinkle: capture-clock → VOD-clock offset, one constant
+per meeting (human anchor v1, automated audio alignment v2). Per-municipality
+VOD/deep-link support matrix lives in ORIGINAL-JOURNALISM.md's data-source table.

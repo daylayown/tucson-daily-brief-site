@@ -10,7 +10,7 @@ CLAUDE.md is the index. Detail lives in these; **when you learn something durabl
 
 | Doc | Covers |
 |---|---|
-| `PIPELINE.md` | Daily brief renderer internals, the 6:00/6:30 AM cron chain, Anthropic billing posture, recurring failure modes (mis-save, no-network, weather-alert briefs, NWS fire-zone fix, editor's desk, self-citation gap) |
+| `PIPELINE.md` | Daily brief renderer internals, the 6:00/6:10 AM cron chain, Anthropic billing posture, recurring failure modes (mis-save, no-network, weather-alert briefs, NWS fire-zone fix, editor's desk, self-citation gap) |
 | `MEETING-WATCH-PIPELINE.md` | The four agenda miners, publishing flow, slug routing, canceled-meeting guard, renderer bugs |
 | `AI-REPORTER.md` | Live + VOD transcription → news report: architecture, usage, schema, scheduler, stream URLs, STT research |
 | `NAMES-BIBLE.md` | `pipeline/local_names.json` — canonical names, Deepgram misreads, the pronouns rule, the queued audit |
@@ -20,6 +20,7 @@ CLAUDE.md is the index. Detail lives in these; **when you learn something durabl
 | `CROSSWORD.md` | The Tucson Mini — editorial posture, generation, wordbank, Saturday ritual |
 | `SOCIAL-CARDS.md` | `social/` renderers, themes, aspect ratios, render-sharpness lessons |
 | `MASCOT.md` | The friendly-saguaro brand character (parked 2026-07-28): decision trail, local-only assets, the patch-compositing animation pipeline, viseme lip-sync plan, prompt kit, resume checklist, light-content-only rule |
+| `CHARACTER-ANIMATION-STACK.md` | How to animate the mascot — why generative video is wrong for cel art (HeyGen bake-off data), the three build tiers, RTX 5080 / LoRA + synthetic-data bootstrap, Character Animator vs Hedra, and the "could this be a product" note |
 | `SHORT-FORM-VIDEO.md` | Platform automation map + DIY publish-adapter plan |
 | `SOCIAL-AUTOPOST.md` | Auto-posting feasibility per platform; Facebook strategy |
 | `MARKETING.md` | Two-brand split, the distribution loop, content mix, instrumentation TODOs |
@@ -194,12 +195,27 @@ The homepage is a **zoned entry hall** (featured brief + cross-stream cards + To
 
 ## Automation
 
-**All AI calls use the Anthropic API via API key**, not a Pro/Max subscription — a deliberate decision from day one, and why the April 2026 subscription-OAuth crackdown didn't affect this pipeline. ~$3–4/month total.
+**All AI calls use the Anthropic API via API key**, not a Pro/Max subscription — a deliberate decision from day one, and why the April 2026 subscription-OAuth crackdown didn't affect this pipeline.
+
+**Running cost (re-baselined 2026-07-30 — the long-standing "~$3–4/month total" was stale):**
+
+| line item | $/month | basis |
+|---|---:|---|
+| **ElevenLabs subscription** | **$24.00** | flat — the largest single cost by far, bigger than every API call combined. Possibly over-provisioned; not yet reviewed |
+| Daily brief — Opus 5 synthesis | ~$10.57 | **measured**: `in=30043 out=8091 thinking=4879` (`/tmp/brief-gen.log`) |
+| Model A/B challenger — Sol, daily via cron | ~$6.68 | measured, `brief-bake-off/ab.jsonl` |
+| Everything else (~17 Sonnet 4.6 call sites + Haiku short) | **not measured** | agenda miners, Spotted, dev watch, FOIA spotter, newsletter, RAG, crossword. Prompts are far smaller than the brief's, but no instrumentation exists |
+
+Two things drove the brief's cost up and are easy to miss:
+- **Opus 5 thinks by default.** `call_claude()` passes no `thinking` param, and on Opus 5 omitting it runs *adaptive* thinking (unlike Opus 4.8/4.7, where omitting meant none). ~4,900 of 8,091 output tokens were thinking, billed at the $25/MTok output rate. `output_config.effort` is the dial if that needs reducing.
+- **Tokenizers differ by ~61%.** The same brief prompt is 34,908 tokens to Claude and 21,647 to GPT-5.6 — a real cost multiplier independent of sticker price. Never compare vendors on $/MTok alone; compare measured cost per run.
+
+Cost detail, the model bake-off, and the per-model comparison live in `PIPELINE.md`.
 
 | Time (MST) | Job | Log |
 |---|---|---|
-| 6:00 AM daily | `generate_brief.py` via `run_brief.sh` — fetch sources → one Sonnet synthesis call → save to canonical path (retry loop, 5 attempts/60s) | — |
-| 6:30 AM daily | `run_podcast.sh` (6:10 → 7:30 → **6:30**, both moves 2026-07-28; ~30-min provenance-review window — see `PIPELINE.md`) — Telegram → blog post + push → daily YouTube Short → podcast script (Haiku) → ElevenLabs TTS → RSS/R2 → YouTube | `/tmp/podcast-gen.log` |
+| 6:00 AM daily | `generate_brief.py` via `run_brief.sh` — fetch sources → one synthesis call (`CLAUDE_MODEL = "claude-opus-5"`, `generate_brief.py:99`) → save to canonical path (retry loop, 5 attempts/60s) | `/tmp/brief-gen.log` |
+| 6:10 AM daily | `run_podcast.sh` (6:10 → 7:30 → 6:30 on 2026-07-28, back to **6:10** on 2026-07-30 — see `PIPELINE.md`) — Telegram → blog post + push → daily YouTube Short → podcast script (Haiku) → ElevenLabs TTS → RSS/R2 → YouTube | `/tmp/podcast-gen.log` |
 | 8:00 AM daily | `check_agendas.sh` — 4 agenda miners + Spotted + dev watch + auto-schedule live recordings (`ENABLE_AUTO_SCHEDULE=1`); **Mondays** also publish the weekly "Buried in the Agenda" Short | `/tmp/agenda-check.log` |
 | 8:45 AM daily | `refresh_ask_index.sh` — rebuild RAG index + `fly deploy` (baked index would otherwise freeze answers) | `/tmp/ask-index-refresh.log` |
 | 9:30 AM Mon | `run_foia_spotter.sh` — FOIA Lead Spotter: scan new published news reports for records-request leads, **web-search-verify each lead** (facts accurate? already public? — catches AI-paraphrased program names from our own reports), draft A.R.S. § 39-121 request emails to `records-requests/drafts/`, Telegram alert. **Nothing sends automatically** — human reviews and sends from `nicholas@daylayown.org` | `/tmp/foia-spotter.log` |
@@ -234,6 +250,6 @@ For each entry, check the flagged name against `brief-inputs/<date>.sources.txt`
 
 Also queued off the same work: inject `pipeline/local_names.json` into `SYNTHESIS_PROMPT` (lowers the error rate; is **not** a control — see `PIPELINE.md`), and decide whether the newsletter needs its own name check. Note the gate cannot catch an error the newsletter *inherited* from a brief — it reads as grounded there — so the brief gate is the real protection for both.
 
-While reviewing, note the publication time settled at **6:30 AM** (6:10 → 7:30 in the morning of 2026-07-28, pared back to 6:30 that evening at the user's call) — the provenance-review window is now ~30 minutes after the ~6:01 alert.
+While reviewing, note the publication time went 6:10 → 7:30 → 6:30 on 2026-07-28 and then **back to 6:10 on 2026-07-30**, at the user's call: the shadow gate had produced only false positives ("Arizona Constitution", "Tucson Electric Power" — place/org names the person-shaped filter should exclude), and the split 6:05 A/B send vs 6:30 publication was confusing in Telegram. The provenance-review window is now ~8 minutes, i.e. effectively none — the gate is an after-the-fact alert.
 
 **The next big project is short-form video** (`SHORT-FORM-VIDEO.md` + `MARKETING.md`) — specifically the distribution loop: two social packages per week for eight consecutive weeks, one moat package + one reach package, each converting toward the newsletter. The moat package is now specced: the **geographic editions** ("What to Watch: Marana / Oro Valley"), a personalization-by-portfolio experiment timed to Meta's video-first feed pivot — framework locked 2026-07-28 in `SHORT-FORM-VIDEO.md`. Everything else in `ROADMAP.md` is captured and gated behind it. Don't start those mid-stream without a user go-ahead.

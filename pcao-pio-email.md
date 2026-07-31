@@ -1,6 +1,18 @@
-# Draft email to PCAO PIO — "where is the current public data?"
+# Email to PCAO PIO — "where is the current public data?"
 
-> Send from `nicholas@daylayown.org` (per the press-outreach sender setup). Fill in the bracketed recipient line. Drafted 2026-07-20 after the PowerBI staleness forensics in `COURT-DATA-FEASIBILITY.md` §3a.
+> **STATUS — SENT 2026-07-21** to **Shawndrea Thomas**, Communications Director, PCAO
+> (`Shawndrea.Thomas@pcao.pima.gov`; cc `media@pcao.pima.gov`). Confirmed still in the role
+> (former local-TV journalist → media-fluent). **Response clock: ~1 week. If no substantive
+> reply by ~2026-07-28, the non-response itself becomes reportable** — e.g. "PCAO did not
+> respond to questions about why its public data has been frozen since March 2025."
+> Discipline: distinguish "no response by [date]" from "refused"; give the fair window before
+> characterizing silence. The likely truth per `powerbi.md` is a rebuild accident, not a
+> cover-up — so the revealing part is whether anyone at the office *knew* it was dead.
+> **Track-2** (the substantive plea/dangerousness questions + a records request for *existing*
+> data extracts, framed to fit § 39-121 "records in the form maintained") is a SEPARATE, later
+> contact — do not blend it into this one.
+
+> Send from `nicholas@daylayown.org` (per the press-outreach sender setup). Drafted 2026-07-20 after the PowerBI staleness forensics in `COURT-DATA-FEASIBILITY.md` §3a.
 
 **Subject:** Question about "By the Numbers" — where can I find PCAO's current public data?
 

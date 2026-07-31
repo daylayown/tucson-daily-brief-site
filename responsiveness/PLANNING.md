@@ -314,3 +314,36 @@ When picking this up cold:
 6. Begin: `responsiveness/build_index.py` (ingest), `responsiveness/db.py` (schema), `responsiveness/render.py` (HTML).
 
 That's enough to get from cold start to first commit in an afternoon.
+
+## TEP outage data — probed 2026-07-30, NOT pursued
+
+The private endpoint behind TEP's outage map is
+`https://apps.tep.com/OutageApp/mapfeed` (POST, called from
+`https://www.tep.com/wp-content/themes/tep/assets/js/outage.js`, refreshed every
+2 minutes). A direct request returns **HTTP 403** with an explicit body:
+
+    {"disclaimer":"Notice: 3rd party use of this API is not permitted.",
+     "error": "Unauthorized Request"}
+
+That is a stated access term, not a rate limit — TEP built a machine-readable
+refusal into the error. **Do not work around it.** Circumventing a utility's
+stated terms to power a transparency project makes the circumvention the story
+and hands TEP a way to discredit otherwise accurate reporting. This is the
+opposite of Tucson Water's ArcGIS layer (public, tokenless) and the DLLC/dev-watch
+sources (open by design) — an open door vs. a sign on the door.
+
+Legitimate paths if power data is picked up later, best first:
+
+1. **ACC reliability filings** — TEP is regulated by the Arizona Corporation
+   Commission; utilities file SAIDI/SAIFI reliability metrics with their
+   regulator. Public, already historical, and better than the live map: enables
+   year-over-year and utility-vs-utility comparison. Nobody local reports it.
+2. **Ask TEP directly** for read-only access for a public archive; add a verified
+   channel to `pipeline/records_custodians.json` if they grant one.
+3. **The refusal is itself publishable** — a documented entry for the
+   Transparency Tracker ("what Tucson publishes vs. what it doesn't"), pointed:
+   in a metro where a July outage is a safety event, the outage API says third
+   parties may not use it, while Tucson Water publishes an open layer.
+4. Scrape only the public human-readable page (`tep.com/outages/`) — lower
+   fidelity, no terms problem. Note `account.tep.com/MyAccount/?action=OutageHistory`
+   is customer-authenticated (your own address only, not a metro archive).
