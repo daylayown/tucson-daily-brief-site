@@ -76,12 +76,21 @@ _DATE_RE = r"(?:" + "|".join(_MONTHS) + r")\s+\d{1,2},?\s+20\d\d"
 
 def parse_date(s):
     s = re.sub(r"\s+", " ", (s or "").strip()).rstrip(",")
-    for fmt in ("%B %d, %Y", "%B %d %Y"):
+    # %m/%d/%y is juanciscomani.com's Squarespace blog ("7/28/26"); the rest of
+    # the sites spell the month out.
+    for fmt in ("%B %d, %Y", "%B %d %Y", "%m/%d/%y"):
         try:
             return datetime.strptime(s, fmt).replace(tzinfo=timezone.utc)
         except ValueError:
             continue
-    return None
+    # ISO-8601 (Bluesky `createdAt`). Sub-second precision runs to nanoseconds,
+    # which fromisoformat rejects, so truncate the fraction to microseconds.
+    iso = re.sub(r"(\.\d{6})\d+", r"\1", s.replace("Z", "+00:00"))
+    try:
+        dt = datetime.fromisoformat(iso)
+        return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
 
 
 def _clean(s):
@@ -151,6 +160,24 @@ def _x_mendoza(html, base):
     return out
 
 
+def _x_ciscomani(html, base):
+    """juanciscomani.com/news/ — Squarespace blog (added 2026-07-31).
+
+    Each item prints its date TWICE (blog-meta-primary + blog-meta-secondary),
+    so this matches forward from the first <time> to that item's
+    <h1 class="blog-title"> and lets the duplicate fall inside the gap. The
+    bounded {0,1500} span keeps a title-less item from swallowing the next one.
+    Dates are M/D/YY here, not the spelled-out month the other sites use.
+    """
+    out = []
+    for m in re.finditer(
+        r'<time class="blog-date"[^>]*>\s*(\d{1,2}/\d{1,2}/\d{2})\s*</time>'
+        r'.{0,1500}?<h1 class="blog-title">\s*<a href="([^"]+)"[^>]*>(.*?)</a>',
+            html, re.S):
+        out.append((_clean(m.group(3)), _abs(m.group(2), base), m.group(1)))
+    return out
+
+
 def _x_hobbs(html, base):
     """katiehobbs.org — <h2 class="long-title"> then <p class="byline">."""
     out = []
@@ -172,9 +199,46 @@ def _x_biggs(html, base):
     return out
 
 
+def _bluesky(payload, base):
+    """Bluesky author feed (JSON, not HTML) -> the same (title, url, date) rows
+    the scrapers return, so fetch_source stays one code path.
+
+    Two exclusions, both deliberate:
+      * reposts (`reason` on the feed item) — amplifying someone else is not
+        the official's own statement, and attributing it to them would be wrong.
+      * replies (`reply` on the record) — conversational fragments that read as
+        non-sequiturs out of thread. Their own posts are the statement.
+    A post has no title; the text IS the content, so it becomes the title.
+    """
+    rows = []
+    for item in (payload.get("feed") or []):
+        if "reason" in item:                       # repost
+            continue
+        post = item.get("post") or {}
+        rec = post.get("record") or {}
+        if "reply" in rec:                         # reply in a thread
+            continue
+        text = _clean(rec.get("text") or "")
+        handle = (post.get("author") or {}).get("handle")
+        rkey = (post.get("uri") or "").rsplit("/", 1)[-1]
+        if not (text and handle and rkey):
+            continue
+        rows.append((text, f"https://bsky.app/profile/{handle}/post/{rkey}",
+                     rec.get("createdAt")))
+    return rows
+
+
 # --- who we watch ------------------------------------------------------------
 # role:  "official" = government channel | "candidate" = campaign channel
 # race:  None = not on a competitive ballot | else the pairing key
+# kind:  "scrape" (default, HTML + x=extractor) | "bluesky" (JSON author feed)
+#
+# An officeholder's own social feed is an official channel and belongs here, not
+# in pipeline/sources.json's news items. Kelly's and Gallego's Bluesky moved out
+# of tier_2_officials on 2026-07-30: routed as news they fed the story sections,
+# where the model could only treat them as reporting; here they feed 📢, which is
+# what "what your officials are saying" means. Their press-release pages remain
+# separate entries — same person, two channels, both official.
 
 SOURCES = [
     # ---- Officials (government channels) ----
@@ -193,6 +257,16 @@ SOURCES = [
     dict(name="Gov. Katie Hobbs", role="official", race=None, x=_x_azgov,
          url="https://azgovernor.gov/newsroom", base="https://azgovernor.gov"),
 
+    # ---- Officials (their own social channels) ----
+    dict(name="Sen. Mark Kelly (Bluesky)", role="official", race=None,
+         kind="bluesky", x=_bluesky, base="https://bsky.app",
+         url="https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed"
+             "?actor=captmarkkelly.bsky.social&limit=10"),
+    dict(name="Sen. Ruben Gallego (Bluesky)", role="official", race=None,
+         kind="bluesky", x=_bluesky, base="https://bsky.app",
+         url="https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed"
+             "?actor=gallego.senate.gov&limit=10"),
+
     # ---- Candidates in Cook-rated competitive races (campaign channels) ----
     dict(name="Katie Hobbs (D)", role="candidate", race="governor", x=_x_hobbs,
          url="https://katiehobbs.org/news/", base="https://katiehobbs.org"),
@@ -200,8 +274,20 @@ SOURCES = [
          url="https://biggsforarizona.com/", base="https://biggsforarizona.com"),
     dict(name="JoAnna Mendoza (D)", role="candidate", race="cd6", x=_x_mendoza,
          url="https://joannamendoza.com/news/", base="https://joannamendoza.com"),
-    # No Ciscomani campaign channel exists (checked 2026-07-29). The cd6 pair is
-    # therefore one-sided; build_block() labels that rather than hiding it.
+    # Added 2026-07-31. A prior note here claimed no Ciscomani campaign channel
+    # existed (checked 2026-07-29) — WRONG; juanciscomani.com has an active news
+    # section (ciscomaniforcongress.com redirects to it). That miss was worse
+    # than a gap: RACE_FIELDS names him, so with no source he was never in
+    # `posting` and never in `errors`, which dropped him into `silent` every
+    # single day. The brief was being told daily that a candidate who posts
+    # several times a week had said nothing. Nothing false reached print (only
+    # the 7/31 brief carried a CD6 line, and his latest item predated its 48h
+    # window), but it would have within days.
+    # LESSON: a missing source and a failed source are not the same thing. The
+    # unchecked/silent split only protects sides we actually try to fetch — so
+    # every name in RACE_FIELDS needs a source here, or the silence note lies.
+    dict(name="Juan Ciscomani (R)", role="candidate", race="cd6", x=_x_ciscomani,
+         url="https://juanciscomani.com/news/", base="https://juanciscomani.com"),
 ]
 
 RACE_LABELS = {"governor": "the governor's race", "cd6": "the CD6 race"}
@@ -218,13 +304,34 @@ def fetch_source(src, cutoff):
     except Exception as e:
         return [], f"{type(e).__name__}: {e}"
     try:
-        rows = src["x"](re.sub(r"\s+", " ", r.text), src["base"])
+        if src.get("kind") == "bluesky":
+            rows = src["x"](r.json(), src["base"])
+        else:
+            rows = src["x"](re.sub(r"\s+", " ", r.text), src["base"])
     except Exception as e:
         return [], f"parse failed: {type(e).__name__}: {e}"
 
     items, seen = [], set()
+    # SILENT-ZERO GUARD. A live press page or author feed always carries *some*
+    # entries, whatever their date. Zero extractor rows therefore means we lost
+    # the source — a redesign the regex no longer matches, or an error body
+    # served with HTTP 200 — not that the office was quiet. Those two are
+    # indistinguishable downstream: both yield an empty block, both make
+    # build_block() omit the section, and the brief then reads as normal while
+    # the source is silently gone. Same failure shape as the stale-feed problem
+    # in this file's header, and the same fix as the Marana DLLC poller's
+    # under-100-licenses check: treat an implausible emptiness as breakage.
+    #
+    # Note this tests rows BEFORE the date filter. Zero *in-window* rows is
+    # normal and stays normal; zero rows at all is the alarm.
+    if not rows:
+        return [], "no entries found on page (layout change or error body?)"
+
+    dated = 0
     for title, url, ds in rows:
         dt = parse_date(ds)
+        if dt:
+            dated += 1
         if not dt or not title or dt < cutoff or url in seen:
             continue
         seen.add(url)
@@ -232,6 +339,12 @@ def fetch_source(src, cutoff):
                           title=title, url=url, date=dt))
         if len(items) >= MAX_PER_SOURCE:
             break
+
+    # Rows found but not one date parsed = the date format moved. Every item
+    # would be dropped and the source would read as quiet. This is exactly the
+    # Bluesky nanosecond-timestamp bug, caught generically.
+    if not dated:
+        return [], f"{len(rows)} entries found but no parseable dates (format change?)"
     return items, None
 
 
@@ -251,11 +364,20 @@ def fetch_all(window_hours=DEFAULT_WINDOW_HOURS, verbose=True):
     return items, errors
 
 
-def build_block(items, window_hours=DEFAULT_WINDOW_HOURS):
+def build_block(items, window_hours=DEFAULT_WINDOW_HOURS, errors=None):
     """Prompt block. Empty string when nothing is in window — the section is
-    skipped entirely rather than padded."""
+    skipped entirely rather than padded.
+
+    `errors` is the list fetch_all() returns. It matters for fairness, not just
+    diagnostics: the CONTESTED note asserts that a named candidate posted
+    nothing. If that candidate's scraper FAILED we do not know whether they
+    posted, and saying they were silent would be a factual claim about a real
+    person manufactured by our own bug. So a failed side suppresses the silence
+    note and is reported as unchecked instead.
+    """
     if not items:
         return ""
+    failed = {name for name, _ in (errors or [])}
     lines = [f"OFFICIAL AND CAMPAIGN RELEASES (last {window_hours}h):", ""]
 
     officials = [i for i in items if i["role"] == "official"]
@@ -272,12 +394,21 @@ def build_block(items, window_hours=DEFAULT_WINDOW_HOURS):
         if got:
             for i in sorted(got, key=lambda x: x["date"], reverse=True):
                 lines.append(f"- {i['name']} | {i['date']:%b %-d} | {i['title']}\n  {i['url']}")
-        silent = [n for n in RACE_FIELDS[race]
-                  if not any(n.split(" (")[0] in p for p in posting)]
+        quiet = [n for n in RACE_FIELDS[race]
+                 if not any(n.split(" (")[0] in p for p in posting)]
+        # A side whose scraper failed is unknown, not silent — never both.
+        unchecked = [n for n in quiet
+                     if any(n.split(" (")[0] in f for f in failed)]
+        silent = [n for n in quiet if n not in unchecked]
         if silent:
             lines.append(f"- NOTE: nothing in window from {', '.join(silent)}. "
                          f"If you report one side of this race, say the other "
                          f"posted nothing — do not imply parity by omission.")
+        if unchecked:
+            lines.append(f"- NOTE: could not check {', '.join(unchecked)} today "
+                         f"(source fetch failed). Do NOT say they posted nothing — "
+                         f"we do not know. If you report the other side, either "
+                         f"omit this race or say their channel could not be checked.")
         lines.append("")
     return "\n".join(lines).strip()
 
@@ -286,4 +417,4 @@ if __name__ == "__main__":
     hrs = int(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_WINDOW_HOURS
     got, errs = fetch_all(window_hours=hrs)
     print(f"\n{len(got)} item(s), {len(errs)} error(s)\n", file=sys.stderr)
-    print(build_block(got, hrs) or "(nothing in window — section would be skipped)")
+    print(build_block(got, hrs, errors=errs) or "(nothing in window — section would be skipped)")

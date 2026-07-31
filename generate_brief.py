@@ -474,30 +474,34 @@ structure, with ─── dividers between sections, omitting any section with n
 
 Tucson Daily Brief — {today_human}
 
+In the skeleton below, square brackets appear ONLY as markdown link syntax. The \
+headline is bold text with no brackets around it — write `**Headline.**`, never \
+`**[Headline.]**`.
+
 🚨 Public Safety
-**[Headline.]** [2-3 sentence neutral summary.]
+**Headline.** Two to three sentences of neutral summary.
 📰 [Source Name](https://direct-article-url)
 
 ───
 
 🏛️ Government
-[same per story]
+(same per-story format)
 
 ───
 
 🏗️ Development & Business
-[same per story]
+(same per-story format)
 
 ───
 
 🎉 Community & Events
-[same per story]
+(same per-story format)
 
 ───
 
 📢 What Your Officials Are Saying
-**[Name (role).]** [1-2 sentences on what they said, attributed as a release.]
-📰 [Source](url)
+**Name (role).** One or two sentences on what they said, attributed as a release.
+📰 [Source Name](https://direct-article-url)
 
 ───
 
@@ -787,9 +791,13 @@ def main():
     try:
         import officials_watch as ow
         ow_items, ow_errs = ow.fetch_all()
-        officials_block = ow.build_block(ow_items)
+        # Pass errors through: a candidate whose scraper failed must not be
+        # reported as having posted nothing. See build_block()'s docstring.
+        officials_block = ow.build_block(ow_items, errors=ow_errs)
         print(f"  ok    Officials watch: {len(ow_items)} release(s), "
               f"{len(ow_errs)} error(s)", file=sys.stderr)
+        for name, err in ow_errs:
+            print(f"  WARN  officials source FAILED — {name}: {err}", file=sys.stderr)
     except Exception as e:
         officials_block = ""
         print(f"  WARN  officials watch unavailable: {e}", file=sys.stderr)

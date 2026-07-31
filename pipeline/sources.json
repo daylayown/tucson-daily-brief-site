@@ -2,7 +2,10 @@
   "monitor": "tucson-daily-brief",
   "description": "Hyper-local news feeds for Tucson/Pima County",
   "last_updated": "2026-07-29",
-  "notes": "Some URLs may need verification. Agent should test each feed on first run and report failures.",
+  "notes": [
+    "Some URLs may need verification. Agent should test each feed on first run and report failures.",
+    "tier_2_officials emptied 2026-07-30: Sens. Kelly and Gallego's Bluesky feeds moved to officials_watch.py. An officeholder's own social feed is an official channel and belongs in the 📢 Officials Watch section, not in the news-items block where the model could only treat it as reporting. Do not re-add official/campaign social accounts here — add them to officials_watch.SOURCES with kind='bluesky'."
+  ],
   "sources": {
     "tier_1_primary": [
       {
@@ -108,26 +111,7 @@
         "notes": "Added 2026-06-25 (verified fresh). Gray Television CBS affiliate, Arc Publishing feed. Low item count per fetch (2-4) — benefits from frequent polling. Main feed (drop /category/news) adds some syndicated items."
       }
     ],
-    "tier_2_officials": [
-      {
-        "name": "Sen. Ruben Gallego",
-        "type": "bluesky",
-        "url": "https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed?actor=gallego.senate.gov&limit=10",
-        "profile": "https://bsky.app/profile/gallego.senate.gov",
-        "category": "elected_official",
-        "priority": "medium",
-        "notes": "Arizona's junior U.S. Senator. Promotional account — scan for official statements, policy positions, and Arizona-specific news. Not a primary news source; use for context and quotes when relevant to Tucson stories."
-      },
-      {
-        "name": "Sen. Mark Kelly",
-        "type": "bluesky",
-        "url": "https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed?actor=captmarkkelly.bsky.social&limit=10",
-        "profile": "https://bsky.app/profile/captmarkkelly.bsky.social",
-        "category": "elected_official",
-        "priority": "medium",
-        "notes": "Arizona's senior U.S. Senator. Promotional account — scan for official statements, policy positions, and Arizona-specific news. Not a primary news source; use for context and quotes when relevant to Tucson stories."
-      }
-    ],
+    "tier_2_officials": [],
     "tier_2_institutional": [
       {
         "name": "City of Tucson - Media (GovDelivery)",
