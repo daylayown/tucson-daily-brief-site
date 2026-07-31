@@ -151,9 +151,13 @@ def analyze_with_claude(meeting_date: datetime, meeting_type: str, agenda_text: 
     if len(agenda_text) > 15000:
         agenda_text = agenda_text[:15000] + "\n\n[TRUNCATED]"
 
+    from agenda_mining import meeting_context_block
+
     prompt = f"""You are a local government reporter covering the Town of Oro Valley, Arizona for the Tucson Daily Brief. Analyze the following Oro Valley Town Council meeting agenda for {date_str}.
 
-Your job: identify the 3-6 most newsworthy items and explain WHY they matter to Oro Valley and greater Tucson-area residents. Think like a beat reporter — what would your editor want you to cover? What affects people's lives, money, safety, or rights?
+{meeting_context_block(meeting_type)}
+
+Your job: identify up to the 3-6 most newsworthy items and explain WHY they matter to Oro Valley and greater Tucson-area residents. Think like a beat reporter — what would your editor want you to cover? What affects people's lives, money, safety, or rights?
 
 Oro Valley context: Oro Valley is an affluent town north of Tucson in Pima County (pop. ~47,000). Key ongoing stories include:
 - Water sustainability and CAP allocation concerns amid Colorado River cuts

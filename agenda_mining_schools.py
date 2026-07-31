@@ -180,6 +180,8 @@ def analyze_with_claude(district: dict, meeting: dict, agenda_text: str) -> str 
     import json
     import urllib.request
 
+    from agenda_mining import meeting_context_block
+
     prompt = f"""You are a local news editor writing a short "What to Watch" preview of an upcoming school district governing board meeting for readers in Tucson, Arizona.
 
 District: {district['name']}
@@ -187,14 +189,16 @@ Board: {district['board']}
 Meeting: {meeting['title']} ({meeting['mtype']})
 Date: {meeting['date'].strftime('%A, %B %d, %Y')} at {meeting['time']}
 
-Write 3-6 short bullet points covering only what a parent or taxpayer would actually want to know: money being spent, policy changes, personnel actions at the leadership level, boundary/calendar/program changes, contracts, and anything likely to draw public comment.
+{meeting_context_block(meeting['mtype'])}
+
+Write up to 3-6 short bullet points covering only what a parent or taxpayer would actually want to know: money being spent, policy changes, personnel actions at the leadership level, boundary/calendar/program changes, contracts, and anything likely to draw public comment.
 
 Rules:
 - Ground every point in the agenda text below. Do not speculate about outcomes or motives.
 - Skip pure routine (approving minutes, consent items with no substance, recurring reports) unless the dollar figure or subject is notable.
 - Name dollar amounts and vendor/program names exactly as the agenda gives them.
 - NEVER name or describe an individual student, and skip any item involving student discipline, records, or identifiable student information (FERPA).
-- If the agenda is thin or purely procedural, say so plainly in one line rather than padding.
+- If nothing on the agenda carries real public consequence, say so plainly in one line rather than padding. Judge that by what the items DO, never by how many there are.
 - Plain prose. No headline, no preamble, no sign-off.
 
 AGENDA TEXT:

@@ -238,6 +238,22 @@ Each script has a `--publish` flag that converts a markdown preview to HTML usin
 - Canceled meetings skip the Claude call entirely and get `canceled_analysis_md()` — a flat statement of fact. Published rather than skipped, because "is there a meeting Tuesday?" is a real reader question.
 - `generate_preview(..., canceled=False)` in all four miners takes the flag and swaps **both** the title ("Meeting Canceled", not "What to Watch") **and the disclosure**. The default footer credits `CLAUDE_MODEL`, which would be a false disclosure on text no model wrote.
 
+**Short-agenda guard — `meeting_context_block()` (added 2026-07-31).** The sibling of the canceled-meeting bug, and the same root cause: an editorial judgment handed to a model that the code already had the facts to make.
+
+The 2026-08-03 Pima meeting was a **special meeting lawfully carrying one item** — the A.R.S. §16-642(A) canvass certifying the July 21 primary. The miner mined it correctly. The model then read one item as evidence of a *failed fetch* and wrote:
+
+> ⚠️ **Reporter's Note:** Only one agenda item was provided for this analysis… if you have the complete agenda, paste the remaining items for full coverage.
+
+plus a closing "*To generate a complete meeting preview with 5–8 newsworthy items, please paste the full agenda*", and a lede calling the agenda "notably slim" and "largely procedural" — about the meeting that makes an election official. **Previews auto-publish with no human review, so operator-addressed text goes straight to readers.** It only missed the live site because the machine crashed before the push.
+
+**Why it happened: every miner already knew the meeting type and never told the model.** Legistar's `EventComment` (`"Special Meeting"`) and the scraped labels in the other three were passed to `generate_preview()`/`generate_full_report()` — i.e. into the *rendered page* — but never into the *prompt*. The model was left to infer from item count alone why an agenda was short. All four miners had this; **Marana, Oro Valley and Tucson accepted a `meeting_type`/`meeting_name` argument and used it only for output**, which is exactly the kind of near-miss that reads as wired-up on a skim.
+
+`meeting_context_block(meeting_type, counts=None)` in `agenda_mining.py` now prepends derived facts to all five prompts (`counts` is `(substantive, discussion, consent)` for Pima, which has structured items; the scrape-based miners pass the type only). It states the meeting type as fact, states that the agenda is complete rather than an excerpt, and forbids the specific inferences — no "appears incomplete", no "slim"/"procedural" on item count alone, **no addressing the operator**, and no padding to reach a target count. Each miner's "identify the N most newsworthy items" also became "identify **up to** the N most", since a fixed target on a one-item agenda is itself an invitation to pad.
+
+Verified end-to-end against the real 8/3 agenda: the model now opens "a special meeting called for a single, legally required purpose" and notes that the lone item "is among the most consequential actions the Board takes all year." Its factual claims checked out too (it cited two posted attachments, one dated 7/30 — both real).
+
+**The generalizable rule:** when the pipeline knows something, tell the model rather than letting it infer. A short agenda, a canceled meeting, a source that failed to fetch — each is a fact the code holds and the model will otherwise guess at, plausibly and wrongly. Same lesson as the officials-watch silent/unchecked split. See `feedback_verify_dont_delegate`.
+
 **Two renderer bugs in `preview_md_to_html` (fixed 2026-07-15, commit `0ce0b2c`).** Both were live site-wide:
 - **Markdown links were never converted.** Every preview published its own source attribution as dead text — `Source: [Town of Marana Agendas](https://destinyhosted.com/...)` rendered literally on all 39 pages, so the provenance link never worked. `_inline_format` now converts links, and the standalone-italic branch (which the footer takes) routes through it instead of bare-escaping. Scheme pinned to `http(s)`; the substitution runs *after* `escape_html`, so `&` and `"` in the URL are already entity-safe.
 - **`### **Headline**` published its asterisks.** Headings were escaped but not inline-formatted. `_heading_text()` unwraps a fully-bolded heading (headings render bold already) and formats the rest.

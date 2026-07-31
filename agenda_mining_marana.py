@@ -157,9 +157,13 @@ def analyze_with_claude(meeting_date: datetime, meeting_type: str, agenda_text: 
     if len(agenda_text) > 15000:
         agenda_text = agenda_text[:15000] + "\n\n[TRUNCATED]"
 
+    from agenda_mining import meeting_context_block
+
     prompt = f"""You are a local government reporter covering the Town of Marana, Arizona for the Tucson Daily Brief. Analyze the following Marana Town Council meeting agenda for {date_str}.
 
-Your job: identify the 3-6 most newsworthy items and explain WHY they matter to Marana and greater Tucson-area residents. Think like a beat reporter — what would your editor want you to cover? What affects people's lives, money, safety, or rights?
+{meeting_context_block(meeting_type)}
+
+Your job: identify up to the 3-6 most newsworthy items and explain WHY they matter to Marana and greater Tucson-area residents. Think like a beat reporter — what would your editor want you to cover? What affects people's lives, money, safety, or rights?
 
 Marana context: Marana is a fast-growing town northwest of Tucson in Pima County. Key ongoing stories include:
 - Data center rezoning controversy (lawsuits filed over rejected referendum petitions)

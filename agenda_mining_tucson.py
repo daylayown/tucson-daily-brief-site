@@ -195,9 +195,13 @@ def analyze_with_claude(meeting_date: datetime, meeting_name: str, agenda_text: 
     if len(agenda_text) > 30000:
         agenda_text = agenda_text[:30000] + "\n\n[TRUNCATED]"
 
+    from agenda_mining import meeting_context_block
+
     prompt = f"""You are a local government reporter covering the City of Tucson, Arizona for the Tucson Daily Brief. Analyze the following Tucson Mayor & Council meeting agenda for {date_str}.
 
-Your job: identify the 3-8 most newsworthy items and explain WHY they matter to Tucson residents. Think like a beat reporter — what would your editor want you to cover? What affects people's lives, money, safety, or rights?
+{meeting_context_block(meeting_name)}
+
+Your job: identify up to the 3-8 most newsworthy items and explain WHY they matter to Tucson residents. Think like a beat reporter — what would your editor want you to cover? What affects people's lives, money, safety, or rights?
 
 Tucson context: Tucson is a city of ~550,000 in southern Arizona, the urban core of Pima County. Key ongoing stories include:
 - Affordable housing crisis and homelessness response

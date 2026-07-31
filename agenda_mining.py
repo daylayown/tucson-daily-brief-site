@@ -242,6 +242,65 @@ def canceled_analysis_md(body_name: str, meeting_date: datetime) -> str:
     ])
 
 
+def meeting_context_block(meeting_type: str = "",
+                          counts: tuple[int, int, int] | None = None) -> str:
+    """Derived facts about the meeting, for the top of every miner's prompt.
+
+    Every miner already knows the meeting type — Legistar's EventComment, or the
+    label scraped off Destiny/OnBase — and Pima also knows the exact item counts.
+    Until 2026-07-31 all of that reached the *rendered page* and none of it
+    reached the *prompt*, so the model had to infer from item count alone why an
+    agenda was short. It inferred wrong on the 2026-08-03 Pima canvass: a special
+    meeting lawfully carrying one item (A.R.S. §16-642(A)) was written up as
+    "notably slim" and "largely procedural", with two lines addressed to the
+    operator — "if you have the complete agenda, paste the remaining items" —
+    that would have published to readers, since previews auto-publish unreviewed.
+
+    Same root cause as the canceled-meeting bug above (see canceled_analysis_md):
+    an editorial judgment was handed to a model that the code already had the
+    facts to make. The standing rule is "derive, don't ask a model" — so state
+    the meeting type as fact and forbid the inference rather than hoping a
+    better-worded prompt discourages it.
+
+    `counts` is (substantive, discussion, consent) when the miner has structured
+    items; scrape-based miners pass None and get the type line only.
+    """
+    lines = [
+        "MEETING CONTEXT — derived from the government's own record, not from "
+        "your reading of the agenda. Treat these as facts and never contradict "
+        "them:",
+        f"- Meeting type: {(meeting_type or '').strip() or 'Regular Meeting'}",
+    ]
+    if counts:
+        substantive, discussion, consent = counts
+        lines.append(
+            f"- Substantive items posted: {substantive} "
+            f"({discussion} for discussion, {consent} on consent calendar)"
+        )
+    lines += [
+        "",
+        "The agenda below is the COMPLETE posted agenda as published by the "
+        "government. It is not an excerpt, a sample, or a partial paste. Special "
+        "meetings, study sessions, and canvass meetings are routinely called for "
+        "a single purpose and legitimately carry one or two items — a short "
+        "agenda is normal and is never evidence that anything is missing.",
+        "",
+        "Therefore:",
+        "- Never write that the agenda appears incomplete or truncated, and "
+        "never speculate about business not shown.",
+        "- Never call a meeting \"slim\", \"thin\", or \"largely procedural\" on "
+        "the basis of item count alone. Judge significance by what the items do. "
+        "A one-item meeting that certifies an election is one of the most "
+        "consequential meetings of the year.",
+        "- Never address the operator or ask for more agenda text. This preview "
+        "publishes to readers unedited — a line like \"paste the full agenda\" "
+        "reaches the public and reads as broken.",
+        "- If there are fewer items than your target count, cover all of them "
+        "and stop. Do not pad to reach a number.",
+    ]
+    return "\n".join(lines)
+
+
 def analyze_with_claude(event: dict, substantive_items: list[dict]) -> str | None:
     """Send agenda items to Claude for editorial analysis."""
     api_key = os.environ.get("ANTHROPIC_API_KEY")
@@ -285,9 +344,19 @@ def analyze_with_claude(event: dict, substantive_items: list[dict]) -> str | Non
 
     agenda_dump = "\n\n".join(items_text)
 
+    consent_items = [i for i in substantive_items if i.get("EventItemConsent")]
+    context_block = meeting_context_block(
+        event.get("EventComment") or "",
+        (len(substantive_items),
+         len(substantive_items) - len(consent_items),
+         len(consent_items)),
+    )
+
     prompt = f"""You are a local government reporter covering Pima County, Arizona for the Tucson Daily Brief. Analyze the following Board of Supervisors meeting agenda for {date_str}.
 
-Your job: identify the 5-8 most newsworthy items and explain WHY they matter to Tucson/Pima County residents. Think like a beat reporter — what would your editor want you to cover? What affects people's lives, money, safety, or rights?
+{context_block}
+
+Your job: identify up to the 5-8 most newsworthy items and explain WHY they matter to Tucson/Pima County residents. Think like a beat reporter — what would your editor want you to cover? What affects people's lives, money, safety, or rights?
 
 Prioritize:
 1. Policy changes that affect residents (ordinances, zoning, regulations)
