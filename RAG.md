@@ -24,7 +24,7 @@ A retrieval-augmented chat agent that answers questions about Tucson using only 
 - **Embeddings:** Voyage `voyage-3-lite` (512-dim, $0.02/1M tokens, Anthropic-acquired Voyage AI is the recommended pairing for Claude RAG). API key in `~/.config/environment.d/voyage.conf`.
 - **Vector store:** SQLite + `sqlite-vec` v0.1.9 extension. Single file at `rag/index.sqlite`. No server, no hosted service.
 - **Generation:** Claude Sonnet 4.6 with strict "answer only from these sources" system prompt; refuses to fabricate, suggests where to look when corpus doesn't cover the question.
-- **Chunking:** document-type-aware. Daily brief → one chunk per story. News report → title+lede + per-`<h2>` sections. Meeting preview → per top-item. Public-record filing → whole filing. Agenda full reference → 1500-char windows with 200-char overlap.
+- **Chunking:** document-type-aware. Daily brief → one chunk per story. News report → title+lede + per-`<h2>` sections. Meeting preview → per top-item. Public-record filing → whole filing. Agenda full reference → 1500-char windows with 200-char overlap. In Depth (`in-depth/*.html`, added 2026-07-23) → reuses the news-report chunker (same article shape); date comes from the `article:published_time` meta since In Depth slugs are undated.
 - **Idempotency:** content hash per file in `file_state` table — re-running re-embeds only changed/new files (verified — incremental rebuild after a new daily brief takes ~0.5s).
 - **Citation URLs:** every chunk carries the public TDB URL it came from; `agenda-watch/*-full.md` references map to the corresponding `meeting-watch/{slug}.html` published preview when one exists, else fall back to the meeting-watch index page.
 

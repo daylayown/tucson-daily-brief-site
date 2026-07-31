@@ -3,7 +3,8 @@
 Build the RAG search index for Tucson Daily Brief.
 
 Walks the published corpus (daily briefs, news reports, meeting previews,
-public-record filings) and the unpublished agenda-watch full references,
+public-record filings, In Depth investigations) and the unpublished
+agenda-watch full references,
 chunks each document by its native structure, embeds chunks via Voyage AI,
 and writes the result to a sqlite-vec database at rag/index.sqlite.
 
@@ -383,6 +384,16 @@ def file_date(name: str) -> str | None:
     return m.group(1) if m else None
 
 
+def published_time_date(path: Path) -> str | None:
+    """Date from the article:published_time meta tag — for pages whose
+    filenames carry no date (In Depth slugs)."""
+    m = re.search(
+        r'<meta property="article:published_time" content="(\d{4}-\d{2}-\d{2})',
+        path.read_text(encoding="utf-8"),
+    )
+    return m.group(1) if m else None
+
+
 def meeting_watch_url_for_agenda_full(filename: str) -> str:
     """Map agenda-watch/{slug}-full.md → meeting-watch/{published-slug}.html
     (or fall back to the meeting-watch index page)."""
@@ -437,6 +448,14 @@ def walk_corpus():
             date = file_date(p.name)
             yield p, "around_town_dev", f"{BASE_URL}/around-town/{p.name}", date, chunk_around_town_dev
 
+    # In Depth pages share the news-report article shape (h1 + lede + h2
+    # sections), so they reuse its chunker.
+    idp = SITE_DIR / "in-depth"
+    if idp.exists():
+        for p in sorted(idp.glob("*.html")):
+            date = file_date(p.name) or published_time_date(p)
+            yield p, "in_depth", f"{BASE_URL}/in-depth/{p.name}", date, chunk_news_report
+
     aw = SITE_DIR / "agenda-watch"
     if aw.exists():
         for p in sorted(aw.glob("*-full.md")):
@@ -454,6 +473,7 @@ DOC_TYPE_LABELS = {
     "agenda_full": "Full agenda reference",
     "public_record": "Around Town filing (new business)",
     "around_town_dev": "Around Town development case",
+    "in_depth": "In Depth investigation",
 }
 
 
