@@ -15,16 +15,16 @@ import html as _html
 from render_card import THEMES, FONTS_HREF, SUN_SVG, render, W, H
 
 # --- the puzzle to display ----------------------------------------------------
-# Based on the real 2026-07-19 Tucson Mini (valid grid). Shown empty + numbered,
+# Based on the real 2026-07-26 Tucson Mini (valid grid). Shown empty + numbered,
 # the classic "fresh puzzle" look. Clues carry the Tucson flavor.
 # "#" = block cell. (Block pattern is identical to prior weeks, so NUMBERS below
 # is unchanged — same top-right + bottom-left blocks.)
 GRID = [
-    ["W", "R", "E", "N", "#"],
-    ["H", "E", "R", "O", "N"],
-    ["E", "L", "O", "T", "E"],
-    ["W", "I", "D", "E", "N"],
-    ["#", "C", "E", "D", "E"],
+    ["D", "E", "E", "R", "#"],
+    ["O", "R", "B", "I", "T"],
+    ["G", "R", "O", "V", "E"],
+    ["S", "O", "L", "A", "R"],
+    ["#", "L", "A", "L", "A"],
 ]
 # Cell numbers (standard crossword numbering), keyed by (row, col).
 NUMBERS = {
@@ -36,9 +36,9 @@ NUMBERS = {
 }
 # The Tucson-flavored clues we surface on the card.
 CLUES = [
-    ("1A", "Cactus ___ — Arizona’s state bird"),
-    ("5A", "Great blue ___, seen at Sweetwater Wetlands"),
-    ("7A", "Sonoran street corn with cotija & lime"),
+    ("1D", "Sonoran ___ — El Güero Canelo’s bacon-wrapped specialty"),
+    ("5A", "Path of OSIRIS-REx, the U of A-led asteroid mission"),
+    ("7A", "Pecan ___ — type of farm found south of town in Sahuarita"),
 ]
 
 SHOW_LETTERS = False  # False = empty "solve me" grid; True = filled (spoiler)
@@ -164,5 +164,5 @@ PAGE = f"""<!DOCTYPE html>
 
 if __name__ == "__main__":
     print("rendering crossword-promo ...")
-    render("crossword-promo-2026-07-19", PAGE)
+    render("crossword-promo-2026-07-26", PAGE)
     print("done.")

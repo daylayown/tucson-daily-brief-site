@@ -561,6 +561,25 @@ DEMO = [
          headline="20 officers were already downtown.",
          dek="At Tuesday's council meeting, the city manager said 20 police officers, five sergeants and a force commander were already stationed downtown — a presence funded by the city's downtown violence-reduction program — when Sunday's shooting began. We were there for the whole meeting: here's what officials said, and what the council did next.",
          meta_text="What They Decided · tucsondailybrief.com"),
+    # --- 2026-07-26: Sunday "it's out" newsletter-conversion card. Weekend cards
+    # lead light and convert toward the newsletter (see feedback_weekend_social_posture)
+    # — so this leads with food, not the week's hard news. Facts verified 2026-07-25
+    # via KOLD (7/17) + the TDB briefs of 7/15-7/18: Gibson Food Hall & Market at
+    # Congress & 6th reopened after nearly two years of renovation, four food counters
+    # (sushi, BBQ, burgers, Mexican) plus a bar and coffee bar; Tucson's food-hall count
+    # is now four, two of them in repurposed shipping containers (Arizona Daily Star);
+    # the bodega + "Pearl Lounge" speakeasy are EXPECTED at a mid-August grand opening,
+    # so that stays hedged. IG 4:5 + crop-proof FB 1:1.
+    dict(slug="weekly-itsout-2026-07-26", theme="terracotta",
+         kicker="TDB Weekly · Out now",
+         headline="Tucson now has\nfour food halls",
+         dek="Gibson Food Hall & Market is back downtown after nearly two years of renovations — four counters, a bar, and a speakeasy expected in August. That's in this morning's issue, along with what else is opening around town. Free in your inbox every Sunday.",
+         meta_text="Subscribe · tucsondailybrief.com"),
+    dict(slug="weekly-itsout-2026-07-26-fb", theme="terracotta", size=(1200, 1200),
+         kicker="TDB Weekly · Out now",
+         headline="Tucson now has\nfour food halls",
+         dek="Gibson Food Hall & Market is back downtown after nearly two years of renovations — four counters, a bar, and a speakeasy expected in August. That's in this morning's issue, along with what else is opening around town. Free in your inbox every Sunday.",
+         meta_text="Subscribe · tucsondailybrief.com"),
 ]
 
 if __name__ == "__main__":
