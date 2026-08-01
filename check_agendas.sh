@@ -26,6 +26,71 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AGENDA_WATCH_DIR="$SCRIPT_DIR/agenda-watch"
 SEND_TELEGRAM="$HOME/.openclaw/skills/tucson-daily-brief/scripts/send_telegram.py"
 
+# --- Non-fatal stage failures -----------------------------------------------
+# Every pipeline below is invoked with `|| record_failure ...` so one broken
+# stage never blocks the others. But "non-fatal" used to also mean "invisible":
+# every Telegram notification in this script fires on *success* only, so a dead
+# poller left no trace except a traceback in /tmp/agenda-check.log that nobody
+# reads. Marana's dev-watch ArcGIS layer was unpublished and went unnoticed
+# until 2026-08-01 for exactly that reason.
+#
+# record_failure remembers what broke and keeps going; the EXIT trap reports it
+# once at the end. The trap fires on *every* exit path, so it also catches an
+# unexpected `set -e` abort — the failure mode that stranded the 8 AM output on
+# 2026-08-01, where publishing had already happened but the git push never ran.
+FAILURES=""
+
+record_failure() {
+    local stage="$1"
+    local out="${2:-}"
+    local detail
+    detail=$(printf '%s\n' "$out" | sed '/^[[:space:]]*$/d' | tail -3)
+    echo "ERROR: $stage FAILED (non-fatal — continuing)"
+    FAILURES="${FAILURES}• ${stage}
+${detail}
+
+"
+    return 0
+}
+
+report_failures() {
+    local rc=$?
+    if [ -z "$FAILURES" ] && [ "$rc" -eq 0 ]; then
+        return 0
+    fi
+
+    local MSG="⚠️ AGENDA PIPELINE — stage failure
+
+check_agendas.sh reported problems on $(date '+%Y-%m-%d %H:%M %Z')."
+
+    if [ -n "$FAILURES" ]; then
+        MSG="${MSG}
+
+Failed stage(s):
+${FAILURES}"
+    fi
+
+    if [ "$rc" -ne 0 ]; then
+        MSG="${MSG}
+The script exited abnormally (code ${rc}). Anything after the failing stage did
+not run — including the git push, so published output may still be sitting
+uncommitted in the working tree."
+    fi
+
+    MSG="${MSG}
+Full log: /tmp/agenda-check.log"
+
+    local TMPFILE
+    TMPFILE=$(mktemp /tmp/agenda-fail-XXXXX.md)
+    printf '%s\n' "$MSG" > "$TMPFILE"
+    if [ -f "$SEND_TELEGRAM" ]; then
+        python3 "$SEND_TELEGRAM" "$TMPFILE" || echo "WARNING: failure-alert Telegram failed"
+    fi
+    rm -f "$TMPFILE"
+    return 0
+}
+trap report_failures EXIT
+
 # Fire a distinct, louder Telegram for high-interest topic flags (data centers,
 # etc.) that the dev-watch pollers emit as `TOPIC-ALERT` lines. This is on top
 # of the routine development-count notice — these items get human eyes fast.
@@ -68,28 +133,28 @@ PREVIEWS=""
 
 # --- Pima County BOS (Legistar API) ---
 echo "Checking Pima County BOS..."
-OUTPUT=$(python3 agenda_mining.py 2>&1) || true
+OUTPUT=$(python3 agenda_mining.py 2>&1) || record_failure "Pima County BOS agenda miner" "$OUTPUT"
 echo "$OUTPUT"
 PREVIEWS="$PREVIEWS
 $(echo "$OUTPUT" | grep "Saved publishable preview:" | sed 's/.*Saved publishable preview: //' || true)"
 
 # --- Marana Town Council (Destiny Hosted) ---
 echo "Checking Marana Town Council..."
-OUTPUT=$(python3 agenda_mining_marana.py 2>&1) || true
+OUTPUT=$(python3 agenda_mining_marana.py 2>&1) || record_failure "Marana agenda miner" "$OUTPUT"
 echo "$OUTPUT"
 PREVIEWS="$PREVIEWS
 $(echo "$OUTPUT" | grep "Saved publishable preview:" | sed 's/.*Saved publishable preview: //' || true)"
 
 # --- Oro Valley Town Council (Destiny Hosted / Granicus) ---
 echo "Checking Oro Valley Town Council..."
-OUTPUT=$(python3 agenda_mining_orovalley.py 2>&1) || true
+OUTPUT=$(python3 agenda_mining_orovalley.py 2>&1) || record_failure "Oro Valley agenda miner" "$OUTPUT"
 echo "$OUTPUT"
 PREVIEWS="$PREVIEWS
 $(echo "$OUTPUT" | grep "Saved publishable preview:" | sed 's/.*Saved publishable preview: //' || true)"
 
 # --- City of Tucson Mayor & Council (Hyland OnBase / PDF) ---
 echo "Checking City of Tucson..."
-OUTPUT=$(python3 agenda_mining_tucson.py 2>&1) || true
+OUTPUT=$(python3 agenda_mining_tucson.py 2>&1) || record_failure "City of Tucson agenda miner" "$OUTPUT"
 echo "$OUTPUT"
 PREVIEWS="$PREVIEWS
 $(echo "$OUTPUT" | grep "Saved publishable preview:" | sed 's/.*Saved publishable preview: //' || true)"
@@ -172,7 +237,7 @@ View it at: https://tucsondailybrief.com/meeting-watch.html"
                 fi
             fi
         else
-            echo "ERROR: Failed to publish $preview_path"
+            record_failure "Preview publish: $preview_path" ""
         fi
     fi
 done <<< "$PREVIEWS"
@@ -182,7 +247,7 @@ done <<< "$PREVIEWS"
 # extracts liquor license items via Claude, and publishes them as filings
 # under public-record/. Idempotent: each source file is processed once.
 echo "Scanning for liquor license filings..."
-PR_OUTPUT=$(python3 public_record_liquor.py 2>&1) || true
+PR_OUTPUT=$(python3 public_record_liquor.py 2>&1) || record_failure "Spotted: liquor filings (agenda scan)" "$PR_OUTPUT"
 echo "$PR_OUTPUT"
 PR_COUNT=$(echo "$PR_OUTPUT" | grep -oP 'published \K\d+(?= new filing)' | tail -1) || true
 PR_COUNT=${PR_COUNT:-0}
@@ -212,7 +277,7 @@ fi
 # that, newly appearing Active licenses publish as Spotted filings. No AI
 # calls — all fields are structured state records. Non-fatal on failure.
 echo "Checking Marana liquor licenses (DLLC)..."
-DLLC_OUTPUT=$(python3 public_record_liquor_dllc.py 2>&1) || true
+DLLC_OUTPUT=$(python3 public_record_liquor_dllc.py 2>&1) || record_failure "Spotted: Marana liquor licenses (DLLC)" "$DLLC_OUTPUT"
 echo "$DLLC_OUTPUT"
 DLLC_COUNT=$(echo "$DLLC_OUTPUT" | grep -oP 'DLLC Marana: published \K\d+' | tail -1) || true
 DLLC_COUNT=${DLLC_COUNT:-0}
@@ -239,7 +304,7 @@ fi
 # around-town/. Idempotent; non-fatal on failure. Feeds the combined Around
 # Town feed (rebuilt internally via rebuild_homepage).
 echo "Checking Oro Valley development cases..."
-DEV_OUTPUT=$(python3 dev_watch_orovalley.py 2>&1) || true
+DEV_OUTPUT=$(python3 dev_watch_orovalley.py 2>&1) || record_failure "Around Town: Oro Valley development watch" "$DEV_OUTPUT"
 echo "$DEV_OUTPUT"
 send_topic_alerts "$DEV_OUTPUT"
 DEV_COUNT=$(echo "$DEV_OUTPUT" | grep -oP 'Published/updated \K\d+' | tail -1) || true
@@ -267,7 +332,7 @@ fi
 # projects under around-town/. Idempotent; non-fatal on failure. Feeds the same
 # combined Around Town feed.
 echo "Checking Marana development projects..."
-DEV_OUTPUT_MA=$(python3 dev_watch_marana.py 2>&1) || true
+DEV_OUTPUT_MA=$(python3 dev_watch_marana.py 2>&1) || record_failure "Around Town: Marana development watch" "$DEV_OUTPUT_MA"
 echo "$DEV_OUTPUT_MA"
 send_topic_alerts "$DEV_OUTPUT_MA"
 DEV_COUNT_MA=$(echo "$DEV_OUTPUT_MA" | grep -oP 'Published/updated \K\d+' | tail -1) || true
