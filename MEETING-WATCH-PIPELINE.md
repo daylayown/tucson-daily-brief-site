@@ -268,6 +268,22 @@ Spotted's agenda route (`public_record_liquor.py`) can never see Marana — the 
 - **First run seeds silently** (53 Marana licenses at seed time, including a liquor store licensed in 1961) — republishing history as "news" is the failure mode. `--seed` re-seeds deliberately; a result set under 100 licenses is treated as a source failure and leaves state untouched, so a DLLC outage or layout change can't wipe the baseline and cause a republish flood.
 - **Known limitations:** DLLC's premises city is the *mailing* city, so Marana-limits businesses with Tucson mailing addresses (e.g. Casa Marana Craft Beer, `TUCSON, AZ 85741`) are missed — deliberate under-match. This route also surfaces licenses at *issuance*, not application; the forward-looking version (pending applications) died with DLLC's 2025-ish site migration and now requires a clerk relationship (records request / standing weekly list — in progress).
 
+### `check_agendas.sh` failure modes (all three found 2026-08-01)
+
+**1. A `499 Token Required` from ArcGIS usually means the layer is *gone*, not secured.** Marana unpublished `DS_Current_Projects_Live`; ArcGIS returns 499 for an absent service exactly as it does for a protected one, so the error reads like an auth change and sends you hunting for credentials. Diagnose by requesting the parent `/services/Hosted?f=json` directory — if that still answers unauthenticated (it did), access didn't change and the layer simply isn't listed anymore. The successor is `Hosted/DS_Current_Projects` (layer name `DS_Projects`), public, identical 11-field schema, **OBJECTID preserved** — which is what made the repoint safe, since `case_key()` is the bare objectid and renumbering would have re-published all 62 projects as new. Always diff the new layer's objectids against the saved state before repointing any of these pollers.
+
+**2. `|| true` on the poller did not make the poller non-fatal.** Every stage is invoked as `OUT=$(python3 …) || true`, but the *next* line extracted a count:
+
+```bash
+DEV_COUNT_MA=$(echo "$DEV_OUTPUT_MA" | grep -oP 'Published/updated \K\d+' | tail -1)
+```
+
+Under `set -euo pipefail`, a failed poller's output has no match → `grep` exits 1 → `pipefail` propagates it out of the command substitution → `set -e` kills the run. So a *development-watch* failure silently killed *agenda publishing*: the previews had already been written and indexed, and the script died before `git push`, leaving published HTML uncommitted in the working tree. All four count extractions now carry `|| true` (the `:-0` fallbacks below them already handled the empty case). **The general trap: guarding a command does nothing if the line that parses its output is itself unguarded.**
+
+**3. Failures were invisible by construction.** Every Telegram in the script fires inside an `if COUNT > 0` branch, so notifications only ever went out on *success* — a dead poller produced no signal at all, just a traceback in a log nobody reads. `record_failure()` now records each stage failure (same non-fatal contract) and an **EXIT trap** sends one consolidated alert naming every broken stage. The trap fires on all exit paths, so it also reports an unexpected `set -e` abort and warns that the push may not have run. Verified: clean run stays silent, single/multiple failures listed, hard abort reports its code.
+
+**Structural quirk, not yet changed:** the script `exit 0`s early when no *new agenda preview* was generated — **before** Spotted, DLLC, and both dev-watch pollers run. So those four pollers only execute on days a new preview appears, not daily. Worth revisiting if development-watch latency ever matters.
+
 ### Key dependencies
 
 - `pdftotext` (poppler-utils) — required for Tucson PDF extraction
