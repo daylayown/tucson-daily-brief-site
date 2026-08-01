@@ -184,7 +184,7 @@ done <<< "$PREVIEWS"
 echo "Scanning for liquor license filings..."
 PR_OUTPUT=$(python3 public_record_liquor.py 2>&1) || true
 echo "$PR_OUTPUT"
-PR_COUNT=$(echo "$PR_OUTPUT" | grep -oP 'published \K\d+(?= new filing)' | tail -1)
+PR_COUNT=$(echo "$PR_OUTPUT" | grep -oP 'published \K\d+(?= new filing)' | tail -1) || true
 PR_COUNT=${PR_COUNT:-0}
 
 if [ "$PR_COUNT" -gt 0 ]; then
@@ -214,7 +214,7 @@ fi
 echo "Checking Marana liquor licenses (DLLC)..."
 DLLC_OUTPUT=$(python3 public_record_liquor_dllc.py 2>&1) || true
 echo "$DLLC_OUTPUT"
-DLLC_COUNT=$(echo "$DLLC_OUTPUT" | grep -oP 'DLLC Marana: published \K\d+' | tail -1)
+DLLC_COUNT=$(echo "$DLLC_OUTPUT" | grep -oP 'DLLC Marana: published \K\d+' | tail -1) || true
 DLLC_COUNT=${DLLC_COUNT:-0}
 
 if [ "$DLLC_COUNT" -gt 0 ]; then
@@ -242,7 +242,7 @@ echo "Checking Oro Valley development cases..."
 DEV_OUTPUT=$(python3 dev_watch_orovalley.py 2>&1) || true
 echo "$DEV_OUTPUT"
 send_topic_alerts "$DEV_OUTPUT"
-DEV_COUNT=$(echo "$DEV_OUTPUT" | grep -oP 'Published/updated \K\d+' | tail -1)
+DEV_COUNT=$(echo "$DEV_OUTPUT" | grep -oP 'Published/updated \K\d+' | tail -1) || true
 DEV_COUNT=${DEV_COUNT:-0}
 
 if [ "$DEV_COUNT" -gt 0 ]; then
@@ -270,7 +270,7 @@ echo "Checking Marana development projects..."
 DEV_OUTPUT_MA=$(python3 dev_watch_marana.py 2>&1) || true
 echo "$DEV_OUTPUT_MA"
 send_topic_alerts "$DEV_OUTPUT_MA"
-DEV_COUNT_MA=$(echo "$DEV_OUTPUT_MA" | grep -oP 'Published/updated \K\d+' | tail -1)
+DEV_COUNT_MA=$(echo "$DEV_OUTPUT_MA" | grep -oP 'Published/updated \K\d+' | tail -1) || true
 DEV_COUNT_MA=${DEV_COUNT_MA:-0}
 
 if [ "$DEV_COUNT_MA" -gt 0 ]; then
