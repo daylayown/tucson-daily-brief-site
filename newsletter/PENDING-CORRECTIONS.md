@@ -10,6 +10,11 @@ Delete an entry once it has actually sent.
 
 ## For the send on Sunday, 2026-08-02
 
+> **STATUS 2026-08-01:** ✅ **Inserted into the uploaded Buttondown draft**
+> (`em_2axq5c3bf19xzt77w6dnn6tm20`), folded into the opening paragraph as specified,
+> with "she" kept. Wording uses "production error" — the user's call, confirmed 2026-08-01.
+> **Still queued here on purpose: delete this entry only after the send actually goes out.**
+
 **Placement:** fold into the opening paragraph, before `## What's worth knowing`.
 
 ```markdown
