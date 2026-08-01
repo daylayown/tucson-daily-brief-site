@@ -15,16 +15,16 @@ import html as _html
 from render_card import THEMES, FONTS_HREF, SUN_SVG, render, W, H
 
 # --- the puzzle to display ----------------------------------------------------
-# Based on the real 2026-07-26 Tucson Mini (valid grid). Shown empty + numbered,
+# Based on the real 2026-08-02 Tucson Mini (valid grid). Shown empty + numbered,
 # the classic "fresh puzzle" look. Clues carry the Tucson flavor.
 # "#" = block cell. (Block pattern is identical to prior weeks, so NUMBERS below
 # is unchanged — same top-right + bottom-left blocks.)
 GRID = [
-    ["D", "E", "E", "R", "#"],
-    ["O", "R", "B", "I", "T"],
-    ["G", "R", "O", "V", "E"],
-    ["S", "O", "L", "A", "R"],
-    ["#", "L", "A", "L", "A"],
+    ["T", "R", "A", "M", "#"],
+    ["W", "A", "G", "O", "N"],
+    ["A", "G", "A", "V", "E"],
+    ["S", "E", "P", "I", "A"],
+    ["#", "D", "E", "E", "R"],
 ]
 # Cell numbers (standard crossword numbering), keyed by (row, col).
 NUMBERS = {
@@ -36,9 +36,9 @@ NUMBERS = {
 }
 # The Tucson-flavored clues we surface on the card.
 CLUES = [
-    ("1D", "Sonoran ___ — El Güero Canelo’s bacon-wrapped specialty"),
-    ("5A", "Path of OSIRIS-REx, the U of A-led asteroid mission"),
-    ("7A", "Pecan ___ — type of farm found south of town in Sahuarita"),
+    ("1A", "Sabino Canyon shuttle that climbs the canyon"),
+    ("7A", "Spiky Sonoran succulent that gives us tequila"),
+    ("9A", "Mule ___ — spotted grazing in the Catalinas"),
 ]
 
 SHOW_LETTERS = False  # False = empty "solve me" grid; True = filled (spoiler)
@@ -164,5 +164,7 @@ PAGE = f"""<!DOCTYPE html>
 
 if __name__ == "__main__":
     print("rendering crossword-promo ...")
-    render("crossword-promo-2026-07-26", PAGE)
+    # Slug carries the puzzle's send date — bump it with GRID/CLUES each week,
+    # or a fresh render silently overwrites the prior week's card.
+    render("crossword-promo-2026-08-02", PAGE)
     print("done.")
