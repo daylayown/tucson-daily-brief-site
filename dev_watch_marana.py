@@ -85,9 +85,15 @@ STATE_FILE = AROUND_TOWN_DIR / ".dev_state_marana.json"
 CLAUDE_MODEL = "claude-sonnet-4-6"
 CLAUDE_API_URL = "https://api.anthropic.com/v1/messages"
 
+# Repointed 2026-08-01: Marana unpublished DS_Current_Projects_Live (it vanished
+# from the /services directory and every request under it began returning
+# {"code":499,"message":"Token Required"} — ArcGIS returns 499 for a service that
+# is secured OR simply absent, so the error reads like an auth change but isn't).
+# The successor layer is public, carries an identical field schema, and preserved
+# OBJECTID, so case_key() identity and the saved diff state survive the move.
 ARCGIS_URL = (
     "https://portal.maranaaz.gov/server/rest/services/"
-    "Hosted/DS_Current_Projects_Live/FeatureServer/0/query"
+    "Hosted/DS_Current_Projects/FeatureServer/0/query"
 )
 # portal.maranaaz.gov is a clean ArcGIS server (no WAF, unlike www.maranaaz.gov),
 # but send a normal browser UA to be safe.
