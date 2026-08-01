@@ -249,3 +249,39 @@ Posture notes: keep review-before-publish (croton spot-checks after publication 
 our conservatism is a differentiator, not a lag) and keep About-page-only AI
 disclosure (croton stamps the model per-article; ours is settled policy,
 feedback_ai_disclosure_about_page).
+
+## Roadmap: Swap the newsletter's model? (captured 2026-08-01 — GATED, discuss later)
+
+**User's suggestion:** `generate_newsletter.py` currently runs **Sonnet 4.6**. Try
+**GPT-5.6 (Sol)** instead — the same challenger already running daily against the
+brief in `brief-bake-off/`.
+
+**Trigger:** the 2026-08-02 issue carried **three** invented specifics, all caught in
+manual review — (1) Tucson Water's resilience claim attributed to "the city's strong
+water banking program," (2) Mosaic Quarter placed on Tucson's "north side" when it is
+south side at Kino Sports Complex, (3) "No opening date yet" when a 2027 target has
+been public since the 2024 groundbreaking. Signature is consistent: a confident,
+plausible **place-or-status** detail attached to a real entity, present in no source.
+Unlike a wrong name, this class reads as connective tissue and slips the eye.
+
+**⚠️ Counter-evidence to weigh before assuming a model swap fixes it:** the
+"David Barrett" fabrication (corrected in the 2026-08-02 issue) originated in the
+**daily brief**, which runs **Opus 5** — a larger model on a tighter prompt. So this
+error class has now occurred on both Opus 5 and Sonnet 4.6. That points at
+**prompt/grounding design** rather than model capability, and a swap alone may just
+change which details get invented.
+
+**Cheaper things to try first / alongside:**
+- A **place-and-status check** analogous to `provenance_gate.py` but for a different
+  noun class: flag directional/geographic phrases ("north/south/east/west side"),
+  status phrases ("no date yet", "longtime", "newly"), and superlatives that do not
+  appear in the source text handed to the model.
+- Tighten the synthesis prompt to forbid supplying geography or project status not
+  present in the source lines.
+- **Run it as an A/B, not a swap** — `brief-bake-off/` already proves the pattern.
+  Generate both, diff them, and count invented specifics over several weeks before
+  committing. A one-off vibe check will not separate model from prompt.
+
+**Gate:** discuss before building. Do not swap the production model mid-week; the
+newsletter is the one surface with a hard weekly deadline and a human-review ritual
+that currently *is* catching these.
