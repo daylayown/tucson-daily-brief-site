@@ -1769,3 +1769,44 @@ article.post-page p.source {
   .week { grid-template-columns: 1fr 1fr; }
   .week .day { border-bottom: 1px solid var(--rule); }
 }
+
+/* ── Report data tables (news reports, by-the-numbers pieces) ── */
+.report-table-wrap {
+  overflow-x: auto;
+  margin: 32px 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.report-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-family: var(--serif);
+  font-size: var(--t-small);
+  color: var(--ink);
+}
+
+.report-table th,
+.report-table td {
+  padding: 8px 16px 8px 0;
+  border-bottom: 1px solid var(--rule);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.report-table thead th {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  border-bottom: 2px solid var(--ink);
+}
+
+.report-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.report-table td strong {
+  color: var(--accent);
+}

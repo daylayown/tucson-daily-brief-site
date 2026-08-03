@@ -452,9 +452,13 @@ def escape_html(text: str) -> str:
 
 
 def _inline_format(text: str) -> str:
-    """Handle bold and inline formatting."""
+    """Handle bold, links, and inline formatting."""
     text = escape_html(text)
     text = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", text)
+    # Markdown links, before italics so a stray * in a URL can't be eaten by the
+    # italic rule. escape_html has already turned & into &amp;, which is what an
+    # href wants anyway.
+    text = re.sub(r"\[([^\]]+)\]\((https?://[^\s)]+)\)", r'<a href="\2">\1</a>', text)
     # Single-asterisk italics, after bold so ** is already consumed.
     text = re.sub(r"\*(?=\S)([^*]+?)(?<=\S)\*", r"<em>\1</em>", text)
     return text
@@ -511,6 +515,51 @@ def report_md_to_html(md_text: str) -> str:
         if stripped.startswith("### "):
             html_parts.append(f"<h3>{_inline_format(stripped[4:])}</h3>")
             i += 1
+            continue
+
+        # Markdown table: header row, delimiter row, then body rows. Data
+        # stories (canvass numbers, trend series) need these; without it the
+        # whole table collapses into one paragraph of literal pipes.
+        if (stripped.startswith("|")
+                and i + 1 < len(lines)
+                and re.match(r"^\|[\s:|-]+\|$", lines[i + 1].strip())):
+            def _cells(row: str) -> list:
+                return [c.strip() for c in row.strip().strip("|").split("|")]
+
+            headers = _cells(stripped)
+            aligns = []
+            for spec in _cells(lines[i + 1]):
+                if spec.startswith(":") and spec.endswith(":"):
+                    aligns.append("center")
+                elif spec.endswith(":"):
+                    aligns.append("right")
+                else:
+                    aligns.append("left")
+            i += 2
+            body_rows = []
+            while i < len(lines) and lines[i].strip().startswith("|"):
+                body_rows.append(_cells(lines[i]))
+                i += 1
+
+            def _align(n: int) -> str:
+                a = aligns[n] if n < len(aligns) else "left"
+                return "" if a == "left" else f' style="text-align:{a}"'
+
+            out = ['<div class="report-table-wrap">', '<table class="report-table">',
+                   "<thead><tr>"]
+            out += [f"<th{_align(n)}>{_inline_format(h)}</th>"
+                    for n, h in enumerate(headers)]
+            out.append("</tr></thead>")
+            if body_rows:
+                out.append("<tbody>")
+                for row in body_rows:
+                    out.append("<tr>")
+                    out += [f"<td{_align(n)}>{_inline_format(c)}</td>"
+                            for n, c in enumerate(row)]
+                    out.append("</tr>")
+                out.append("</tbody>")
+            out += ["</table>", "</div>"]
+            html_parts.append("\n".join(out))
             continue
 
         # Bullet list items
