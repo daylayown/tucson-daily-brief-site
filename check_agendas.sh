@@ -448,4 +448,13 @@ Reminder: log reach/watch-time/follows in social/editions-log.md after ~48h."
     done
 fi
 
+# --- Meeting-coverage staleness check ---
+# A scraper that stops finding meetings is indistinguishable from a body that
+# stops meeting — both are silence. This separates the two (see
+# check_meeting_staleness.py) and alerts only when the source itself looks dead
+# or is listing council meetings we never published. Non-fatal.
+echo "Checking meeting-coverage staleness..."
+python3 "$SCRIPT_DIR/check_meeting_staleness.py" --telegram \
+    || echo "WARNING: staleness check failed (non-fatal)"
+
 echo "$(date): Done."

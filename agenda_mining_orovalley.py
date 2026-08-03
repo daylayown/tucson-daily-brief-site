@@ -22,6 +22,7 @@ import sys
 import urllib.parse
 import urllib.request
 from datetime import datetime
+from html import unescape  # not `import html` — get_meetings_for_month shadows it
 from pathlib import Path
 
 # --- Config ---
@@ -33,14 +34,15 @@ PUBLISHED_DIR = SITE_DIR / "meeting-watch"
 CLAUDE_MODEL = "claude-sonnet-4-6"
 CLAUDE_API_URL = "https://api.anthropic.com/v1/messages"
 
-# Meeting types we care about (filter value from Destiny: mt=TC, SPECIAL, STUDY)
-COUNCIL_MEETING_TYPES = [
-    "town council regular session",
-    "town council special session",
-    "town council study session",
-    "regular session",
-    "special session",
-]
+# Any body whose type starts with "Town Council" is council business. A fixed
+# substring list used to gate this and silently dropped 9 real meetings between
+# 2024 and 2026 — budget study sessions, retreats, and combined sessions whose
+# Destiny type strings ("Town Council Budget Study Session", "Town Council
+# Regular and Study  Session" — note the double space) matched no entry. Prefix
+# matching is what Destiny's own type taxonomy actually guarantees.
+COUNCIL_TYPE_PREFIX = "town council"
+# Bodies that merely mention the council but aren't the council meeting itself.
+NON_COUNCIL_MARKERS = ("subcommittee", "sub-committee", "task force")
 
 
 def fetch_html(url: str) -> str:
@@ -74,14 +76,18 @@ def get_meetings_for_month(year: int, month: int) -> list[dict]:
         seq = link_match.group(1)
         date_text = link_match.group(2)
 
-        # Look for the meeting type in the <td> following this link
+        # Take the very next <td> whole rather than pattern-matching its wording.
+        # The old regex required the text to end in Meeting/Board/Session/… over a
+        # character class that excluded ';', so any entity-bearing type ("Planning
+        # &amp; Zoning Commission") failed to match and fell through to "Unknown"
+        # — and an Unknown type is silently dropped as non-council.
         after_link = html[link_match.end():link_match.end() + 500]
-        type_match = re.search(
-            r'<td[^>]*>\s*([A-Za-z][A-Za-z &\-]+(?:Meeting|Board|Session|Commission|District|Trust|Corporation|Plan)[^<]*)',
-            after_link,
-            re.IGNORECASE,
-        )
-        meeting_type = type_match.group(1).strip() if type_match else "Unknown"
+        type_match = re.search(r'<td[^>]*>(.*?)</td>', after_link, re.IGNORECASE | re.DOTALL)
+        if type_match:
+            raw = re.sub(r"<[^>]+>", "", type_match.group(1))
+            meeting_type = re.sub(r"\s+", " ", unescape(raw)).strip() or "Unknown"
+        else:
+            meeting_type = "Unknown"
 
         try:
             date = datetime.strptime(date_text, "%B %d, %Y")
@@ -89,7 +95,8 @@ def get_meetings_for_month(year: int, month: int) -> list[dict]:
             continue
 
         type_lower = meeting_type.lower()
-        is_council = any(t in type_lower for t in COUNCIL_MEETING_TYPES)
+        is_council = (type_lower.startswith(COUNCIL_TYPE_PREFIX)
+                      and not any(m in type_lower for m in NON_COUNCIL_MARKERS))
 
         meetings.append({
             "seq": seq,

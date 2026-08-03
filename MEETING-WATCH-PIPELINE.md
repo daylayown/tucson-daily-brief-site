@@ -56,6 +56,51 @@ AI-assisted agenda previews for local government meetings in the Tucson metro ar
 
 Agenda previews are forward-looking summaries of what's on the agenda — they publish automatically. Post-meeting news reports (future feature) will require human editorial review.
 
+## Silence is ambiguous — the staleness check (added 2026-08-03)
+
+**The failure mode:** a scraper that stops finding meetings looks exactly like a governing body that has stopped meeting. Both are silence, and nothing in the pipeline distinguished them. Oro Valley went seven weeks with no preview and nothing flagged it; it turned out to be a genuine recess, but only a hand check proved that.
+
+`check_meeting_staleness.py` runs at the end of `check_agendas.sh` and splits the two cases:
+
+1. **How long since we published?** — newest dated file in `meeting-watch/<key>-*.html`. Previews are forward-looking, so a *future* date means we're ahead, not behind.
+2. **If stale, is the source alive?** — re-query the miner's own `get_meetings_for_month()` for the last three months and count rows of *any* type.
+
+| result | level | meaning |
+|---|---|---|
+| not stale | ✅ | fine |
+| stale, source returns rows, 0 council | 🟡 | recess — noted, not alarming |
+| stale, source returns **nothing** | 🚨 | probable scraper break |
+| stale, source lists council meetings we never published | 🚨 | type-filter bug |
+| stale, no prober available (Pima, Tucson) | ⚠️ | check by hand |
+
+Thresholds live in `MUNICIPALITIES`. **Oro Valley's is the widest (70d) because it takes a real July recess every year** — in 2025 the June 18 → August 13 gap alone ran 56 days. Pima/Tucson have no prober because their sources aren't month-listing scrapes (Legistar API, OnBase PDFs); they degrade to ⚠️.
+
+The check never publishes. `--date YYYY-MM-DD` simulates another day, `--force-telegram` sends regardless — both for testing.
+
+## Meeting-type filters: prefix, don't enumerate (fixed 2026-08-03)
+
+`agenda_mining_orovalley.py` gated `is_council` on a fixed list of type strings. Destiny's actual strings vary more than the list anticipated, so **9 real Town Council meetings were silently dropped between 2024 and 2026**:
+
+| date | Destiny type |
+|---|---|
+| 2024-05-08, 2024-05-09 | Town Council Budget Study Session |
+| 2025-04-30 | Town Council Study and Special  Session |
+| 2025-05-05 | Town Council Budget Study Session |
+| 2025-05-07 | Town Council Regular and Study  Session |
+| 2026-01-21, 2026-03-02 | Town Council Retreat |
+| 2026-04-22 | Town Council Regular and Study  Session |
+| 2026-05-04 | Town Council Budget Study Session |
+
+Note the **double space** in "Regular and Study  Session" — the strings aren't normalized upstream, which is exactly why enumerating them fails. Budget study sessions are where the town's spending is actually set, so this was real lost coverage.
+
+**Fix:** `is_council` is now a prefix test (`type.startswith("town council")`) minus a small `NON_COUNCIL_MARKERS` exclusion list, rather than an allowlist of full type strings.
+
+Two bugs compounded it, both in the same row parse:
+- The type regex required the cell text to end in `Meeting|Board|Session|Commission|…` matched over a character class that **excluded `;`**, so any entity-bearing type (`Planning &amp; Zoning Commission`) failed and fell through to `"Unknown"` — and `Unknown` is silently non-council. It now takes the next `<td>` whole and `html.unescape()`s it. This alone took the `Unknown` count from as high as 12 rows in a month to **zero across all 36 months** of 2024–2026.
+- Import `from html import unescape`, **not** `import html` — `get_meetings_for_month` has a local variable named `html` that shadows the module.
+
+**Marana and Tucson still use the old enumerate-the-types pattern** (`COUNCIL_MEETING_TYPES` in `agenda_mining_marana.py:37` and `agenda_mining_tucson.py:38`). Marana is known to drop `Council-Study Session` and carries a large `Unknown` bucket — not yet fixed.
+
 ## Commands Reference
 
 ### Pima County BOS
