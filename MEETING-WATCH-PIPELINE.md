@@ -99,7 +99,34 @@ Two bugs compounded it, both in the same row parse:
 - The type regex required the cell text to end in `Meeting|Board|Session|Commission|…` matched over a character class that **excluded `;`**, so any entity-bearing type (`Planning &amp; Zoning Commission`) failed and fell through to `"Unknown"` — and `Unknown` is silently non-council. It now takes the next `<td>` whole and `html.unescape()`s it. This alone took the `Unknown` count from as high as 12 rows in a month to **zero across all 36 months** of 2024–2026.
 - Import `from html import unescape`, **not** `import html` — `get_meetings_for_month` has a local variable named `html` that shadows the module.
 
-**Marana and Tucson still use the old enumerate-the-types pattern** (`COUNCIL_MEETING_TYPES` in `agenda_mining_marana.py:37` and `agenda_mining_tucson.py:38`). Marana is known to drop `Council-Study Session` and carries a large `Unknown` bucket — not yet fixed.
+**Marana and Tucson still use the old enumerate-the-types pattern** (`COUNCIL_MEETING_TYPES` in `agenda_mining_marana.py:37` and `agenda_mining_tucson.py:38`).
+
+### Routine study sessions are deliberately NOT covered (editorial call, 2026-08-03)
+
+Auditing the filters turned up that Marana drops `Council-Study Session` (4 meetings) and **Tucson drops every single study session** — each Tucson meeting day is a study session in the afternoon and a regular meeting that evening, and only the regular one was ever previewed:
+
+```
+DROPPED  2026-08-05 13:30  Mayor & Council - Study Session
+COVERED  2026-08-05 17:30  Mayor & Council - Regular
+```
+
+**The user's call is to leave these dropped: a recurring procedural sub-meeting is too granular for a news publication.** Don't "fix" this later mistaking it for the same bug as the Oro Valley one — it's a deliberate scope boundary. Volume is the distinction:
+
+| | per year | covered? |
+|---|---:|---|
+| Tucson study sessions | ~24 | ❌ too granular |
+| Marana `Council-Study Session` | ~2 | ❌ same rationale |
+| OV Budget Study Session | ~1 | ✅ sets the town budget |
+| OV Retreat | ~1–2 | ✅ sets council priorities |
+| OV "Regular **and** Study Session" | ~1 | ✅ it *is* a regular meeting |
+
+Pima County has no allowlist at all (it processes every BOS event from Legistar), which is why `news-reports/pima-county-*-study-session.html` exist — those predate this boundary.
+
+**Still open:** Marana carries a large `Unknown` type bucket (38 rows across 2024–2026). Study sessions aside, the open question is whether any *regular or special* council meeting is hiding in there — an unparsed type is silently non-council. Unresolved as of 2026-08-03 because destinyhosted.com rate-limited us mid-audit (see below).
+
+### Don't sweep destinyhosted.com
+
+Auditing three years × 12 months across two municipalities is ~70+ requests and **will get you rate-limited** — the host starts refusing connections outright (`Errno 111`), for *all* Destiny municipalities at once, not just the one you were querying. It recovers in minutes but re-blocks immediately on a fresh burst, so it's adaptive rather than a fixed window. If you need a historical sweep: throttle hard (several seconds between requests), cache the HTML to disk on first fetch, and never run it close to the 8:00 AM `check_agendas.sh` window. Both Destiny miners are wrapped in `|| record_failure`, so a block degrades to a Telegram failure report rather than aborting the run — but that's a safety net, not a licence.
 
 ## Commands Reference
 
