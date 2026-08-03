@@ -79,3 +79,33 @@ rather than bolting on a hollow "thoughts?"
 First use: the Wyyerd fiber carousel (`social/render_fiber_2026_07_29.py`),
 slide 3.
 
+
+## Card copy vs. caption: never say the same thing twice (2026-08-03)
+
+**The card is a hook. The caption is the story. They must not duplicate each
+other.** User feedback on the first draft of the Pima ballot-return package: the
+cards and the caption said essentially the same thing, and the card text was far
+too long to scan.
+
+The split:
+
+- **Card:** breezy and scannable. A big claim and one short line under it. If a
+  reader has to *read* the card rather than glance at it, it's too long. If the
+  caption would feel redundant sitting next to the card, the card is doing the
+  caption's job.
+- **Caption:** carries the numbers, the trend, the mechanism, the source and the
+  link. Captions can and should run long — they're also where reach comes from
+  (keyword-rich captions beat hashtags; see the hashtag section above).
+
+Worked example, same story:
+
+| | |
+|---|---|
+| ❌ Card | "Fewer than half of Pima County's early ballots came back." + a 4-line dek repeating 349,885 / 161,016 / 46% / lowest in 30 years |
+| ✅ Card | **"46%"** / "of Pima County's early ballots came back. Lowest in 30 years." |
+| ✅ Caption | the raw counts, the three-primary slide with each year's rate, how the Active Early Voting List works, turnout, source, link |
+
+**Stat cards need an `hsize` override.** `build_card` picks type size from
+headline *length*, so a 3-character headline like "46%" lands at long-headline
+size and reads small in a big empty frame. Pass `hsize=260` (tuned on the 4:5
+canvas) so the number carries the card. Same applies to any short numeric hook.
