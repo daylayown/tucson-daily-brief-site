@@ -71,3 +71,6 @@ agenda-watch/*-attachments.json
 
 # Model A/B: challenger briefs + metrics. Regenerable, never published.
 brief-bake-off/
+
+# PCAO dashboard captures — includes their internal metric definitions + SQL; do not republish
+pcao-dashboard-archive/
