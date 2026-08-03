@@ -389,10 +389,10 @@ def extract_headline(md_text: str) -> str:
     collect_existing_posts()."""
     for line in md_text.strip().split("\n"):
         for match in re.finditer(r"\*\*(.+?)\*\*", line):
-            headline = match.group(1).strip().rstrip(".")
+            headline = match.group(1).strip()
             if _is_weather_label(headline):
                 continue
-            return headline
+            return _clamp_weather_alert(headline).rstrip(".")
     return ""
 
 
@@ -764,6 +764,39 @@ def _is_weather_label(s: str) -> bool:
     return (not s) or s.endswith(":") or ("°" in s)
 
 
+# The weather section's bolded alert callout, e.g. "⚠️ ALERTS: An Extreme Heat
+# Warning is in effect …". On multi-hazard days this runs to several hundred
+# characters, so it can lead the page but must not run down it.
+_ALERT_BLOCK_RE = re.compile(r"^\W*ALERTS?\b", re.I)
+# A sentence ends at .!? followed by whitespace + a capital — but "8 p.m. Monday"
+# and "Sgt. Ruiz" are not sentence ends.
+_ABBREVS = ("a.m", "p.m", "Sgt", "Lt", "Ave", "Blvd", "Rd", "St", "Dr", "Mt")
+_SENT_END_RE = re.compile(r"[.!?](?=\s+[A-Z“\"(])")
+
+
+def _first_sentence(s: str, hard_cap: int = 180) -> str:
+    """First sentence of s, abbreviation-aware. Falls back to a word-boundary
+    truncation if the text has no usable sentence break."""
+    s = s.strip()
+    for m in _SENT_END_RE.finditer(s):
+        head = s[: m.end()]
+        if any(head[:-1].endswith(a) for a in _ABBREVS):
+            continue
+        if len(head) <= hard_cap:
+            return head
+        break
+    if len(s) <= hard_cap:
+        return s
+    return s[:hard_cap].rsplit(" ", 1)[0].rstrip(",;:") + "…"
+
+
+def _clamp_weather_alert(s: str) -> str:
+    """Trim the weather ALERTS callout down to its lead sentence. Any other
+    headline passes through untouched."""
+    s = s.strip()
+    return _first_sentence(s) if _ALERT_BLOCK_RE.match(s) else s
+
+
 def collect_existing_posts() -> list[dict]:
     """Scan posts/ directory for existing HTML files and extract metadata."""
     posts = []
@@ -786,7 +819,7 @@ def collect_existing_posts() -> list[dict]:
                 cand = sm.group(1).strip()
                 if _is_weather_label(cand):
                     continue
-                lede = cand.rstrip(".")
+                lede = _clamp_weather_alert(cand).rstrip(".")
                 break
         posts.append({"date": dt, "slug": post_slug(dt), "lede": lede})
     posts.sort(key=lambda p: p["date"], reverse=True)
@@ -804,10 +837,10 @@ def collect_brief_rundown(slug: str, n: int = 4) -> list[str]:
     content = path.read_text()
     items = []
     for sm in re.finditer(r"<strong>(.+?)</strong>", content):
-        cand = _unescape_and_truncate(sm.group(1), max_len=0).strip().rstrip(".")
+        cand = _unescape_and_truncate(sm.group(1), max_len=0).strip()
         if not cand or _is_weather_label(cand):
             continue
-        items.append(cand)
+        items.append(_clamp_weather_alert(cand).rstrip("."))
         if len(items) >= n:
             break
     return items
@@ -1110,6 +1143,13 @@ def collect_next_meeting() -> dict | None:
     return None
 
 
+# Longer hazard names first so "Extreme Heat Warning" doesn't match as "Heat Warning".
+_ALERT_NAME_RE = re.compile(
+    r"\b(Flash Flood|Excessive Heat|Extreme Heat|Severe Thunderstorm|Blowing Dust|"
+    r"Red Flag|High Wind|Winter Storm|Dust|Flood|Heat|Wind)\s+"
+    r"(Watch|Warning|Advisory)\b", re.I)
+
+
 def extract_weather_status(brief_html: str) -> dict:
     """From a brief's weather section: {alert, hi, lo}. If the brief says there
     are no active alerts, alert is None. hi/lo are the nearest forecast values."""
@@ -1119,13 +1159,18 @@ def extract_weather_status(brief_html: str) -> dict:
     weather = t[wi:] if wi >= 0 else t
     alert = None
     if not re.search(r"no active\b[^.]*alert", weather, re.I):
-        am = re.search(
-            r"((?:Flash Flood|Flood|Excessive Heat|Heat|Severe Thunderstorm|"
-            r"Blowing Dust|Dust|Red Flag|High Wind|Wind|Winter Storm)\s+"
-            r"(?:Watch|Warning|Advisory)[^.·]*)", weather, re.I)
-        alert = _unescape_and_truncate(am.group(1), max_len=52) if am else None
-    hi = re.search(r"high near (\d+)", weather, re.I)
-    lo = re.search(r"low near (\d+)", weather, re.I)
+        # Name the hazards rather than quoting a clause — the strip is a ticker,
+        # and the old clause match cut mid-abbreviation ("…runs through 8 p").
+        names = []
+        for m in _ALERT_NAME_RE.finditer(weather):
+            name = f"{m.group(1).title()} {m.group(2).title()}"
+            if name not in names:
+                names.append(name)
+        alert = ", ".join(names[:3]) or None
+    # "near"/"around"/"of" all occur in NWS phrasing — matching only "near"
+    # silently dropped the temps chip from the status strip.
+    hi = re.search(r"high (?:near|around|of) (\d+)", weather, re.I)
+    lo = re.search(r"low (?:near|around|of) (\d+)", weather, re.I)
     return {"alert": alert,
             "hi": hi.group(1) if hi else None,
             "lo": lo.group(1) if lo else None}
