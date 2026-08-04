@@ -230,6 +230,42 @@ def post_page(client, entry: dict, composed: dict, blob_cache: dict):
     return client.send_post(text=composed["text"], embed=embed, langs=["en"])
 
 
+def announce(client, text: str, url: str, blob_cache: dict):
+    """Post hand-written copy with a link card for one of our own pages.
+
+    The ONLY non-derived path in this file, for announcements that aren't a
+    published page ("we now cover the school districts"). Deliberately narrow:
+
+      * It never touches the ledger. Nothing here came from the sitemap, so
+        there is nothing to mark as posted, and writing to the ledger could
+        suppress a real page later.
+      * No cron wiring, ever. It requires --announce, so an unattended run
+        cannot reach it. Automation posts only what the site already published.
+      * Over-length is an ERROR, not a truncation. compose() may trim derived
+        text because a machine wrote it; hand-written copy that gets silently
+        cut mid-word is worse than a failed command.
+
+    The card title comes from the target page's own og:title and the
+    description stays empty — same "never say the same thing twice" rule the
+    derived path follows, since the post text is doing that work.
+    """
+    from atproto import models
+    rel = url.removeprefix(SITE) or "index.html"
+    meta = page_meta(rel) or {"title": "Tucson Daily Brief", "image": ""}
+    thumb = None
+    data = thumb_bytes(meta["image"], blob_cache.setdefault("bytes", {}))
+    if data is not None:
+        thumb = client.upload_blob(data).blob
+    embed = models.AppBskyEmbedExternal.Main(
+        external=models.AppBskyEmbedExternal.External(
+            uri=url,
+            title=meta["title"] or "Tucson Daily Brief",
+            description="",
+            thumb=thumb,
+        ))
+    return client.send_post(text=text, embed=embed, langs=["en"])
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--seed", action="store_true",
@@ -237,7 +273,32 @@ def main() -> None:
     ap.add_argument("--dry-run", action="store_true",
                     help="show what would post without posting")
     ap.add_argument("--max-per-run", type=int, default=DEFAULT_MAX_PER_RUN)
+    ap.add_argument("--announce", metavar="TEXT|@FILE",
+                    help="post hand-written copy with a link card (manual only; "
+                         "'@path' reads the text from a file). Never ledgered.")
+    ap.add_argument("--announce-url", default=SITE, metavar="URL",
+                    help=f"page the announce link card points at (default {SITE})")
     args = ap.parse_args()
+
+    if args.announce:
+        text = args.announce
+        if text.startswith("@"):
+            text = Path(text[1:]).read_text().strip()
+        if not text:
+            sys.exit("[bluesky] ERROR: --announce text is empty")
+        if len(text) > MAX_GRAPHEMES:
+            sys.exit(f"[bluesky] ERROR: {len(text)} chars, limit {MAX_GRAPHEMES} "
+                     f"— edit the copy, this path will not truncate it")
+        if not args.announce_url.startswith(SITE):
+            sys.exit(f"[bluesky] ERROR: --announce-url must be on {SITE}")
+        log(f"announce ({len(text)}/{MAX_GRAPHEMES} chars) → {args.announce_url}")
+        print("-" * 60 + f"\n{text}\n" + "-" * 60)
+        if args.dry_run:
+            log("dry run — nothing posted")
+            return
+        res = announce(get_client(), text, args.announce_url, {})
+        log(f"posted: {res.uri}")
+        return
 
     entries = sitemap_entries()
     ledger = load_ledger()

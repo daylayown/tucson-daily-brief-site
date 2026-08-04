@@ -108,6 +108,75 @@ Idempotent by construction, so wire it cheaply: end of `run_podcast.sh`, end of 
 
 **Mechanics gotchas:** 300-grapheme limit; link facets use **UTF-8 byte offsets** (off-by-emoji bug); the link-card thumbnail must be uploaded as a blob ≤~1MB per post (Bluesky won't fetch OG images — reuse each page's OG image, compress if needed). Rate limits are a non-issue at TDB volume.
 
+### Manual announcements — `--announce` (added 2026-08-04)
+
+`bluesky_poster.py --announce "TEXT|@file" [--announce-url URL]` posts
+hand-written copy with a link card to one of our own pages. The **only**
+non-derived path in that file, and deliberately narrow: it never touches the
+ledger (nothing came from the sitemap, and a stray entry could suppress a real
+page later), it is never cron-wired (it requires the flag, so an unattended run
+cannot reach it), and over-length copy is a **hard error rather than a
+truncation** — `compose()` may trim machine-written text, but silently cutting
+hand-written copy mid-word is worse than a failed command. Card title comes
+from the target page's own `og:title`, description stays empty (same "never say
+the same thing twice" rule). Use `--dry-run` first; it prints the copy and the
+character count.
+
+**First use, 2026-08-04:** the school-districts announcement
+(`3msc62t55fy2q`), linking the homepage. Copy workshopped rather than
+generated. What shaped it, for the next one:
+- **Led with the gap, not the feature** — "School boards decide a lot and
+  almost nobody covers them" before "the brief now carries school district
+  news." The thesis is the hook; the feature is the payload.
+- **"I'm teaching my software to sit in on the board meetings"** for the
+  forward tease. Honest that it does not exist yet, keeps the accountable human
+  in frame, and holds the account's no-"AI" line (below) without being coy.
+- **Named the six districts we actually read**, and used "more districts to
+  come" for the three behind the Finalsite wall — true, and it doesn't hand
+  readers a technical excuse.
+- **"reading what they tell families"**, not "covering the districts" — we read
+  announcements; we do not yet report on the districts. Precision here is the
+  same discipline as the 🎓 section's attribution rules (`PIPELINE.md`).
+
+### Two operational gotchas (both hit 2026-08-04)
+
+1. **`atproto` is installed `--user` for system Python, not the project
+   `.venv`.** So this script runs under `python3`, never `.venv/bin/python3` —
+   which is what `run_bluesky_post.sh` and `check_agendas.sh` already do. Easy
+   to trip on, because everything else in the repo is venv-run.
+2. **The cached session string gets revoked** (`ExpiredToken`) — seen within
+   hours of creation. `get_client()` catches it, logs in fresh and rewrites
+   `bluesky-session.txt`, so it self-heals; the log line is noise, not a
+   failure. Do not "fix" it by deleting the session cache.
+
+### The pinned post — rewrite DEFERRED (2026-08-04)
+
+Current pinned intro is `3msbtcoo5ba22` (299/300 chars, link card → homepage),
+with the UTM-tagged TDB Weekly card as a pinned self-reply beneath it
+(`3msbtcouu7e23`). **Deliberately not rewritten to add schools** — user's call:
+replace it once the live AI reporter actually covers school boards, so the copy
+can state it plainly instead of teasing it. Drafts explored and the reasoning
+worth keeping:
+
+- **Bluesky posts are not editable.** A "rewrite" is delete + repost + re-pin,
+  and deleting the parent **orphans the pinned newsletter reply** (renders under
+  a "deleted post" placeholder), so the reply has to be reposted too. Re-pinning
+  means writing the `pinnedPost` strongRef back onto the `app.bsky.actor.profile`
+  self record. Budget for four steps, not one.
+- The window is cheap while engagement is zero — check
+  `app.bsky.feed.getPosts` for likes/reposts/quotes before deleting anything.
+- The draft that overclaimed, caught before posting: "watch the meetings across
+  Tucson, Pima County, Marana, Oro Valley **and now the school districts**"
+  reads as though we attend school board meetings. We don't yet. Keep the school
+  clause grammatically separate from the meetings clause until the reporter
+  ships — at which point this whole problem goes away.
+- At 299/300 the post has no room, so adding schools costs the closing question
+  ("What part of town are you reading from?"). On an evergreen pinned post that
+  question is what converts a profile visit into a reply — don't drop it
+  casually. Reading the profile: `app.bsky.actor.getProfile` returns
+  `pinnedPost`, and the whole thread is readable unauthenticated via
+  `app.bsky.feed.getPostThread`.
+
 ### v2 framework (discussed 2026-08-04, post-launch)
 
 Account is fully dressed as of launch day: hand-written bio, pinned intro post (the "software I whipped together" nod — deliberate wording; the word "AI" avoided because Bluesky's early-adopter crowd skews AI-skeptical), UTM-tagged newsletter reply pinned beneath it (`utm_source=bluesky&utm_medium=social&utm_campaign=tdb-weekly`), first follows done manually.
