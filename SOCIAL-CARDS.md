@@ -105,6 +105,17 @@ Worked example, same story:
 | ✅ Card | **"46%"** / "of Pima County's early ballots came back. Lowest in 30 years." |
 | ✅ Caption | the raw counts, the three-primary slide with each year's rate, how the Active Early Voting List works, turnout, source, link |
 
+**Calibration (2026-08-04): "hook, not summary" does not mean bare.** The first
+data-center cards applied this rule as one-line deks ("Public hearing, 5:30 p.m.
+You can speak.") and the user's reaction was "too bare bones — add some
+details." The target: **headline + a dek carrying 2–3 concrete details** (the
+stakes, the specifics, the when) — still scannable at a glance, but substantive.
+The caption then carries *different* material (ordinance/item numbers,
+background, what's still unknown, the link), never the same sentences. Worked
+example: datacenter-hearing-2026-08-04 v2 (dek names the citywide zoning
+change, the Colorado River context, and the hearing logistics; caption carries
+Ordinance 12268, the Reclamation EIS timing, and the open questions).
+
 **Stat cards need an `hsize` override.** `build_card` picks type size from
 headline *length*, so a 3-character headline like "46%" lands at long-headline
 size and reads small in a big empty frame. Pass `hsize=260` (tuned on the 4:5

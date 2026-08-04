@@ -44,11 +44,24 @@ from render_card import build_card, render
 
 KICKER = "What to Watch"
 
+# CALIBRATION (user, 2026-08-04): the one-line deks were "too bare bones."
+# The card is still a hook, not a summary — but the dek should carry 2-3
+# concrete details (the stakes, the specifics, the when). The caption then
+# carries DIFFERENT material: ordinance/item numbers, background, what's
+# still unknown, the link. Card and caption must not repeat each other.
+
 HOOK_HEAD = "Data centers: Tucson sets the rules Wednesday."
-HOOK_DEK = "Public hearing, 5:30 p.m. You can speak."
+HOOK_DEK = (
+    "A citywide zoning change decides where large-scale data centers can be "
+    "built — in a city already planning for Colorado River cuts. Public "
+    "hearing at Mayor & Council, 5:30 p.m. You can speak."
+)
 
 ASK_HEAD = "What do you think about data centers?"
-ASK_DEK = "Tell us below 👇"
+ASK_DEK = (
+    "Jobs and tax base? Water and power strain? Both? Tucson is about to "
+    "write the rules — tell us where you land 👇"
+)
 
 CARDS = [
     dict(slug="datacenter-hearing-2026-08-04", theme="light",
