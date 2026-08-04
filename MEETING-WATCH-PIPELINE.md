@@ -412,3 +412,23 @@ Digests and manifests are gitignored — regenerable, bulky, and
 `check_agendas.sh` does a wholesale `git add agenda-watch/` that would otherwise
 commit them into the public repo daily.
 
+
+## The lede must name the news (prompt fix, 2026-08-04)
+
+All four miners shared the instruction "Start with a brief 2-sentence overview
+of the meeting" — which invites meta-commentary about the meeting's *shape*
+instead of its news. Failure case: the 8/5 Tucson preview's lede said
+"relatively light on major spending decisions … two significant land use and
+development items" about the meeting setting the city's data-center rules.
+The lede feeds four surfaces (page lede, og:description, meeting-watch index
+cards at ~117 chars, Bluesky post text), so vagueness propagates everywhere.
+
+Fixed 2026-08-04 in all four prompts: sentence 1 must lead with the single most
+newsworthy item named concretely (not a category label), sentence 2 rounds up
+the rest; describing the meeting's size/routineness in the overview is banned.
+The ask is specificity, not drama — don't escalate the wording toward hype if
+this gets revisited. Watch the first week of previews; if vagueness persists,
+consider a log-only check that the lede shares a content word with the top
+item's headline (shadow-mode first, per the provenance-gate philosophy).
+As a belt regardless: the Bluesky poster appends "Top of the agenda: {first
+Top-Items h3}" when it fits (see SOCIAL-AUTOPOST.md Part 3).

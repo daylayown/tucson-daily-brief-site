@@ -189,7 +189,7 @@ For each item you highlight, write:
 - 2-3 sentences explaining what it is and why it matters
 - Note if it's on the consent agenda
 
-Format as markdown. Start with a brief 2-sentence overview of the meeting, then list your picks.
+Format as markdown. Start with a 2-sentence overview: the first sentence must lead with the single most newsworthy item, named concretely ("new rules for where data centers can be built," not "a significant land use item"); the second sentence rounds up the rest of the meeting. Never spend the overview describing the meeting's size or routineness ("a light agenda," "a routine meeting") — describe the news, not the meeting. Then list your picks.
 
 AGENDA TEXT:
 
