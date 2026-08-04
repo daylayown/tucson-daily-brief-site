@@ -87,4 +87,57 @@ TDB's strict no-fabrication bar ([[feedback_ai_content_quality_bar]]) was hit **
 
 ---
 
-*Captured 2026-06-26. Strategy + feasibility only — not building. Pairs with SHORT-FORM-VIDEO.md and the project_social_promo_strategy / project_social_autopost memories.*
+## Part 3 — Bluesky/ATProto build plan (locked 2026-08-04; **v1 BUILT + LIVE same day**)
+
+**Status:** account live as `@tucsondailybrief.com` (domain handle verified via Cloudflare TXT, DID `did:plc:mo77ybho6xbkzjbzfdaxmhrn`), app password in `~/.config/environment.d/bluesky.conf`, `atproto` SDK installed `--user`. v1 shipped as `social/bluesky_poster.py`; ledger seeded with the 366-page back catalog; first three posts (2026-08-04 brief + Marana/Tucson council previews) published 2026-08-04. Wired: end of `check_agendas.sh` (8 AM) + `run_bluesky_post.sh` catch-all crons at 6:45 AM/4:45 PM (`/tmp/bluesky-post.log`). Build refinements vs the plan below: discovery reads **`sitemap.xml`** (the canonical published list every pipeline rebuilds) instead of re-scanning section dirs; compose reads each page's **baked og: meta** instead of calling the SEO helpers; post text carries the dek and the link card carries the headline (card description left empty — never say the same thing twice); Pima BOS previews get a date sentence assembled from the page's own strings (their pages have no lede, only a stats strip); a dek ending in "…" (derive_description's 160-char meta cut) is re-fit from the page's lede paragraph as complete sentences within the 300-grapheme limit — never post mid-sentence text; meeting previews append "Top of the agenda: {first Top-Items h3}" when it fits, because the lede alone can undersell the meeting (the 8/5 Tucson lede said "two significant land use items" without naming the data-center rules hearing — the miners' own item ranking supplies the emphasis, no model call); >7-day-old pages are ledgered without posting (ledger-gap safety); 8 posts/run cap. Session string cached in `social/bluesky-session.txt` (gitignored, like the ledger).
+
+**Account posture: brand account** (`@tucsondailybrief`), decided 2026-08-04 — same personal-social-rule carve-out as FB/IG. Purpose: extend TDB's reach / new audiences. Context: AZPM's Bluesky went dormant (PIPELINE.md) — Tucson presence on the network is thin, which is both the opportunity and the audience caveat. Baselines say Bluesky = 0 today; the justification is zero marginal cost once automated + this being the proving ground for the whole publish-adapter stack (build order, Part 2).
+
+**Day-one move, before any code: domain handle.** Set the handle to `@tucsondailybrief.com` via DNS TXT `_atproto.tucsondailybrief.com` — free, instant, ATProto's built-in anti-impersonation verification.
+
+### v1 — ledger-diff poster (`social/bluesky_poster.py`), fully derived, full-auto
+
+Do **not** bolt posting into each pipeline. One decoupled script, the published site as source of truth:
+
+1. **Discover** published URLs by scanning the section dirs the way `rebuild_homepage()` does (`posts/`, `meeting-watch/`, `news-reports/`, `around-town/`, `public-record/`, `in-depth/`).
+2. **Diff** against a posted-ledger (gitignored SQLite/JSON, like `promise-ledger/`). **Seed the ledger with the live back catalog on first run** or it firehoses ~400 old pages.
+3. **Compose** from the SEO layer — `extract_headline()` + `derive_description()` + link card. Zero model calls, zero fabrication risk; safe to full-auto because every page already passed its own editorial gate. Register: neutral/watchful for briefs/previews/decided; warmer allowed for Around Town/Spotted (BRAND-BIBLE.md).
+4. **Post** via the official `atproto` Python SDK (app password in `~/.config/environment.d/`, same pattern as anthropic.conf).
+
+Idempotent by construction, so wire it cheaply: end of `run_podcast.sh`, end of `check_agendas.sh`, plus a late-morning catch-all cron. `ai_reporter.py` needs no changes — human-approved reports get picked up on the next run, so the review gate stays upstream.
+
+**Mechanics gotchas:** 300-grapheme limit; link facets use **UTF-8 byte offsets** (off-by-emoji bug); the link-card thumbnail must be uploaded as a blob ≤~1MB per post (Bluesky won't fetch OG images — reuse each page's OG image, compress if needed). Rate limits are a non-issue at TDB volume.
+
+### v2 framework (discussed 2026-08-04, post-launch)
+
+Account is fully dressed as of launch day: hand-written bio, pinned intro post (the "software I whipped together" nod — deliberate wording; the word "AI" avoided because Bluesky's early-adopter crowd skews AI-skeptical), UTM-tagged newsletter reply pinned beneath it (`utm_source=bluesky&utm_medium=social&utm_campaign=tdb-weekly`), first follows done manually.
+
+Remaining, in priority order:
+1. **Starter pack** of Southern-AZ civic accounts — manual, ~10 min, once the account has ~a week of content.
+2. **Metrics logger** — daily snapshot of followers + per-post engagement to a gitignored jsonl (public API, no auth); feeds the 8-week distribution-loop evaluation. Pair with UTM-tagging the auto-poster's links (Bluesky mobile apps often send no referrer, so GA4 undercounts without it).
+3. **Preview→outcome quote-posts** (user-approved 2026-08-04, next build session alongside the metrics logger) — when a What They Decided report publishes, quote-post the matching What to Watch post instead of posting a standalone link: "here's what happened" quoting "here's what to watch." Fully derived — the ledger has every post's URI and report slugs pair with preview slugs, so it's a slug join, no model call. Makes TDB's defining preview→outcome rhythm visible in a native Bluesky format; ~20 lines.
+4. **Monday "This week in local government" thread** (user-approved 2026-08-04, future session) — one thread, one post per body meeting that week, derived from published previews via the v1 compose machinery. A recurring anchor product in a predictable slot. Build it *together with* the rollup decision below — the weekly thread is the natural home for Spotted/Around Town digests if batching wins.
+5. **Rollup policy decision** — watch a week of the firehose first: possibly keep briefs/previews/reports/In Depth as individual posts but batch Spotted + Around Town into derived digest posts to keep the feed high-signal.
+6. **Custom feed generator** — ROADMAP-gated, see "Other ATProto plays" below.
+
+**Wait-and-see: Bluesky as a newsgathering input.** Flip the pipe: a daily poll of Bluesky search for Tucson keywords (street names, "Pima County," agency names) appending interesting hits to `pipeline/EDITOR-TIPS.md`, which the brief generator already reads every run. User likes the concept (2026-08-04) but is unconvinced there's enough Tucson content on the network yet — the same thinness that makes the account an easy land-grab makes it a weak source. Revisit when the metrics logger (or just time in-app) shows a real Tucson conversation forming; a one-week trial is cheap whenever curiosity strikes.
+
+**Declined:** notifications→Telegram forwarding (2026-08-04) — user is at the PC all day and will handle replies directly in-app; don't re-propose. **Deferred:** the Flash caption writer below — the launch-day compose improvements (sentence-fit + top-of-agenda) ate most of its value; revisit only if metrics show Bluesky earning real attention.
+
+### v2 — DeepSeek V4 Flash caption writer (later, optional)
+
+Flash writes the post text as a **compression-only** task: input is the page's own extracted text, no outside facts, derived v1 text as automatic fallback when output fails checks (too long / names not present in source — the provenance-gate trick, reused). Cost is fractions of a cent per day. Bake-off lessons that apply (PIPELINE.md): Flash **thinks by default and overthinks** (cap/disable thinking for captions); OpenAI-compatible endpoint → reuse the `run_chat()` shape from `brief_model_ab.py`, not `call_claude()`; PRC hosting settled 2026-07-31, don't re-raise. Governance: model-written captions are reader-facing news text → per Part 2's tiered rule, either Telegram one-tap or the compression-only + fallback guard. Decide when v2 starts; v1 doesn't need it.
+
+### Other ATProto plays, ranked
+
+1. ~~Domain handle~~ — day one, see above.
+2. **Tucson custom feed generator** — a subscribable "Tucson News" feed (TDB + Star + Sentinel + AZPM + local reporters) via Jetstream + feed-skeleton service on Fly next to `tdb-ask`. TDB owns a *distribution surface*, not just an account. Real multi-session project — ROADMAP it, gated.
+3. **Starter pack** of Southern-AZ civic accounts — manual, ten minutes, do once the account has content.
+4. **Custom lexicons for civic records** (k3-adjacent) — no consumer exists today; parked as a note.
+5. **Self-hosted PDS** — skip, buys nothing at this scale.
+
+**Effort:** v1 ≈ one session; v2 ≈ +1 hour; feed generator = its own project.
+
+---
+
+*Captured 2026-06-26. Strategy + feasibility only — not building. Part 3 added 2026-08-04 (architecture locked, awaiting build go-ahead). Pairs with SHORT-FORM-VIDEO.md and the project_social_promo_strategy / project_social_autopost memories.*

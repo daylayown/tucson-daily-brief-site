@@ -77,3 +77,7 @@ pcao-dashboard-archive/
 
 # Kelly-Curtis visa bill reporting — pre-publication, outreach pending
 kelly-curtis-visa/
+
+# Bluesky poster — ledger + session are local state
+social/bluesky-ledger.json
+social/bluesky-session.txt

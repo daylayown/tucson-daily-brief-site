@@ -457,4 +457,10 @@ echo "Checking meeting-coverage staleness..."
 python3 "$SCRIPT_DIR/check_meeting_staleness.py" --telegram \
     || echo "WARNING: staleness check failed (non-fatal)"
 
+# --- Bluesky ledger-diff poster (SOCIAL-AUTOPOST.md Part 3) ---
+# Posts anything newly published since the last run; idempotent, non-fatal.
+echo "Posting new pages to Bluesky..."
+python3 "$SCRIPT_DIR/social/bluesky_poster.py" \
+    || echo "WARNING: Bluesky poster failed (non-fatal)"
+
 echo "$(date): Done."
