@@ -1,10 +1,11 @@
 {
   "monitor": "tucson-daily-brief",
   "description": "Hyper-local news feeds for Tucson/Pima County",
-  "last_updated": "2026-07-29",
+  "last_updated": "2026-08-04",
   "notes": [
     "Some URLs may need verification. Agent should test each feed on first run and report failures.",
-    "tier_2_officials emptied 2026-07-30: Sens. Kelly and Gallego's Bluesky feeds moved to officials_watch.py. An officeholder's own social feed is an official channel and belongs in the 📢 Officials Watch section, not in the news-items block where the model could only treat it as reporting. Do not re-add official/campaign social accounts here — add them to officials_watch.SOURCES with kind='bluesky'."
+    "tier_2_officials emptied 2026-07-30: Sens. Kelly and Gallego's Bluesky feeds moved to officials_watch.py. An officeholder's own social feed is an official channel and belongs in the 📢 Officials Watch section, not in the news-items block where the model could only treat it as reporting. Do not re-add official/campaign social accounts here — add them to officials_watch.SOURCES with kind='bluesky'.",
+    "Same rule for school districts (added 2026-08-04): a district's own news page is an official channel and lives in school_news.py, feeding the 🎓 Schools section. Do not add a district feed here — Marana's Atom feed would fit this file mechanically and that is exactly the trap. News-OUTLET coverage of schools (e.g. the Star Education feed below) does belong here."
   ],
   "sources": {
     "tier_1_primary": [
@@ -267,7 +268,7 @@
   "editorial_priorities": [
     "1. Government actions (city council votes, county decisions, state legislation affecting Tucson)",
     "2. Public safety (police, fire, emergency alerts, severe weather)",
-    "3. Education (TUSD, Amphitheater, Catalina Foothills, U of A)",
+    "3. Schools — the nine metro K-12 districts (own channels read by school_news.py; outlet coverage via the feeds here). U of A is separate, not a school district.",
     "4. Development & business (new construction, business openings/closings, economic news)",
     "5. Community events (major events, cultural happenings)",
     "6. Weather (daily conditions, notable forecasts, seasonal patterns)"
@@ -280,6 +281,7 @@
     "summary_style": "concise wire-service prose, no fluff, lead with most important story"
   },
   "_meta": {
-    "see_also": "officials_watch.py holds 8 additional sources not configurable here: press releases for Sens. Kelly and Gallego, Reps. Ciscomani (CD6) and Grijalva (CD7), Gov. Hobbs, and the campaigns of Hobbs, Biggs and Mendoza. They need per-site HTML parsers rather than a feed URL, so they live in that module. Feeds the brief's 'What Your Officials Are Saying' section. Do not audit sources without also reading that file."
+    "see_also": "officials_watch.py holds 8 additional sources not configurable here: press releases for Sens. Kelly and Gallego, Reps. Ciscomani (CD6) and Grijalva (CD7), Gov. Hobbs, and the campaigns of Hobbs, Biggs and Mendoza. They need per-site HTML parsers rather than a feed URL, so they live in that module. Feeds the brief's 'What Your Officials Are Saying' section. Do not audit sources without also reading that file.",
+    "see_also_schools": "school_news.py holds 10 more sources: the nine metro K-12 districts' own news channels (three of them flagged status='blocked' behind a JS wall). Feeds the brief's 🎓 Schools section. Same rule — a source audit that reads only this file will miss them. Route map in SCHOOL-DATA-FEASIBILITY.md § E."
   }
 }

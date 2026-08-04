@@ -81,3 +81,6 @@ kelly-curtis-visa/
 # Bluesky poster — ledger + session are local state
 social/bluesky-ledger.json
 social/bluesky-session.txt
+
+# School news: repeat-suppression ledger (which district posts a brief already used)
+pipeline/.school_news_seen.json

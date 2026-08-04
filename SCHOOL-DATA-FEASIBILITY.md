@@ -134,6 +134,82 @@ NAEP API works (`nationsreportcard.gov/Dataservice/GetAdhocData.aspx?...jurisdic
 
 ---
 
+## E. District news channels — SHIPPED 2026-08-04 (`school_news.py`)
+
+Scanned live 2026-08-04 to feed the daily brief's 🎓 Schools section. **Six of
+nine districts are readable; one of the nine publishes a feed.** Pipeline
+wiring and editorial rules → `PIPELINE.md`.
+
+| District | Platform | Route | Date from |
+|---|---|---|---|
+| **Marana USD** | Finalsite Composer | ⭐ Atom feed `www.maranausd.org/fs/post-manager/boards/3/posts/feed` | feed `published` |
+| **Sunnyside USD** | ParentSquare SmartSites | scrape `susd12.org/news-room` (`ss-post-page-row`) | `ss-post-date` |
+| **Catalina Foothills** | ParentSquare SmartSites | scrape `cfsd16.org/` (`stack-news-grid`) | `stack-news-grid-date` |
+| **Sahuarita USD** | ParentSquare SmartSites | scrape `susd30.us/` (`stack-news-grid`) | `stack-news-grid-date` |
+| **Amphitheater** | ParentSquare SmartSites | scrape `amphi.com/` (`psq_feed_item`) **+ per-item detail fetch** | `Posted Date: MM/DD/YY` on the article page |
+| **TUSD** | custom CMS | scrape `/stories` **+** `/communications-and-media-relations-dept` | URL slug `story-YYYYMMDD-`; PR filename `-TUSD-MMDDYY.pdf` |
+| **Vail USD** | Finalsite | ⛔ Client Challenge | — |
+| **Flowing Wells USD** | Finalsite | ⛔ Client Challenge | — |
+| **Tanque Verde USD** | Finalsite | ⛔ Client Challenge | — |
+
+**Findings worth not re-deriving:**
+
+1. **No district publishes an RSS autodiscovery link.** Not one `<link
+   rel="alternate" type="application/rss+xml">` across nine sites.
+2. **The Finalsite feed route is `/fs/post-manager/boards/{id}/posts/feed`** —
+   Atom, no auth. It is not documented and not linked; it was found by reading
+   the site's own `application-*.js` (`fsBoardRSSLinks` template). The board ID
+   is in the news page's `data-boards='[{"id":3,...}]'` attribute. Marana's
+   district board is **3**; boards 4+ are per-school (Butterfield, DeGrazia,
+   Coyote Trail…) and mostly stale — do not add them. The page-level guesses all
+   404: `/news/district-news/rss`, `/rss`, `/feed`, `/rss.xml`, `/news/rss`.
+   ⚠️ Send `Accept: */*` — a narrow `Accept: application/rss+xml` gets a **406**,
+   which reads like a broken route rather than a header problem.
+3. **ParentSquare SmartSites has no feed at all.** All of `/rss`, `/feed`,
+   `/rss.xml`, `/feed.xml`, `/news-room/rss`, `/news-room?rss=1`,
+   `/apps/news/rss.jsp`, `/pf4/rss` 404. Its news markup *is* server-rendered
+   though, so scraping is clean. Three theme variants, and they differ in ways
+   that matter: `ss-post-page-row` (dedicated news page, dated),
+   `stack-news-grid` (homepage grid, dated, **not sorted by date** — a pinned
+   item sits first), and `psq_feed_item` (homepage, **no date in the list at
+   all**). Article permalinks are
+   `/index.php?pageID=smartSiteFeed&psqFeed=true&articleID={id}`; that URL
+   without an `articleID` renders an empty shell, so there is no list endpoint.
+   Only Sunnyside has a news page in its sitemap — the other three are
+   homepage-only. Sitemaps are numeric page IDs, so they can't be used to find
+   the news page.
+4. **Vail, Flowing Wells and Tanque Verde are behind Finalsite's Client
+   Challenge** — a JS interstitial at the CDN edge, identical asset hash
+   (`_fs-ch-1T1wmsGaOgGaSxcX`) on all three, applied to **every** path including
+   the board-feed route. This is the ADE Cloudflare class of wall from gotcha #1,
+   not the UA-only Marana/OV WAFs: a full Chrome header set (incl. `sec-ch-ua`,
+   `sec-fetch-*`) over HTTP/2 via curl still gets challenged, and no
+   `*.finalsite.net` origin host resolves. Needs a real headless browser. Only
+   `/robots.txt` is served (`Disallow: /api/`). They stay in `SOURCES` flagged
+   `status="blocked"` so the brief names the gap instead of implying nine
+   districts were checked.
+5. **TUSD's dates are derived, not parsed.** `/stories` is a hand-maintained
+   tabbed archive whose URLs carry `story-YYYYMMDD-`; press releases are PDFs
+   named `NAME-TUSD-MMDDYY.pdf`. Both give a date without trusting prose.
+   Cadence caveat: `/stories` newest was 2026-07-22, the press-release page's
+   newest was **091225 — eleven months stale**, and `/spotlight` is per-person
+   spotlights frozen at Sept 2025 (don't wire it). TUSD's site catch-alls to the
+   homepage with HTTP 200 for any unknown path, so probe results there need a
+   content check, not a status check.
+6. **Domains that are not what you'd guess:** Sahuarita is **`susd30.us`** (not
+   susd30.org/.net — and `sausd.org` is a parked spam domain that 302s to a
+   redirect chain). `sahuarita.k12.az.us` and `vail.k12.az.us` don't serve.
+7. **Editorial reality check:** most district posts are parent logistics, not
+   news. The value is in the exceptions — Amphitheater's "request for arguments
+   for/against the special sale, lease or exchange of real property election" is
+   a real story no outlet covered — and in **convergence**: Marana, Sunnyside and
+   Sahuarita all posted Arizona Healthy Schools Act guidance inside three days.
+   Selection has to be strict or the section becomes a bulletin board.
+
+**Next for this layer:** the three blocked districts via headless browser (same
+dependency the walled ADE Excel files need — build once, use twice), and board
+agendas/video per § D for the live AI reporter at school-board meetings.
+
 ## Build order (recommended)
 1. **EASY data wins, ship first (no headless, no WAF):**
    - **Auditor General XLSX** → "Where your district's money goes" + classroom-$ ranking + teacher-pay comparison (one download, highest value/lowest lift in the whole catalog).

@@ -103,6 +103,55 @@ The podcast script is condensed from a full ~7,500-char read (~8 minutes) to a t
 
 **ElevenLabs budget:** Creator tier, 100K chars/month. Condensed podcast uses ~45K chars/month (with Turbo v2.5 at 0.5 credits/char, that's ~22.5K credits/month). Usage-based billing enabled at 25,000 credit threshold as safety net.
 
+## The 🎓 Schools section (`school_news.py`, added 2026-08-04)
+
+Nine Tucson-metro K-12 districts read on their own channels, feeding a dedicated
+brief section between Development & Business and Officials. Full per-district
+route map, platform notes and the blocked-district detail live in
+`SCHOOL-DATA-FEASIBILITY.md` § E; the module's own docstring carries the rest.
+
+**Why it is a module, not entries in `sources.json`.** A district's news page is
+an official channel. In the news-items block the model can only read it as
+reporting, so "the district said X" becomes "X" — the exact failure that moved
+Kelly's and Gallego's Bluesky out of `tier_2_officials` on 2026-07-30. Adding a
+district feed to `sources.json` would re-create it. Don't.
+
+**What it does differently from `officials_watch.py`:**
+
+- **Repeat suppression by brief date, not fetch time.** Districts post a few
+  times a week, so a 36h window misses anything posted over a weekend; the
+  window is 96h and `pipeline/.school_news_seen.json` (gitignored) records the
+  brief date an item was first offered. An item is dropped only if it went to an
+  *earlier* brief — so a same-day re-run (run_brief.sh retries five times) still
+  sees its own items and a failed brief never loses a story. `--dry-run` passes
+  `mark_seen=False` so a dry run cannot consume tomorrow's items.
+- **Blocked districts are named in the prompt.** Vail, Flowing Wells and Tanque
+  Verde sit behind Finalsite's Client Challenge and cannot be read at all. A
+  section built from six that reads as "the schools news" would assert coverage
+  we don't have, so `build_block()` emits a NOT CHECKED TODAY line and the
+  prompt forbids implying full coverage or reporting those districts as quiet.
+  Same distinction as officials_watch's silent-vs-unchecked rule.
+- **Hard selection rules in the prompt.** Most district posts are parent
+  logistics (hiring, supply lists, spirit weeks, photo-use policies). The
+  SCHOOLS rules in `SYNTHESIS_PROMPT` enumerate the exclusions and require
+  district-wide or metro consequence, cap the section at 1-3 items, and say
+  outright that omitting the section beats padding it. There is also a FERPA
+  rule: never identify an individual student, whatever the district published.
+- **Convergence is the story.** When several districts announce the same thing
+  the prompt merges them into one item naming the districts. First run
+  (2026-08-04) surfaced exactly that: Marana, Sunnyside and Sahuarita all posted
+  Arizona Healthy Schools Act guidance within three days.
+
+Both guards from `officials_watch.fetch_source` are carried over and matter more
+here, because five of the six working adapters are HTML scrapes: zero extractor
+rows is treated as breakage (a live district page always has posts), and rows
+found with no parseable date is treated as a date-format change rather than as a
+quiet district.
+
+`schools_block` is also joined into the provenance gate's `sources` string. A
+name that reached the brief only through a district announcement *is* grounded,
+and leaving the block out would flag it as fabricated.
+
 ## Sources that look healthy while delivering nothing (2026-07-29)
 
 One day produced three variants of the same failure, and none of them raised an

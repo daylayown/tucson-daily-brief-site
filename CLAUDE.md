@@ -85,6 +85,7 @@ These are the ones that cost something when forgotten:
 │   ├── records_custodians.json  # Verified public-records channels per government — never guess an entry
 │   ├── EDITOR-TIPS.md           # Hand-submitted leads, read each run
 │   └── TUCSON-BRIEF.md          # Original agent rules — REFERENCE ONLY (rules now in generate_brief.py)
+├── school_news.py               # 9 metro K-12 districts' own news channels → the brief's 🎓 Schools section
 ├── agenda_mining.py             # Pima County BOS (Legistar API) + shared render/publish helpers
 ├── agenda_mining_marana.py      # Marana (Destiny Hosted scrape)
 ├── agenda_mining_orovalley.py   # Oro Valley (Destiny Hosted scrape)

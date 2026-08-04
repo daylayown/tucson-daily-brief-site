@@ -422,7 +422,9 @@ editorial judgment: select, rank, deduplicate, and write the brief.
 EDITORIAL PRIORITIES (rank stories in this order; lead with the highest available):
 1. Government actions — city council votes, county decisions, AZ legislation affecting Tucson, ballot measures
 2. Public safety — major incidents, emergency alerts, law enforcement news (not routine blotter)
-3. Education — TUSD, Amphitheater, Catalina Foothills, U of A
+3. Schools — the K-12 districts: TUSD, Amphitheater, Marana, Sunnyside, Vail,
+   Sahuarita, Catalina Foothills, Flowing Wells, Tanque Verde. (U of A is NOT a
+   school district — university news belongs in its topical section.)
 4. Development & business — construction, business openings/closings, economic news
 5. Community & events — major events, cultural happenings (only if genuinely significant)
 6. What your officials are saying — press releases from the officials who represent
@@ -464,6 +466,37 @@ and an item pulled across arrives without the URL this section requires.
 - Every item needs its markdown link, same as everywhere else. If an item has no URL, \
 leave it out.
 
+SCHOOLS: The 🎓 section covers the K-12 districts. It draws from TWO kinds of \
+material and the difference decides how you write each item:
+- The "=== SCHOOLS ===" block is what districts said on their OWN channels. \
+Every line there is an announcement, not a finding: write "the district \
+announced" / "said in a post" — never restate it as established fact, and never \
+adopt its framing.
+- A school story reported by a NEWS OUTLET in the news items belongs in this \
+section too, written normally and cited to the outlet. Put it here, not under \
+Government or Community — one school story, one place, never both.
+- SELECT HARD. Most district posts are routine parent logistics and do NOT \
+belong in a news brief: hiring posts, open-enrollment reminders, supply lists, \
+lunch menus, app downloads, spirit weeks, photo-use policies, meet-the-teacher \
+nights, individual student or staff recognition. Include an item only if it has \
+district-wide or metro consequence — budgets, bonds and overrides, board \
+decisions, school closures or boundary changes, superintendent changes, policy \
+or state-law changes that affect families, safety incidents, ballot measures, \
+construction, labor actions.
+- If several districts announced the SAME thing, merge them into one item and \
+name the districts. That convergence is the story.
+- FERPA: never name, photograph-describe, or identify an individual student, \
+whatever the district published.
+- 1-3 items, 1-2 sentences each. If nothing clears the bar, OMIT THE WHOLE \
+SECTION. A padded schools section is worse than no schools section.
+- If the block carries a "NOT CHECKED TODAY" note: never write that those \
+districts announced nothing, and never write a sentence that claims the section \
+covers all of them. That is a constraint on what you claim, NOT an instruction \
+to add a disclaimer — do not append "other districts were not checked" or any \
+standing caveat to the section. Naming the districts an item actually came from \
+is already accurate.
+- Every item needs its markdown link, same as everywhere else.
+
 WEATHER: Write the ⛈️ section from the NWS data under "=== WEATHER ===". If an active \
 alert exists, lead that section with a ⚠️ callout in bold. Include today's \
 conditions/high/low/wind, tonight, tomorrow, and a 2-3 sentence outlook.
@@ -486,6 +519,13 @@ headline is bold text with no brackets around it — write `**Headline.**`, neve
 
 🏛️ Government
 (same per-story format)
+
+───
+
+🎓 Schools
+**Headline.** Two to three sentences. District announcements are attributed as \
+announcements; outlet-reported items are cited to the outlet.
+📰 [Source Name](https://direct-url)
 
 ───
 
@@ -519,6 +559,10 @@ If an item's LINK is "(none)", cite the source name without a link. Never link t
 
 === EDITOR TIPS ===
 {tips_block}
+
+=== SCHOOLS ===
+
+{schools_block}
 
 === OFFICIALS ===
 
@@ -801,6 +845,23 @@ def main():
     except Exception as e:
         officials_block = ""
         print(f"  WARN  officials watch unavailable: {e}", file=sys.stderr)
+    # School districts' own channels. Same posture as officials watch: non-fatal,
+    # and it feeds its own labeled section rather than the news-items block, so a
+    # district announcement can never be read as reporting. See school_news.py.
+    # mark_seen is off for --dry-run so a dry run cannot consume tomorrow's items.
+    try:
+        import school_news as sn
+        sn_items, sn_errs, sn_blocked = sn.fetch_all(brief_date=brief_date,
+                                                     mark_seen=not args.dry_run)
+        schools_block = sn.build_block(sn_items, errors=sn_errs, blocked=sn_blocked)
+        print(f"  ok    School news: {len(sn_items)} post(s), "
+              f"{len(sn_errs)} error(s), {len(sn_blocked)} blocked", file=sys.stderr)
+        for name, err in sn_errs:
+            print(f"  WARN  school source FAILED — {name}: {err}", file=sys.stderr)
+    except Exception as e:
+        schools_block = ""
+        print(f"  WARN  school news unavailable: {e}", file=sys.stderr)
+
     total_items = sum(c for _, c in fetched)
     print(f"Total items in window: {total_items} across "
           f"{sum(1 for _, c in fetched if c)} source(s) with content", file=sys.stderr)
@@ -808,6 +869,7 @@ def main():
     if args.dry_run:
         print("\n=== WEATHER ===\n" + weather_block)
         print("\n=== EDITOR TIPS ===\n" + tips_block)
+        print("\n=== SCHOOLS ===\n" + (schools_block or "(none)"))
         print("\n=== OFFICIALS ===\n" + (officials_block or "(none)"))
         print("\n=== ITEMS ===\n" + items_block)
         return
@@ -827,6 +889,7 @@ def main():
         weather_block=weather_block,
         tips_block=tips_block,
         items_block=items_block,
+        schools_block=schools_block or "(none in window — omit the 🎓 section)",
         officials_block=officials_block or "(none in window — omit the 📢 section)",
     )
     print(f"Prompt: ~{len(prompt):,} chars (~{len(prompt)//4:,} tokens). Calling Claude...", file=sys.stderr)
@@ -841,8 +904,11 @@ def main():
     # now: classify and log, never alter the brief. See provenance_gate.py.
     run_provenance_gate(
         body,
+        # schools_block belongs here for the same reason officials_block does: a
+        # name that reached the brief only via a district announcement IS
+        # grounded, and leaving the block out would flag it as fabricated.
         sources="\n".join([items_block, weather_block, tips_block,
-                           officials_block]),
+                           schools_block, officials_block]),
         date_str=brief_date.isoformat(),
     )
 
