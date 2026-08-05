@@ -228,8 +228,17 @@ article + full thread render via the override.
    Announced as a reply under the pinned post. Add/remove = listitem records or the app.
 1. ~~Domain handle~~ — day one, see above.
 2. **Tucson custom feed generator** — a subscribable "Tucson News" feed (TDB + Star + Sentinel + AZPM + local reporters) via Jetstream + feed-skeleton service on Fly next to `tdb-ask`. TDB owns a *distribution surface*, not just an account. Real multi-session project — ROADMAP it, gated. The starter-pack roster doubles as its seed list.
-3. **Custom lexicons for civic records** (k3-adjacent) — no consumer exists today; parked as a note.
-4. **Self-hosted PDS** — skip, buys nothing at this scale.
+3. **Standard Site publishing** (surfaced by the Decoder interview with CEO Toni
+   Schneider, 2026-08-03) — an emergent long-form-publishing lexicon defined by
+   Leaflet/Pckt/Offprint that Bluesky now surfaces natively in-app, with WordPress
+   adopting. If TDB published articles as Standard Site records, they'd render as
+   first-class long-form content across the ATmosphere instead of link cards.
+   NOT YET INVESTIGATED: spec maturity, whether records embed or link canonical
+   content, SEO/canonical implications. Feasibility scan before any build.
+4. **Custom lexicons for civic records** (k3-adjacent) — no consumer exists today,
+   but Schneider explicitly invites custom record types ("you can define your own
+   records on the protocol"); parked as a note.
+5. **Self-hosted PDS** — skip, buys nothing at this scale.
 
 **Effort:** v1 ≈ one session; v2 ≈ +1 hour; feed generator = its own project.
 
