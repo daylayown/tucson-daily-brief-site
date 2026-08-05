@@ -197,6 +197,31 @@ Remaining, in priority order:
 
 Flash writes the post text as a **compression-only** task: input is the page's own extracted text, no outside facts, derived v1 text as automatic fallback when output fails checks (too long / names not present in source — the provenance-gate trick, reused). Cost is fractions of a cent per day. Bake-off lessons that apply (PIPELINE.md): Flash **thinks by default and overthinks** (cap/disable thinking for captions); OpenAI-compatible endpoint → reuse the `run_chat()` shape from `brief_model_ab.py`, not `call_claude()`; PRC hosting settled 2026-07-31, don't re-raise. Governance: model-written captions are reader-facing news text → per Part 2's tiered rule, either Telegram one-tap or the compression-only + fallback guard. Decide when v2 starts; v1 doesn't need it.
 
+### Portability of the Bluesky builds to X / Threads (researched 2026-08-05)
+
+Verdict per feature — the differences are structural, not effort:
+
+- **Ledger-diff auto-poster → Threads: ports cleanly, free.** Threads API publishes
+  text (500 chars) + links with previews; 250 posts/day ceiling (we need ~3). This is
+  just the Part 2 "publish adapter" for Threads. One-time tax: Meta App Review +
+  Tech Provider Verification (~a week of paperwork).
+- **Auto-poster → X: ports at ~$12–18/mo.** Pay-per-use is $0.015/post but **$0.20
+  per post containing a link** — our poster is ~2–3 link posts/day. Credits are
+  prepaid (a natural hard budget cap). Manual-first posture from the 2026-08-04 note
+  stands; also NO brand account exists on X yet — creating one is a user action.
+- **Comments embed → NEITHER.** The embed exists because Bluesky's AppView is
+  unauthenticated + CORS-open, so readers' browsers fetch threads directly. X reads
+  cost $0.005 each (client-side impossible, and a proxy would pay per pageview —
+  costs scale with traffic). Threads reads are free but token-gated → would need a
+  caching proxy service on Fly, for a second comment section of dubious UX value.
+  **Comments stay Bluesky-only, by design — it's the differentiator, not a gap.**
+- **Starter pack → no analog.** X Lists are the nearest cousin (manual, no
+  follow-all); Threads has nothing.
+
+Sources (all 2026): docs.x.com pricing, postproxy.dev, opentweet.io, api.sorsa.io
+(X); blotato.com, postproxy.dev, replia.net (Threads). X pricing churns — re-verify
+before buying credits.
+
 ### Bluesky-powered article comments (SHIPPED 2026-08-05)
 
 Every article page carries a hidden `<section id="bsky-comments">` (chrome constant
