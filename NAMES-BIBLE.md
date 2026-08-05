@@ -16,7 +16,34 @@ Built 2026-05-12 during an editorial review of a Pima County BOS draft that surf
 
 ⚠️ **"Returns empty cleanly" is a trap when a new body ships.** An unmatched slug gets **no names block at all — not even `regional`** — so the body's first report is drafted with raw Deepgram spellings *and* without the pronouns instruction, which is the one rule in that block protecting against the 2026-07-14 misgendering failure. `MUNICIPALITY_PREFIXES` in `ai_reporter.py` must gain the new slug prefix the same day its miner ships. Caught on 2026-08-04: `agenda_mining_sahuarita.py` was written and its Aug 12 capture scheduled while `sahuarita` was still absent from that tuple.
 
-**`sahuarita` bucket added 2026-08-04** — TDB's first school district. Six people (five governing board members + Superintendent Manuel O. Valenzuela, Ed.D.) and 13 schools/venues, all sourced from `susd30.us`'s own governing-board, leadership and calendar pages — **no name here entered via transcript.** All `deepgram_misreads` arrays are deliberately **empty**: this file's convention is that a misread is recorded once *observed*, and pre-guessing plausible variants for names like "Petersmarck" would be the same guess-instead-of-derive mistake the bible exists to prevent. The 2026-08-12 board meeting is the first real sample — populate them from that transcript. Pronouns are unset for all six and logged in `_meta.verification_needed`.
+**`sahuarita` bucket added 2026-08-04** — TDB's first school district. Six people (five governing board members + Superintendent Manuel O. Valenzuela, Ed.D.) and 15 schools/venues, all sourced from `susd30.us`'s own governing-board, leadership and calendar pages — **no name here entered via transcript.** Pronouns are unset for all six and logged in `_meta.verification_needed`.
+
+## ⭐ Calibrate a new body's misreads BEFORE its first live capture
+
+The misreads for `sahuarita` were **not** guessed and **not** waited for. They were harvested the same day the bucket was created, by running a *past* meeting through the same Deepgram path the live capture will use:
+
+```bash
+yt-dlp -F "<video-url>"                       # pick the smallest audio-only format
+yt-dlp -q -f 139 -o meeting.m4a "<video-url>" # 139 = m4a 49k; ~10 MB for 2 hours
+python3 ai_reporter_vod.py meeting.m4a --slug <body>-<date> --no-draft
+```
+
+Then diff the transcript against the canonical list. This is the whole trick for any new body: **the first live capture should not be the first time you learn how the ASR mangles these names.** Nine districts are queued (`SCHOOL-DATA-FEASIBILITY.md`), and every one with archived video can be calibrated before it ever goes live. Cost: ~$0.13 for a 30-minute meeting.
+
+**Go to the roll call.** It is the single highest-yield 90 seconds in any meeting — every board member's name, spoken clearly, in a fixed format ("Governing board member, missus Amy Petersmark, absent"). The 2026-07-08 sample produced every person-level misread below from roll call alone.
+
+**Mechanics worth reusing:**
+- Fuzzy-match each canonical name's *distinctive* token (usually the surname) against transcript tokens **and 2–3 word runs** — ASR splits a surname into two words ("Roa Rodriguez"), so single-token matching misses those.
+- Generate candidates, then **confirm each in context**. Most raw candidates are the correct name plus its neighbour ("sparks oh", "denise i") — noise, not misreads.
+- `exact=0` is the strongest signal: it means the ASR *never* got the name right. "Petersmarck" was wrong in 100% of appearances.
+- ⚠️ `yt-dlp --download-sections … --force-keyframes-at-cuts` re-encodes and crawls. Download the whole small audio-only format instead; it is faster than clipping.
+- ⚠️ Local-file input to `ai_reporter_vod.py` was broken until 2026-08-04 (ffmpeg's `-reconnect` flags are HTTP-only and abort on a file). Fixed.
+
+**Two traps this run surfaced — a transcript variant is not automatically a misread:**
+- Roll call said "**Anthony** Bruno"; the district site says "**Tony** Bruno". That is a formal-vs-informal name, and adding "Anthony" to `deepgram_misreads` would instruct the model to rewrite a *correct* transcription. Left out; logged for a human decision.
+- The transcript also yielded "doctor John Sparks" and a CFO, "Lisette Huey", neither confirmed on `susd30.us`. Transcript-only means hypothesis — both went to `verification_needed`, not into the roster. The rule cuts both ways: it stops bad names getting in *and* stops real-sounding ones being promoted on audio alone.
+
+**Observed 2026-07-08:** `Petersmarck`→"Petersmark" (never correct), `Reis`→"Reese" (never correct), `Raul Rodriguez`→"Roa Rodriguez", `Sparks`→"Sparx", and the word **Sahuarita** itself →"Sawarita"/"Sarita"/"Sarajarita". Valenzuela and Bruno were rendered correctly every time and so carry empty arrays — *evidence*, not an omission. Note the district's own name being mangled three ways is the highest-value entry in the bucket: it appears inside many proper nouns, which is why "Sahuarita" is its own `places` entry rather than being folded into the district's full name (mapping "Sarita"→"Sahuarita Unified School District" would rewrite "Sarita High School" into the district).
 
 **How to grow the bible:** every editorial review yields new misreads — add them to the relevant entry's `deepgram_misreads` array as you encounter them. New officials surfacing in a meeting (e.g., the Pima County Elections Director, AZ Auditor General team) should be added to the appropriate bucket. Bible is the single source of truth; no separate post-pass regex layer is needed at this scale.
 

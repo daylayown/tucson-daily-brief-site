@@ -21,6 +21,7 @@ Options:
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -44,14 +45,24 @@ DEEPGRAM_PARAMS = {
 
 
 def fetch_audio_to_opus(source: str, out_path: Path) -> None:
-    """Use ffmpeg to extract mono opus audio from any source (URL or local file)."""
+    """Use ffmpeg to extract mono opus audio from any source (URL or local file).
+
+    The `-reconnect*` flags are options on ffmpeg's HTTP protocol handler, not
+    global ones: passed with a local-file input, ffmpeg aborts with "Option
+    reconnect not found" and never opens the file. So this module's documented
+    local-file support was broken until 2026-08-04 — which matters, because the
+    local-file path is exactly what you reach for when a live capture failed and
+    you have a recording in hand. Apply them only to remote inputs.
+    """
     print(f"  Extracting audio with ffmpeg → {out_path.name}")
+    is_remote = bool(re.match(r"^[a-z][a-z0-9+.-]*://", source, re.I))
+    reconnect = ["-reconnect", "1",
+                 "-reconnect_streamed", "1",
+                 "-reconnect_delay_max", "30"] if is_remote else []
     cmd = [
         "ffmpeg",
         "-y",
-        "-reconnect", "1",
-        "-reconnect_streamed", "1",
-        "-reconnect_delay_max", "30",
+        *reconnect,
         "-err_detect", "ignore_err",
         "-fflags", "+discardcorrupt",
         "-i", source,

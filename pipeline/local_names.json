@@ -13,7 +13,9 @@
       "pima-county.people: Daniel Dempsey — nominated for Treasurer 2026-07-28 by Supervisor Cano (motion failed for lack of a second). Transcript-only spelling; withheld from the 2026-07-28 published report rather than printed unverified, same as Sarah Feld.",
       "pima-county.people: pronouns unset for Nancy Cole, Patrick DeConcini, John H. Payne, Kenneth M. Silverman, Diane Quihuis, Paul Kraft — do not infer from name.",
       "sahuarita.people: pronouns unset for John Sparks, Tony Bruno, Denise Reis, Raul Rodriguez, Amy Petersmarck, Manuel O. Valenzuela, Ed.D. — confirm on susd30.us before adding (do not infer from name)",
-      "sahuarita.people/places: deepgram_misreads all empty — populate from the first real transcript (Aug 12 2026 board meeting), do not pre-guess variants"
+      "sahuarita.people: Tony Bruno — district site says 'Tony', roll call says 'Anthony Bruno'. Formal vs informal, NOT a misread; decide which form reports should use. Do not add 'Anthony' to deepgram_misreads.",
+      "sahuarita.people: John Sparks — addressed as 'doctor John Sparks' at roll call; confirm the doctorate on susd30.us before putting Dr. in his title (transcript-only for now).",
+      "sahuarita.people: Lisette Huey (Chief Financial Officer) and an unnamed assistant superintendent were called at the 2026-07-08 roll call but are NOT on susd30.us's leadership page as fetched. Transcript-only = hypothesis; verify before adding."
     ],
     "scope_note": "Regional bucket also holds state-level officials (e.g., Arizona Auditor General) since they appear at any municipality's meetings and don't belong in any single municipality bucket. School districts get their own bucket keyed on the slug prefix used by agenda_mining_sahuarita.py / ai_reporter.py (e.g. 'sahuarita').",
     "pronouns_note": "Pronouns are injected so the model does not infer gender from a name (root cause of a 2026-07-14 Pima County draft misgendering Supervisor Andrés Cano). Only add pronouns that are evidenced — transcript honorifics/pronoun use, or documented public record. If unknown, leave the field off and add the person to verification_needed rather than guessing."
@@ -677,7 +679,9 @@
       {
         "canonical": "John Sparks",
         "title": "Governing Board President",
-        "deepgram_misreads": []
+        "deepgram_misreads": [
+          "Sparx"
+        ]
       },
       {
         "canonical": "Tony Bruno",
@@ -687,17 +691,24 @@
       {
         "canonical": "Denise Reis",
         "title": "Governing Board Member",
-        "deepgram_misreads": []
+        "deepgram_misreads": [
+          "Reese",
+          "Denise Reese"
+        ]
       },
       {
         "canonical": "Raul Rodriguez",
         "title": "Governing Board Member",
-        "deepgram_misreads": []
+        "deepgram_misreads": [
+          "Roa Rodriguez"
+        ]
       },
       {
         "canonical": "Amy Petersmarck",
         "title": "Governing Board Member",
-        "deepgram_misreads": []
+        "deepgram_misreads": [
+          "Petersmark"
+        ]
       },
       {
         "canonical": "Manuel O. Valenzuela, Ed.D.",
@@ -706,6 +717,14 @@
       }
     ],
     "places": [
+      {
+        "canonical": "Sahuarita",
+        "deepgram_misreads": [
+          "Sawarita",
+          "Sarita",
+          "Sarajarita"
+        ]
+      },
       {
         "canonical": "Sahuarita Unified School District",
         "deepgram_misreads": []
@@ -720,7 +739,9 @@
       },
       {
         "canonical": "Sahuarita High School",
-        "deepgram_misreads": []
+        "deepgram_misreads": [
+          "Sarita High School"
+        ]
       },
       {
         "canonical": "Sahuarita Intermediate School",
@@ -757,6 +778,12 @@
       {
         "canonical": "Early Childhood Center",
         "deepgram_misreads": []
+      },
+      {
+        "canonical": "Sahuarita Performing Arts Center",
+        "deepgram_misreads": [
+          "Sawarita Performing Arts Center"
+        ]
       }
     ]
   },
