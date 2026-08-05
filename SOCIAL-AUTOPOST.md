@@ -203,8 +203,12 @@ Verdict per feature — the differences are structural, not effort:
 
 - **Ledger-diff auto-poster → Threads: ports cleanly, free.** Threads API publishes
   text (500 chars) + links with previews; 250 posts/day ceiling (we need ~3). This is
-  just the Part 2 "publish adapter" for Threads. One-time tax: Meta App Review +
-  Tech Provider Verification (~a week of paperwork).
+  just the Part 2 "publish adapter" for Threads. **No App Review / Tech Provider
+  Verification needed for own-account posting** (corrected 2026-08-05): a dev-mode
+  app + "Threads Tester" invite to our own account grants threads_basic +
+  threads_content_publish immediately; review is only for serving third parties.
+  Setup is ~30 min of Meta-console clicking; token is long-lived (60 days) and
+  refreshable via th_refresh_token — the adapter must auto-refresh.
 - **Auto-poster → X: ports at ~$12–18/mo.** Pay-per-use is $0.015/post but **$0.20
   per post containing a link** — our poster is ~2–3 link posts/day. Credits are
   prepaid (a natural hard budget cap). Manual-first posture from the 2026-08-04 note
