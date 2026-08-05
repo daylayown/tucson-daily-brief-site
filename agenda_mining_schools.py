@@ -228,9 +228,7 @@ def generate_preview(district: dict, meeting: dict, analysis: str) -> str:
         f"## {d.strftime('%A')}, {d.strftime('%B %d, %Y')}",
         "", f"{meeting['title']} ({meeting['mtype']}) — {meeting['time']}",
         "", "---", "", analysis, "", "---",
-        f"*Generated {datetime.now():%Y-%m-%d %H:%M} by Tucson Daily Brief agenda "
-        f"mining pipeline using {CLAUDE_MODEL}.*",
-        "*AI-assisted journalism — reviewed by a human editor before publication.*",
+        # No per-article AI disclosure — see the note in agenda_mining.py.
         f"*Source: [{district['name']} BoardBook]({meeting['url']})*",
     ])
 

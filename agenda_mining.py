@@ -377,7 +377,7 @@ For each item you highlight, write:
 - 2-3 sentences explaining what it is and why it matters
 - Note if it's on the consent calendar (which means it could pass without any discussion)
 
-Format as markdown. Start with a 2-sentence overview: the first sentence must lead with the single most newsworthy item, named concretely ("new rules for where data centers can be built," not "a significant land use item"); the second sentence rounds up the rest of the meeting. Never spend the overview describing the meeting's size or routineness ("a light agenda," "a routine meeting") — describe the news, not the meeting. Then list your picks.
+Format as markdown. Start with a 2-sentence overview: the first sentence must lead with the single most newsworthy item, named concretely ("new rules for where data centers can be built," not "a significant land use item"); the second sentence rounds up the rest of the meeting. Never spend the overview describing the meeting's size or routineness ("a light agenda," "a routine meeting") — describe the news, not the meeting. End after your last item — do NOT append a closing note, editor's note, coverage plan, logistics paragraph, or any remark about the agenda's thinness or what is missing from it. Never state or imply that the Tucson Daily Brief will attend the meeting, and never address other reporters or newsrooms. You are writing for readers, not for an editor. Then list your picks.
 
 AGENDA ITEMS:
 
@@ -445,12 +445,12 @@ def generate_preview(event: dict, items: list[dict], analysis: str,
     lines.append(analysis)
     lines.append("")
     lines.append("---")
+    # No per-article AI disclosure. The site-wide About-page disclosure covers it;
+    # a footer on every preview is meta commentary about the machinery, which is
+    # exactly what the reader-facing register excludes. Removed 2026-08-04 — do
+    # not reintroduce it when adding a miner.
     if canceled:
-        lines.append(f"*Generated {datetime.now().strftime('%Y-%m-%d %H:%M')} by Tucson Daily Brief agenda mining pipeline.*")
-        lines.append(f"*No agenda was posted for this meeting — this notice records the cancellation and is not AI-generated.*")
-    else:
-        lines.append(f"*Generated {datetime.now().strftime('%Y-%m-%d %H:%M')} by Tucson Daily Brief agenda mining pipeline using {CLAUDE_MODEL}.*")
-        lines.append(f"*AI-assisted journalism — reviewed by a human editor before publication.*")
+        lines.append("*No agenda was posted for this meeting.*")
     lines.append(f"*Source: [Pima County Legistar](https://pima.legistar.com/Calendar.aspx)*")
 
     return "\n".join(lines)

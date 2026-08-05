@@ -321,7 +321,7 @@ For each item you highlight, write:
 - 2-3 sentences explaining what it is and why it matters
 - Note if it's on the consent agenda
 
-Format as markdown. Start with a 2-sentence overview: the first sentence must lead with the single most newsworthy item, named concretely ("a $12M bond request for a new elementary school," not "a significant facilities item"); the second sentence rounds up the rest of the meeting. Never spend the overview describing the meeting's size or routineness ("a light agenda," "a routine meeting") — describe the news, not the meeting. Then list your picks.
+Format as markdown. Start with a 2-sentence overview: the first sentence must lead with the single most newsworthy item, named concretely ("a $12M bond request for a new elementary school," not "a significant facilities item"); the second sentence rounds up the rest of the meeting. Never spend the overview describing the meeting's size or routineness ("a light agenda," "a routine meeting") — describe the news, not the meeting. End after your last item — do NOT append a closing note, editor's note, coverage plan, logistics paragraph, or any remark about the agenda's thinness or what is missing from it. Never state or imply that the Tucson Daily Brief will attend the meeting, and never address other reporters or newsrooms. You are writing for readers, not for an editor. Then list your picks.
 
 AGENDA TEXT:
 
@@ -368,15 +368,9 @@ def generate_preview(meeting_date: datetime, analysis: str, location: str = "",
         "",
         "---",
     ]
-    stamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+    # No per-article AI disclosure — see the note in agenda_mining.py.
     if canceled:
-        lines.append(f"*Generated {stamp} by Tucson Daily Brief agenda mining pipeline.*")
-        lines.append("*No agenda was posted for this meeting — this notice records "
-                     "the cancellation and is not AI-generated.*")
-    else:
-        lines.append(f"*Generated {stamp} by Tucson Daily Brief agenda mining pipeline "
-                     f"using {CLAUDE_MODEL}.*")
-        lines.append("*AI-assisted journalism — auto-published.*")
+        lines.append("*No agenda was posted for this meeting.*")
     lines.append(f"*Source: [Sahuarita Unified Governing Board portal]({PORTAL_MEETINGS})*")
     return "\n".join(lines)
 
