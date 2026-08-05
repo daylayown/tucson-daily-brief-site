@@ -201,14 +201,25 @@ Flash writes the post text as a **compression-only** task: input is the page's o
 
 Verdict per feature — the differences are structural, not effort:
 
-- **Ledger-diff auto-poster → Threads: ports cleanly, free.** Threads API publishes
-  text (500 chars) + links with previews; 250 posts/day ceiling (we need ~3). This is
-  just the Part 2 "publish adapter" for Threads. **No App Review / Tech Provider
-  Verification needed for own-account posting** (corrected 2026-08-05): a dev-mode
-  app + "Threads Tester" invite to our own account grants threads_basic +
-  threads_content_publish immediately; review is only for serving third parties.
-  Setup is ~30 min of Meta-console clicking; token is long-lived (60 days) and
-  refreshable via th_refresh_token — the adapter must auto-refresh.
+- **Ledger-diff auto-poster → Threads: SHIPPED 2026-08-05** (`social/threads_poster.py`).
+  Imports the derivation helpers straight from `bluesky_poster.py` (sitemap diff,
+  `page_meta()`, `compose()`); own gitignored ledger (`threads-ledger.json`); posts via
+  the two-step container flow with `link_attachment` (Threads fetches our og: meta
+  server-side — no blob upload). Runs alongside the Bluesky poster in
+  `run_bluesky_post.sh` (6:45 AM / 4:45 PM) and at the end of `check_agendas.sh`.
+  **No App Review / Tech Provider Verification was needed for own-account posting**:
+  dev-mode Meta app ("tdb-publisher") + "Threads Tester" invite to @tucsondailybrief
+  grants threads_basic + threads_content_publish immediately; review is only for
+  serving third parties. Setup gotchas hit live: the token-generator popup authorizes
+  whatever threads.net session the browser holds (log in as the brand account first),
+  and the tester invite must be accepted from the brand account's Settings → Website
+  permissions. **Token lifecycle:** long-lived (60 days); the poster self-refreshes
+  via th_refresh_token once the token is 7 days old and rewrites
+  `~/.config/environment.d/threads.conf` in place (clock in gitignored
+  `threads-state.json`; tokens <24h old can't be refreshed). Credentials:
+  THREADS_ACCESS_TOKEN / THREADS_USER_ID (27808088595552441) / THREADS_APP_ID /
+  THREADS_APP_SECRET — the *Threads* app ID/secret, not the Facebook pair.
+  Back catalog seeded; first post (2026-08-05 brief) live at launch.
 - **Auto-poster → X: ports at ~$12–18/mo.** Pay-per-use is $0.015/post but **$0.20
   per post containing a link** — our poster is ~2–3 link posts/day. Credits are
   prepaid (a natural hard budget cap). Manual-first posture from the 2026-08-04 note

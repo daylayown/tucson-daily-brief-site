@@ -18,5 +18,7 @@ done
 
 cd "$REPO"
 echo "$(date): Bluesky catch-all run"
-python3 social/bluesky_poster.py
+python3 social/bluesky_poster.py || echo "WARNING: Bluesky poster failed (non-fatal)"
+echo "$(date): Threads catch-all run"
+python3 social/threads_poster.py || echo "WARNING: Threads poster failed (non-fatal)"
 echo "$(date): Done."
