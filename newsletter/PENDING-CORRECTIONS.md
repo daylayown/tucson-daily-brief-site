@@ -23,6 +23,7 @@ item — a warm walk through every way readers can talk to us and follow along:
   comment on TDB articles — each story links to its Bluesky post, and replies
   there appear right on the article page.
 - **Instagram** — @tucsondailybrief: fun behind-the-scenes stories and reels.
+- **Threads** — @tucsondailybrief is now live there too (auto-posting since 2026-08-05).
 - Any other standing channels (Facebook page, podcast, ChatTDB) as a closing line.
 
 **Also this week:** TDB got a shout-out on TWiT's Intelligent Machines
