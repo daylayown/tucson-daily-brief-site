@@ -166,9 +166,11 @@ $(echo "$OUTPUT" | grep "Saved publishable preview:" | sed 's/.*Saved publishabl
 # the board's PUBLISHED annual calendar (schedule_recording.py --start) instead
 # of having a model read a start time out of the agenda.
 #
-# Placed deliberately ABOVE the "no new previews" early exit below: this stage
-# must run every day, because its whole advantage is scheduling a capture for a
-# meeting weeks out, on days when no municipal agenda has dropped at all.
+# Placed above the "no new previews" branch below, which was an `exit 0` when
+# this stage was written (fixed 2026-08-04). The placement no longer matters for
+# correctness, but it still reflects the requirement: this stage must run every
+# day, because its whole advantage is scheduling a capture for a meeting weeks
+# out, on days when no municipal agenda has dropped at all.
 # Idempotent — re-running no-ops on both the `at` job and the preview.
 echo "Checking Sahuarita Unified Governing Board..."
 SAH_OUTPUT=$(python3 agenda_mining_sahuarita.py 2>&1) \
@@ -178,18 +180,27 @@ echo "$SAH_OUTPUT"
 # Clean up empty lines
 PREVIEWS=$(echo "$PREVIEWS" | sed '/^$/d')
 
+# No new previews is NOT a reason to stop. This used to be `exit 0`, which
+# skipped all eight independent stages below — Spotted, the Marana DLLC poll,
+# both dev-watch pollers, the Monday short, the geographic editions and the
+# staleness check — none of which have anything to do with whether a council
+# posted an agenda. They were added to this script after the guard existed and
+# silently inherited it.
+#
+# It fired on most days, because the common case triggers it: the miners run
+# fine, find the meetings, and report "Preview already exists." Three of the
+# four runs in /tmp/agenda-check.log (Aug 1-4 2026) exited here. Aug 3 was a
+# MONDAY, so that week's "Buried in the Agenda" Short and the geographic
+# editions never published — and unlike the diff-based pollers, a Monday-gated
+# job has no catch-up path; it waits a week.
+#
+# NOTE ON STYLE: the publish loop below is deliberately NOT indented into this
+# else branch. Its body contains a multi-line NOTIFY_MSG string, and indenting
+# those continuation lines would inject leading whitespace into the Telegram
+# message. Bash does not care about the indentation; the message does.
 if [ -z "$PREVIEWS" ]; then
-    # ⚠️ KNOWN ISSUE (found 2026-08-04, NOT yet fixed): this early exit skips
-    # every stage below — Spotted, the Marana DLLC poll, both dev-watch
-    # pollers, the Monday short, the geographic editions, and the staleness
-    # check. They therefore only run on days a council posted a new agenda.
-    # The diff-based pollers catch up on their next run so no data is lost, but
-    # Spotted filings and Around Town items are delayed by however many days
-    # pass without a new municipal agenda. The Bluesky poster is unaffected —
-    # it has its own 6:45 AM / 4:45 PM crons.
-    echo "No new previews generated."
-    exit 0
-fi
+    echo "No new previews to publish (continuing to the remaining stages)."
+else
 
 # Auto-publish each new preview and notify via Telegram
 PUBLISHED=0
@@ -265,6 +276,8 @@ View it at: https://tucsondailybrief.com/meeting-watch.html"
         fi
     fi
 done <<< "$PREVIEWS"
+
+fi   # end of the "new previews to publish" branch
 
 # --- Public Record liquor license filings (post-process) ---
 # Scans agenda-watch/*-full.md files produced by the four pipelines above,
