@@ -305,6 +305,24 @@ Guidelines:
    with four real stories should drop the routine business, not compress
    everything evenly. Cut proclamations, recognitions, routine code
    conformance and procedural calendars entirely.
+9a. SUBSTANTIVE MATTERS ONLY. The test is whether a resident's money, safety,
+   rights, schools, property or neighborhood is affected — not whether the item
+   took up meeting time. Cut these even when staff dwelt on them:
+     - internal personnel moves below the top of the organization: promotions,
+       interim-to-permanent appointments, reorganizations, retirements,
+       new-hire introductions. An assistant town manager or a division
+       director changing jobs is not news. Leadership churn IS news only when
+       the post is genuinely consequential (town manager, superintendent,
+       police chief, finance director) or when the move is itself contested —
+       a firing, a resignation under pressure, a no-confidence vote, a
+       vacancy the body argued about.
+     - awards, rankings and "best places" citations, including third-party
+       ones the staff quoted. A town being named a top anything by a website
+       is promotion, not news.
+     - attendance reports, event recaps, thank-yous, and staff travel.
+   From a staff or manager's report, keep the DATA that shows a trend —
+   permit counts, revenue, response times, caseloads, enrollment — and drop
+   the announcements around it. The numbers are the story; the roundup is not.
 10. Never state a person's job title, employer, board membership, past role or
     any other biographical detail unless it appears in the source documents or
     is stated plainly in the transcript. If you know only a name, use only the

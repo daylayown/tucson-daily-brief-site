@@ -15,7 +15,9 @@
       "sahuarita.people: pronouns unset for John Sparks, Tony Bruno, Denise Reis, Raul Rodriguez, Amy Petersmarck, Manuel O. Valenzuela, Ed.D. — confirm on susd30.us before adding (do not infer from name)",
       "sahuarita.people: Tony Bruno — district site says 'Tony', roll call says 'Anthony Bruno'. Formal vs informal, NOT a misread; decide which form reports should use. Do not add 'Anthony' to deepgram_misreads.",
       "sahuarita.people: John Sparks — addressed as 'doctor John Sparks' at roll call; confirm the doctorate on susd30.us before putting Dr. in his title (transcript-only for now).",
-      "sahuarita.people: Lisette Huey (Chief Financial Officer) and an unnamed assistant superintendent were called at the 2026-07-08 roll call but are NOT on susd30.us's leadership page as fetched. Transcript-only = hypothesis; verify before adding."
+      "sahuarita.people: Lisette Huey (Chief Financial Officer) and an unnamed assistant superintendent were called at the 2026-07-08 roll call but are NOT on susd30.us's leadership page as fetched. Transcript-only = hypothesis; verify before adding.",
+      "marana.people: Dennis Shannon and Bennett Burke — members of the public who gave speaker cards 2026-08-04. Transcript-only spellings; confirm before printing a private citizen's name (Burke referenced an article he submitted to the Arizona Daily Star, which is externally checkable).",
+      "marana: 'Seward Basin 20' (2026-08-04 wastewater item) — transcript-only, absent from the agenda and looks like a mangled development/basin name. Ear-check the recording before it appears in print."
     ],
     "scope_note": "Regional bucket also holds state-level officials (e.g., Arizona Auditor General) since they appear at any municipality's meetings and don't belong in any single municipality bucket. School districts get their own bucket keyed on the slug prefix used by agenda_mining_sahuarita.py / ai_reporter.py (e.g. 'sahuarita').",
     "pronouns_note": "Pronouns are injected so the model does not infer gender from a name (root cause of a 2026-07-14 Pima County draft misgendering Supervisor Andrés Cano). Only add pronouns that are evidenced — transcript honorifics/pronoun use, or documented public record. If unknown, leave the field off and add the person to verification_needed rather than guessing."
@@ -436,7 +438,9 @@
         "canonical": "Patrick Cavanaugh",
         "title": "Council Member",
         "deepgram_misreads": [
-          "Kavanagh"
+          "Kavanagh",
+          "Kavanaugh",
+          "McVaughnaw"
         ]
       },
       {
@@ -462,7 +466,11 @@
       },
       {
         "canonical": "Terry Rozema",
-        "title": "Town Manager"
+        "title": "Town Manager",
+        "deepgram_misreads": [
+          "Ozima",
+          "Rosemont"
+        ]
       },
       {
         "canonical": "David L. Udall",
@@ -479,6 +487,12 @@
       }
     ],
     "places": [
+      {
+        "canonical": "Marana",
+        "deepgram_misreads": [
+          "Rana"
+        ]
+      },
       {
         "canonical": "Marana Municipal Complex"
       },
