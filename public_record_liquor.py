@@ -465,7 +465,7 @@ def render_filing_html(data: dict, source_meta: dict, meeting_date: str, page_sl
 
 <hr>
 
-<p class="filing-disclosure"><em>This is a public record filing surfaced automatically from the {escape_html(body_name)} agenda. Tucson Daily Brief is interested in talking to the people behind new businesses opening in our community — if you&rsquo;re affiliated with this filing and would like to share more about your plans, <a href="mailto:nicholas@tucsondailybrief.com">get in touch</a>.</em></p>
+<p class="filing-disclosure"><em>This is a public record filing surfaced automatically from the {escape_html(body_name)} agenda. Tucson Daily Brief is interested in talking to the people behind new businesses opening in our community — if you&rsquo;re affiliated with this filing and would like to share more about your plans, <a href="mailto:editor@tucsondailybrief.com">get in touch</a>.</em></p>
 </article>
 </div>
 </main>
