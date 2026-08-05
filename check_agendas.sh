@@ -198,12 +198,18 @@ PREVIEWS=$(echo "$PREVIEWS" | sed '/^$/d')
 # else branch. Its body contains a multi-line NOTIFY_MSG string, and indenting
 # those continuation lines would inject leading whitespace into the Telegram
 # message. Bash does not care about the indentation; the message does.
+# Initialized here, NOT inside the else branch below: every later stage
+# (Spotted, DLLC, both dev watches) increments it, and under `set -u` an
+# increment on a no-new-previews day would kill the script — which is exactly
+# what happened on 2026-08-05, aborting the commit/push and every stage after
+# the Marana dev watch.
+PUBLISHED=0
+
 if [ -z "$PREVIEWS" ]; then
     echo "No new previews to publish (continuing to the remaining stages)."
 else
 
 # Auto-publish each new preview and notify via Telegram
-PUBLISHED=0
 
 while IFS= read -r preview_path; do
     if [ -f "$preview_path" ]; then
@@ -402,7 +408,7 @@ if [ "$PUBLISHED" -gt 0 ]; then
     git add agenda-watch/ meeting-watch/ meeting-watch.html \
             public-record/ public-record.html \
             around-town/ around-town.html local-government.html \
-            index.html briefings.html
+            index.html briefings.html newsletter.html sitemap.xml rss.xml
     git commit -m "Auto-publish meeting preview(s) and public record filing(s) for $(date +%Y-%m-%d)" || true
     git push
     echo "Pushed to GitHub Pages."
