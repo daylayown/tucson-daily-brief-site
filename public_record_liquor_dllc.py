@@ -329,8 +329,6 @@ def render_dllc_filing_html(row: dict, discovered: datetime, page_slug: str) -> 
 <hr>
 
 <p class="filing-disclosure"><em>This liquor license was surfaced automatically from the Arizona Department of Liquor Licenses and Control&rsquo;s public license database. Tucson Daily Brief is interested in talking to the people behind new businesses opening in our community &mdash; if you&rsquo;re affiliated with this license and would like to share more about your plans, <a href="mailto:editor@tucsondailybrief.com">get in touch</a>.</em></p>
-
-<p class="filing-meta"><em>Generated {discovered.strftime('%Y-%m-%d')} by Tucson Daily Brief&rsquo;s Spotted pipeline. All fields are structured records from the state license database &mdash; no AI extraction involved. Source: Arizona DLLC.</em></p>
 </article>
 </div>
 </main>

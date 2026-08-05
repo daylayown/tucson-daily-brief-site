@@ -1288,15 +1288,6 @@ article.post-page p.source {
   font-style: italic;
 }
 
-.filing-meta {
-  font-size: var(--t-small);
-  color: var(--ink-quiet);
-  font-style: italic;
-  margin-top: var(--gap-l);
-  padding-top: var(--gap-m);
-  border-top: 1px solid var(--rule);
-}
-
 /* ─── Back link ─── */
 
 .back-link {
