@@ -27,6 +27,7 @@ import urllib.parse
 import urllib.request
 from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from generate_post import (
     ANALYTICS_HTML,
@@ -64,6 +65,40 @@ CLAUDE_MODEL = "claude-sonnet-4-6"
 # Deepgram spellings and without the pronouns rule. "sahuarita" (the first school
 # district) was added 2026-08-04 for exactly that reason.
 MUNICIPALITY_PREFIXES = ("pima-county", "tucson", "marana", "orovalley", "sahuarita")
+
+
+AZ = ZoneInfo("America/Phoenix")  # Arizona: no DST, ever
+
+
+def meeting_date_from_meta(meta: dict) -> str:
+    """The meeting's LOCAL calendar date, as YYYY-MM-DD.
+
+    Not `started_at[:10]`. That field is UTC, so any meeting starting at or
+    after 5 p.m. Arizona time stamps as the following day — a 6 p.m. council
+    meeting on Aug 4 is "2026-08-05T00:55:00+00:00". Evening meetings are the
+    norm for every body TDB covers, so that slice was wrong for essentially
+    every report.
+
+    It reached the drafting PROMPT (generate_news_report) as well as the draft
+    header, meaning the model was told the wrong date. The 2026-08-04 Marana
+    report came out correct anyway only because the mined agenda carried the
+    real date and the prompt ranks documents above the transcript — so the bug
+    was masked wherever an agenda existed, and would have surfaced on a special
+    meeting or any capture whose agenda never posted. Published metadata was
+    never affected; publish_report() derives its date from the slug.
+
+    The slug is preferred here for the same reason: it is the local date the
+    scheduler worked from, so it agrees with the published page by
+    construction. Converting `started_at` into Arizona time is the fallback.
+    """
+    m = re.search(r"(\d{4}-\d{2}-\d{2})", meta.get("slug") or "")
+    if m:
+        return m.group(1)
+    started = meta.get("started_at") or ""
+    try:
+        return datetime.fromisoformat(started).astimezone(AZ).date().isoformat()
+    except ValueError:
+        return started[:10] or "unknown"
 
 
 def municipality_from_slug(slug: str) -> str | None:
@@ -268,7 +303,7 @@ def generate_news_report(data: dict, force: bool = False) -> str | None:
     slug = meta.get("slug", "unknown")
     duration_sec = meta.get("duration_seconds", 0)
     duration_str = f"{duration_sec // 3600}h {(duration_sec % 3600) // 60}m" if duration_sec else "unknown"
-    meeting_date = meta.get("started_at", "")[:10] or "unknown"
+    meeting_date = meeting_date_from_meta(meta)
     has_diarization = meta.get("diarization", False)
 
     formatted_transcript = format_transcript_for_prompt(data)
@@ -393,7 +428,7 @@ def save_draft(data: dict, report_text: str) -> Path:
     meta = data["meta"]
     slug = meta.get("slug", "unknown")
     title = meta.get("title", "Meeting")
-    meeting_date = meta.get("started_at", "")[:10] or "unknown"
+    meeting_date = meeting_date_from_meta(meta)
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
 
     header = f"""*Draft generated {now} by Tucson Daily Brief AI Reporter using {CLAUDE_MODEL}.*
