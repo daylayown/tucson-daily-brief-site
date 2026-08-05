@@ -197,13 +197,39 @@ Remaining, in priority order:
 
 Flash writes the post text as a **compression-only** task: input is the page's own extracted text, no outside facts, derived v1 text as automatic fallback when output fails checks (too long / names not present in source — the provenance-gate trick, reused). Cost is fractions of a cent per day. Bake-off lessons that apply (PIPELINE.md): Flash **thinks by default and overthinks** (cap/disable thinking for captions); OpenAI-compatible endpoint → reuse the `run_chat()` shape from `brief_model_ab.py`, not `call_claude()`; PRC hosting settled 2026-07-31, don't re-raise. Governance: model-written captions are reader-facing news text → per Part 2's tiered rule, either Telegram one-tap or the compression-only + fallback guard. Decide when v2 starts; v1 doesn't need it.
 
-### Other ATProto plays, ranked
+### Bluesky-powered article comments (SHIPPED 2026-08-05)
 
+Every article page carries a hidden `<section id="bsky-comments">` (chrome constant
+`BLUESKY_COMMENTS_HTML` in `generate_post.py`, interpolated before `</article>` in the
+brief template and all seven section renderers; a one-time sweep patched 369 published
+pages). `/assets/bsky-comments.js` (vanilla, no deps) looks up the page's canonical URL
+in `/assets/bluesky-posts.json`, fetches the post's reply thread from the **public
+AppView** (`public.api.bsky.app`, unauthenticated, CORS-open), and renders replies —
+chronological, nesting capped at 3, labeled replies skipped, everything inserted via
+`textContent` (no HTML injection path). Pages with no Bluesky post keep the section
+hidden; zero-reply pages show a "Be the first to comment" CTA. **No backend.**
+
+The map is exported by `bluesky_poster.py::export_public_map()` from its ledger (real
+posts only — seeded/stale entries have no thread) after every posting run, and
+committed/pushed by `push_public_map()` (non-fatal; all pushes originate from this
+laptop so races don't bite). So a new page's comment section lights up when the 6:45 AM
+/ 4:45 PM poster run posts it — same latency as the Bluesky post itself.
+
+Dev preview on any article page: `?bsky-uri=<at://…/app.bsky.feed.post/…>` overrides
+the map lookup. Verified live 2026-08-05 in-browser: zero-reply CTA path on a real
+article + full thread render via the override.
+
+### Starter pack (SHIPPED 2026-08-05) + other ATProto plays, ranked
+
+0. ~~Starter pack~~ — **"Tucson News & Community"**, 34 accounts, created entirely via
+   the protocol (list + listitems + starterpack records):
+   https://bsky.app/starter-pack/tucsondailybrief.com/3msdxceiw672s
+   Roster + skip reasons (kept private): `../tucson-daily-brief-notes/bluesky-starter-pack-roster.md`.
+   Announced as a reply under the pinned post. Add/remove = listitem records or the app.
 1. ~~Domain handle~~ — day one, see above.
-2. **Tucson custom feed generator** — a subscribable "Tucson News" feed (TDB + Star + Sentinel + AZPM + local reporters) via Jetstream + feed-skeleton service on Fly next to `tdb-ask`. TDB owns a *distribution surface*, not just an account. Real multi-session project — ROADMAP it, gated.
-3. **Starter pack** of Southern-AZ civic accounts — manual, ten minutes, do once the account has content.
-4. **Custom lexicons for civic records** (k3-adjacent) — no consumer exists today; parked as a note.
-5. **Self-hosted PDS** — skip, buys nothing at this scale.
+2. **Tucson custom feed generator** — a subscribable "Tucson News" feed (TDB + Star + Sentinel + AZPM + local reporters) via Jetstream + feed-skeleton service on Fly next to `tdb-ask`. TDB owns a *distribution surface*, not just an account. Real multi-session project — ROADMAP it, gated. The starter-pack roster doubles as its seed list.
+3. **Custom lexicons for civic records** (k3-adjacent) — no consumer exists today; parked as a note.
+4. **Self-hosted PDS** — skip, buys nothing at this scale.
 
 **Effort:** v1 ≈ one session; v2 ≈ +1 hour; feed generator = its own project.
 

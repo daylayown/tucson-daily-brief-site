@@ -19,9 +19,9 @@ item — a warm walk through every way readers can talk to us and follow along:
 - **Bluesky** — we're now @tucsondailybrief.com; mention the "Tucson News &
   Community" starter pack (34 local accounts, one tap):
   https://bsky.app/starter-pack/tucsondailybrief.com/3msdxceiw672s
-  If the Bluesky-powered article comments ship before Saturday (in progress
-  2026-08-05), tell readers they can now comment on any TDB article by replying
-  on Bluesky — verify it's live before including.
+  Comments are LIVE (shipped + verified 2026-08-05): tell readers they can now
+  comment on TDB articles — each story links to its Bluesky post, and replies
+  there appear right on the article page.
 - **Instagram** — @tucsondailybrief: fun behind-the-scenes stories and reels.
 - Any other standing channels (Facebook page, podcast, ChatTDB) as a closing line.
 
