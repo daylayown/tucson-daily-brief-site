@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Canonical names and places for Southern Arizona municipalities. Loaded by ai_reporter.py and injected into the news-report generation prompt to correct Deepgram mistranscriptions.",
-    "last_updated": "2026-07-28",
+    "last_updated": "2026-08-04",
     "deepgram_misreads_note": "Each known misread observed in a transcript should be added to the `deepgram_misreads` array. The pipeline will tell the LLM to replace any of these with the canonical form.",
     "verification_needed": [
       "regional.people: Suzanne Droubie (Pima County Assessor) — re-verify on pima.gov before relying on",
@@ -11,9 +11,11 @@
       "pima-county.people: Michael Racy — Deepgram rendered as 'Rossi'/'Rask'; confirm current Pima County lobbying contract status",
       "pima-county.people: Sarah Feld — named aloud in the 2026-07-28 IDA appointment motion as the affiliated-nonprofits representative (term to 2028). Transcript-only, no external confirmation; deliberately NOT added as canonical. Confirm via Legistar minutes or Clerk of the Board.",
       "pima-county.people: Daniel Dempsey — nominated for Treasurer 2026-07-28 by Supervisor Cano (motion failed for lack of a second). Transcript-only spelling; withheld from the 2026-07-28 published report rather than printed unverified, same as Sarah Feld.",
-      "pima-county.people: pronouns unset for Nancy Cole, Patrick DeConcini, John H. Payne, Kenneth M. Silverman, Diane Quihuis, Paul Kraft — do not infer from name."
+      "pima-county.people: pronouns unset for Nancy Cole, Patrick DeConcini, John H. Payne, Kenneth M. Silverman, Diane Quihuis, Paul Kraft — do not infer from name.",
+      "sahuarita.people: pronouns unset for John Sparks, Tony Bruno, Denise Reis, Raul Rodriguez, Amy Petersmarck, Manuel O. Valenzuela, Ed.D. — confirm on susd30.us before adding (do not infer from name)",
+      "sahuarita.people/places: deepgram_misreads all empty — populate from the first real transcript (Aug 12 2026 board meeting), do not pre-guess variants"
     ],
-    "scope_note": "Regional bucket also holds state-level officials (e.g., Arizona Auditor General) since they appear at any municipality's meetings and don't belong in any single municipality bucket.",
+    "scope_note": "Regional bucket also holds state-level officials (e.g., Arizona Auditor General) since they appear at any municipality's meetings and don't belong in any single municipality bucket. School districts get their own bucket keyed on the slug prefix used by agenda_mining_sahuarita.py / ai_reporter.py (e.g. 'sahuarita').",
     "pronouns_note": "Pronouns are injected so the model does not infer gender from a name (root cause of a 2026-07-14 Pima County draft misgendering Supervisor Andrés Cano). Only add pronouns that are evidenced — transcript honorifics/pronoun use, or documented public record. If unknown, leave the field off and add the person to verification_needed rather than guessing."
   },
   "pima-county": {
@@ -667,6 +669,94 @@
       },
       {
         "canonical": "Catalina State Park"
+      }
+    ]
+  },
+  "sahuarita": {
+    "people": [
+      {
+        "canonical": "John Sparks",
+        "title": "Governing Board President",
+        "deepgram_misreads": []
+      },
+      {
+        "canonical": "Tony Bruno",
+        "title": "Governing Board Clerk",
+        "deepgram_misreads": []
+      },
+      {
+        "canonical": "Denise Reis",
+        "title": "Governing Board Member",
+        "deepgram_misreads": []
+      },
+      {
+        "canonical": "Raul Rodriguez",
+        "title": "Governing Board Member",
+        "deepgram_misreads": []
+      },
+      {
+        "canonical": "Amy Petersmarck",
+        "title": "Governing Board Member",
+        "deepgram_misreads": []
+      },
+      {
+        "canonical": "Manuel O. Valenzuela, Ed.D.",
+        "title": "Superintendent",
+        "deepgram_misreads": []
+      }
+    ],
+    "places": [
+      {
+        "canonical": "Sahuarita Unified School District",
+        "deepgram_misreads": []
+      },
+      {
+        "canonical": "Sahuarita District Auditorium",
+        "deepgram_misreads": []
+      },
+      {
+        "canonical": "Sahuarita Middle School",
+        "deepgram_misreads": []
+      },
+      {
+        "canonical": "Sahuarita High School",
+        "deepgram_misreads": []
+      },
+      {
+        "canonical": "Sahuarita Intermediate School",
+        "deepgram_misreads": []
+      },
+      {
+        "canonical": "Sahuarita Primary School",
+        "deepgram_misreads": []
+      },
+      {
+        "canonical": "Walden Grove High School",
+        "deepgram_misreads": []
+      },
+      {
+        "canonical": "Anza Trail School",
+        "deepgram_misreads": []
+      },
+      {
+        "canonical": "Copper View Elementary School",
+        "deepgram_misreads": []
+      },
+      {
+        "canonical": "Wrightson Ridge School",
+        "deepgram_misreads": []
+      },
+      {
+        "canonical": "Sopori Elementary School",
+        "deepgram_misreads": []
+      },
+      {
+        "canonical": "Sahuarita Digital Pathways Academy",
+        "deepgram_misreads": []
+      },
+      {
+        "canonical": "Early Childhood Center",
+        "deepgram_misreads": []
       }
     ]
   },

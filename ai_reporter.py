@@ -57,7 +57,13 @@ CLAUDE_MODEL = "claude-sonnet-4-6"
 # Local names + places bible
 # ---------------------------------------------------------------------------
 
-MUNICIPALITY_PREFIXES = ("pima-county", "tucson", "marana", "orovalley")
+# Slug prefixes with a local_names.json bucket. A slug that matches nothing here
+# gets NO canonical-names block at all — not even the shared "regional" bucket —
+# because load_local_names_reference() returns early. So a new body must be added
+# here the same day its miner ships, or its first report is drafted with raw
+# Deepgram spellings and without the pronouns rule. "sahuarita" (the first school
+# district) was added 2026-08-04 for exactly that reason.
+MUNICIPALITY_PREFIXES = ("pima-county", "tucson", "marana", "orovalley", "sahuarita")
 
 
 def municipality_from_slug(slug: str) -> str | None:
