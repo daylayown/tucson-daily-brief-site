@@ -10,6 +10,31 @@ Delete an entry once it has actually sent.
 
 **No corrections currently queued.**
 
+## Queued editorial insert — 2026-08-09 send (user direction, 2026-08-05)
+
+**Lead "story" this week = audience interactivity / how to reach TDB.** Not a news
+item — a warm walk through every way readers can talk to us and follow along:
+
+- **Email** — write to editor@tucsondailybrief.com; Nicholas reads everything.
+- **Bluesky** — we're now @tucsondailybrief.com; mention the "Tucson News &
+  Community" starter pack (34 local accounts, one tap):
+  https://bsky.app/starter-pack/tucsondailybrief.com/3msdxceiw672s
+  If the Bluesky-powered article comments ship before Saturday (in progress
+  2026-08-05), tell readers they can now comment on any TDB article by replying
+  on Bluesky — verify it's live before including.
+- **Instagram** — @tucsondailybrief: fun behind-the-scenes stories and reels.
+- Any other standing channels (Facebook page, podcast, ChatTDB) as a closing line.
+
+**Also this week:** TDB got a shout-out on TWiT's Intelligent Machines
+(ep. 882, aired 2026-08-03 — Paris Martineau, Leo Laporte, Jeff Jarvis:
+https://twit.tv/shows/intelligent-machines/episodes/882), and **Nicholas is on
+This Week in Tech this Sunday 2026-08-09** — tell readers to watch. Keep the
+shout-out framing modest; do NOT repeat the episode's "reads every agenda
+packet / listens to every meeting" claims in our own voice.
+
+**Reminder outside the newsletter:** post an IG story Sat or Sun promoting the
+TWiT appearance (manual).
+
 ---
 
 ## Sent
