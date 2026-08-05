@@ -65,6 +65,22 @@ STREAM_SOURCES = {
         "mode": "direct",
         "body_name": "Marana Town Council",
     },
+    "sahuarita": {
+        # First school district (added 2026-08-04). Channel @sahuaritausd30
+        # (UCzme1bb_tZwH52MhNWnzE6A) posts EVERY board meeting, next-day, titled
+        # "{Month D, YYYY} Sahuarita Unified School District #30 Board Meeting".
+        #
+        # The handle-based /live URL behaves identically to Pima County's while
+        # offline (streamlink resolves it, finds no live stream), so the
+        # SCHOOL-DATA-FEASIBILITY.md § D worry — that school streams are
+        # per-meeting scheduled events with no channel-level /live redirect —
+        # does not apply to this district. It parses; only a live broadcast
+        # proves capture, hence "unverified" below.
+        "url": "https://www.youtube.com/@sahuaritausd30/live",
+        "mode": "streamlink",
+        "body_name": "Sahuarita Unified Governing Board",
+        "unverified": True,
+    },
 }
 
 
@@ -101,6 +117,8 @@ def municipality_from_basename(basename: str) -> str | None:
         return "tucson"
     if basename.startswith("pima-county"):
         return "pima-county"
+    if basename.startswith("sahuarita"):
+        return "sahuarita"
     return None
 
 
@@ -258,12 +276,15 @@ def schedule_one(
     municipality: str,
     dry_run: bool = False,
     force: bool = False,
+    known_start: str | None = None,
 ) -> int:
     source = STREAM_SOURCES.get(municipality)
     if not source:
         print(f"ERROR: unknown municipality '{municipality}'", file=sys.stderr)
         return 2
-    if not full_ref_path.exists():
+    # A known start time needs no agenda: the whole point is that the body
+    # publishes its schedule, so there is nothing to read out of the packet.
+    if not known_start and not full_ref_path.exists():
         print(f"ERROR: full reference not found: {full_ref_path}", file=sys.stderr)
         return 2
 
@@ -274,9 +295,27 @@ def schedule_one(
         return 2
 
     body_name = source["body_name"]
-    agenda_text = full_ref_path.read_text()
 
-    info = extract_schedule_info(agenda_text, meeting_date, body_name)
+    if known_start:
+        # DERIVED, NOT INFERRED. Sahuarita's governing board publishes an annual
+        # meeting calendar (dates + "Meetings begin at 6 p.m."), so the start
+        # time is a published fact. Handing that agenda to a model to re-guess
+        # the time would be the exact mistake feedback_verify_dont_delegate is
+        # about — a plausible answer replacing one we already have. It also
+        # decouples scheduling from agenda posting: AZ's 24-hour notice rule
+        # means an agenda may not exist until the day before, while the calendar
+        # is published months ahead.
+        info = {
+            "public_session_start": known_start,
+            "has_executive_session": None,
+            "executive_session_start": None,
+            "confidence": "high",
+            "notes": "Start time taken from the body's own published meeting "
+                     "calendar, not extracted from the agenda.",
+        }
+    else:
+        agenda_text = full_ref_path.read_text()
+        info = extract_schedule_info(agenda_text, meeting_date, body_name)
     if not info:
         if not dry_run:
             send_telegram(
@@ -435,6 +474,10 @@ def main() -> int:
     parser.add_argument("--list", action="store_true", help="List currently scheduled recordings")
     parser.add_argument("--all-dry-run", action="store_true",
                         help="Backtest: dry-run every preview in agenda-watch/")
+    parser.add_argument("--start", metavar="ISO8601",
+                        help="Known public-session start (e.g. 2026-08-12T18:00:00-07:00). "
+                             "Skips model extraction and does not require a full reference — "
+                             "use when the body publishes its own meeting calendar.")
     args = parser.parse_args()
 
     if args.list:
@@ -444,8 +487,16 @@ def main() -> int:
         all_dry_run()
         return 0
 
-    if not (args.preview and args.full_ref and args.municipality):
-        parser.error("preview, full_ref, and municipality required (or use --list / --all-dry-run)")
+    # With --start there is no full_ref, so `preview municipality` is the natural
+    # two-argument form. Shift it into place rather than making callers pass a
+    # placeholder path for a file the --start path never reads.
+    if args.start and args.municipality is None and args.full_ref in STREAM_SOURCES:
+        args.municipality, args.full_ref = args.full_ref, None
+    if args.start and not (args.preview and args.municipality):
+        parser.error("--start needs: <preview_path> <municipality>")
+    if not args.start and not (args.preview and args.full_ref and args.municipality):
+        parser.error("preview, full_ref, and municipality required "
+                     "(or use --start / --list / --all-dry-run)")
 
     if not args.dry_run and not check_atd_running():
         msg = "atd daemon is not running — cannot schedule live recordings. Run: sudo systemctl enable --now atd"
@@ -454,8 +505,10 @@ def main() -> int:
         return 3
 
     return schedule_one(
-        Path(args.preview), Path(args.full_ref), args.municipality,
-        dry_run=args.dry_run, force=args.force,
+        Path(args.preview),
+        Path(args.full_ref) if args.full_ref else Path("/nonexistent"),
+        args.municipality,
+        dry_run=args.dry_run, force=args.force, known_start=args.start,
     )
 
 

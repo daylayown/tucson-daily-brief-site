@@ -90,7 +90,8 @@ These are the ones that cost something when forgotten:
 ├── agenda_mining_marana.py      # Marana (Destiny Hosted scrape)
 ├── agenda_mining_orovalley.py   # Oro Valley (Destiny Hosted scrape)
 ├── agenda_mining_tucson.py      # City of Tucson (Hyland OnBase PDF + pdftotext)
-├── check_agendas.sh             # 8 AM cron: 4 miners + Spotted + dev watch + auto-publish + push
+├── agenda_mining_sahuarita.py   # Sahuarita Unified governing board — FIRST school district; schedules captures from the board's published annual calendar, not the agenda
+├── check_agendas.sh             # 8 AM cron: 4 miners + Sahuarita board + Spotted + dev watch + auto-publish + push
 ├── public_record_liquor.py      # Spotted pipeline: liquor filings out of agenda references
 ├── public_record_liquor_dllc.py # Spotted: Marana liquor licenses via AZ DLLC database diff (no AI calls)
 ├── foia_lead_spotter.py         # Weekly: trawl news-reports/ for records-request leads → web-search verify facts/prior-disclosure → draft §39-121 emails → Telegram
@@ -218,7 +219,7 @@ Cost detail, the model bake-off, and the per-model comparison live in `PIPELINE.
 |---|---|---|
 | 6:00 AM daily | `generate_brief.py` via `run_brief.sh` — fetch sources → one synthesis call (`CLAUDE_MODEL = "claude-opus-5"`, `generate_brief.py:99`) → save to canonical path (retry loop, 5 attempts/60s) | `/tmp/brief-gen.log` |
 | 6:10 AM daily | `run_podcast.sh` (6:10 → 7:30 → 6:30 on 2026-07-28, back to **6:10** on 2026-07-30 — see `PIPELINE.md`) — Telegram → blog post + push → daily YouTube Short → podcast script (Haiku) → ElevenLabs TTS → RSS/R2 → YouTube | `/tmp/podcast-gen.log` |
-| 8:00 AM daily | `check_agendas.sh` — 4 agenda miners + Spotted + dev watch + auto-schedule live recordings (`ENABLE_AUTO_SCHEDULE=1`); **Mondays** also publish the weekly "Buried in the Agenda" Short | `/tmp/agenda-check.log` |
+| 8:00 AM daily | `check_agendas.sh` — 4 agenda miners + **Sahuarita governing board** + Spotted + dev watch + auto-schedule live recordings (`ENABLE_AUTO_SCHEDULE=1`); **Mondays** also publish the weekly "Buried in the Agenda" Short. ⚠️ Known issue: the "no new previews" early exit skips every stage after the preview loop (Spotted, DLLC, both dev watches, Monday short, geo editions, staleness check) — the Sahuarita stage is placed above it for that reason | `/tmp/agenda-check.log` |
 | 6:45 AM + 4:45 PM daily | `run_bluesky_post.sh` — Bluesky ledger-diff poster catch-all (also runs at the end of `check_agendas.sh`); fully derived from `sitemap.xml` + each page's og: meta, no AI calls — see `SOCIAL-AUTOPOST.md` Part 3 | `/tmp/bluesky-post.log` |
 | 8:45 AM daily | `refresh_ask_index.sh` — rebuild RAG index + `fly deploy` (baked index would otherwise freeze answers) | `/tmp/ask-index-refresh.log` |
 | 9:30 AM Mon | `run_foia_spotter.sh` — FOIA Lead Spotter: scan new published news reports for records-request leads, **web-search-verify each lead** (facts accurate? already public? — catches AI-paraphrased program names from our own reports), draft A.R.S. § 39-121 request emails to `records-requests/drafts/`, Telegram alert. **Nothing sends automatically** — human reviews and sends from `nicholas@daylayown.org` | `/tmp/foia-spotter.log` |

@@ -130,7 +130,35 @@ NAEP API works (`nationsreportcard.gov/Dataservice/GetAdhocData.aspx?...jurisdic
 - **Diligent (4):** TUSD, Vail, Sahuarita (on `diligentoneplatform.com` host), Tanque Verde. One adapter, two host variants. Portal calendars are JS-rendered, but `/Portal/MeetingInformation.aspx?Org=Cal&Id={n}` is server-rendered HTML and IDs are small sequential ints; agendas/minutes as direct PDF (`/document/{docId}/{slug}/?printPdf=true`).
 - **BoardBook (4):** Amphitheater 2065, Marana 1780, Catalina Foothills 1202, Flowing Wells 1607. Server-rendered HTML (cleanly scrapable, no SPA), direct-PDF verified: `https://meetings.boardbook.org/Documents/DownloadPDF/{GUID}?org={ORG_ID}`. **Lowest-lift adapter.**
 
-**Board video for AI reports (`run_live_reporter.sh`):** 6 clean YouTube YES — **Vail, Marana, Amphitheater, Sahuarita, Sunnyside, Flowing Wells**. Best `/streams` targets: Marana, Flowing Wells, Sahuarita. **TUSD = Livestream.com (HLS)** → use the Swagit-style `--direct` ffmpeg path, not YouTube/streamlink. Catalina Foothills unclear (verify), Tanque Verde none. Note: school streams are typically scheduled live *events* (per-meeting watch URLs), not a channel-level `/live` redirect like Pima County — may need to resolve the upcoming live-event URL per meeting.
+**Board video for AI reports (`run_live_reporter.sh`) — ⛔ THE 2026-06-26 CLAIM HERE WAS WRONG. Corrected 2026-08-04 by checking every channel's actual uploads.**
+
+The original claim was "6 clean YouTube YES — Vail, Marana, Amphitheater, Sahuarita, Sunnyside, Flowing Wells." That verified the districts *have* YouTube channels carrying live streams. They do — of **graduations, choir concerts and staff awards**. Only two post board meetings:
+
+| District | Channel | Board meetings on the channel? |
+|---|---|---|
+| **Sahuarita** | `@sahuaritausd30` (`UCzme1bb_tZwH52MhNWnzE6A`) | ✅ **every meeting**, next-day, `{Month D, YYYY} Sahuarita Unified School District #30 Board Meeting` |
+| **Marana** | `@maranaschools` (`UCR6QjOAchn6MMc7Y6SdEtZw`) | ✅ **every regular meeting**, `MUSD Regular Board Meeting - {date}` |
+| Amphitheater | `@amphitheaterpublicschools4779` | ❌ zero in last 15 uploads — graduations + Distinguished Service Awards |
+| Flowing Wells | `@flowingwellsstream5127` | ❌ zero — the channel is *student media* ("Flowing Wells STREAM") |
+| Sunnyside | `@SunnysideUSD12` | ❌ zero recent; one "Governing Board Public Hearing" from **July 2025** |
+| Vail | main channel = promo ("Meet the Teacher"); separate **"Vail Streaming"** (`UCEbo7IVBlGe0b4NKN7eO6Og`, 362 subs) lists **no videos at all** | ❌ not usable as verified |
+| TUSD | Livestream.com HLS (per the 2026-06 scan) | ❓ still unverified |
+| Catalina Foothills / Tanque Verde | none found | ❌ |
+
+**Method that settled it, reuse this:** YouTube's per-channel Atom feed, `https://www.youtube.com/feeds/videos.xml?channel_id={UC…}` — stable, no scraping, 15 most recent uploads with dates. Get the id from the channel page's `"externalId":"UC…"`. The newer web layout puts titles in `lockupViewModel` (`videoRenderer` is gone), and in-channel `?query=` search returns results that contradict the Live tab, so don't trust it.
+
+**The "scheduled live events, not a channel-level `/live` redirect" worry does NOT apply to Sahuarita.** `https://www.youtube.com/@sahuaritausd30/live` behaves identically to Pima County's working URL while offline (streamlink resolves it, reports no playable stream), so the handle-based `/live` pattern works. Wired into `schedule_recording.py` as `STREAM_SOURCES["sahuarita"]`, flagged `unverified` until a live broadcast proves capture.
+
+**Board meeting cadence (verified from BoardBook/Diligent records, 2026-08-04):**
+
+| District | Day | Frequency | Summer |
+|---|---|---|---|
+| Sahuarita | **Wednesday** 6:00 PM | 2nd + 4th | **meets** (held Jul 8) |
+| Marana | **Thursday** 6:00 PM | 2nd, monthly | recess (no July) |
+| Amphitheater | **Tuesday** 6:00 PM | 2nd, monthly | meets (Jul 14) |
+| Flowing Wells | **Tuesday** 6:00 PM | 2nd + 4th | meets (Jul 7, Jul 28) |
+
+Agenda-source noise to filter: Marana posts many **"Notice of Quorum"** rows (board members attending a school event — not deliberative, do not capture); Catalina Foothills posts **"WEEK IN REVIEW"** (89 of them) and **"FAMILY FACULTY ORGANIZATION"** meetings, which are not the governing board. BoardBook agendas key on a **slug**, not the org ID: `/Public/Agenda/{slug}?meeting={id}` (`marana`, `amphitheater`, `cfsd`, `flowingwells`).
 
 ---
 
@@ -216,7 +244,13 @@ agendas/video per § D for the live AI reporter at school-board meetings.
    - **Report Cards JSON API + azsbe A-F XLSX** → per-district academic report cards (grades, proficiency, grad, enrollment trends).
    - **Urban API** → enrollment-decline + per-pupil + discipline-equity.
    → one `school_data.py` poller (9 districts × the above APIs) feeds Around Town cards, charts, RAG, and originals.
-2. **Meeting coverage pilot = Vail USD** (Diligent + YouTube → preview AND post-meeting report day one; Vail Chamber warm launch). One Diligent adapter then yields TUSD/Sahuarita/Tanque Verde nearly free; BoardBook adapter adds the other 4.
+2. **Meeting coverage pilot = ~~Vail USD~~ → SAHUARITA USD. Built 2026-08-04 (`agenda_mining_sahuarita.py`).** Vail was the wrong pick and the reason is instructive: it was chosen on agenda platform, and *video was never checked per-district*. Vail has no usable board video (above), so the pilot could have produced previews but never a post-meeting report — the half that needs the live reporter. Sahuarita wins on every axis: every meeting streamed, twice monthly, no summer gap, and a published annual calendar. (Vail also has a BoardDocs instance, `go.boarddocs.com/az/vail`, alongside the Diligent portal that still resolves — which of the two is authoritative is unverified.)
+
+   **Pick the pilot on the intersection, not on one axis.** The reporter needs an agenda source AND a stream; either alone is not coverage.
+
+   Two design choices from the build worth carrying to the next district:
+   - **Schedule from the body's published calendar, not the agenda.** Sahuarita publishes every 2026 meeting date months ahead plus a standing "Meetings begin at 6 p.m."; agendas appear only ~24h out (ARS §38-431.02). Splitting them let three captures be scheduled five weeks ahead, and it removed a model call — `schedule_recording.py --start` takes the published time verbatim instead of asking Claude to find it in a packet. Check for an annual calendar before writing any new adapter.
+   - **Diligent serves agendas as rendered HTML from URLs ending `.docx`.** No `pdftotext`, no python-docx. The document's *filename* is truncated by Diligent ("…Agenda, July 8,.docx" — no year) and the link is an empty icon anchor, so match on the agenda's own header line ("Wednesday, July 8, 2026 at 6:00 PM"), which is also where its start time is confirmed. Agenda docs hang off `MeetingInformation.aspx?Id={n}` pages, NOT off `MeetingTypeList.aspx` (which has no `/document/` links at all).
 3. **Override/bond scorecard** (Pima County CSV) — election-cycle cadence.
 4. **Deep-dive only:** AFR PDFs, dropout, full demographic cross-tabs (all behind the ADE Cloudflare wall → headless browser when a specific story needs them).
 

@@ -159,10 +159,34 @@ echo "$OUTPUT"
 PREVIEWS="$PREVIEWS
 $(echo "$OUTPUT" | grep "Saved publishable preview:" | sed 's/.*Saved publishable preview: //' || true)"
 
+# --- Sahuarita Unified Governing Board (Diligent + published board calendar) ---
+# TDB's first school district. Runs as its own self-contained stage rather than
+# feeding $PREVIEWS, because it differs from the municipal miners in two ways:
+# it publishes its own preview inline, and it schedules the live reporter from
+# the board's PUBLISHED annual calendar (schedule_recording.py --start) instead
+# of having a model read a start time out of the agenda.
+#
+# Placed deliberately ABOVE the "no new previews" early exit below: this stage
+# must run every day, because its whole advantage is scheduling a capture for a
+# meeting weeks out, on days when no municipal agenda has dropped at all.
+# Idempotent — re-running no-ops on both the `at` job and the preview.
+echo "Checking Sahuarita Unified Governing Board..."
+SAH_OUTPUT=$(python3 agenda_mining_sahuarita.py 2>&1) \
+    || record_failure "Sahuarita governing board miner" "$SAH_OUTPUT"
+echo "$SAH_OUTPUT"
+
 # Clean up empty lines
 PREVIEWS=$(echo "$PREVIEWS" | sed '/^$/d')
 
 if [ -z "$PREVIEWS" ]; then
+    # ⚠️ KNOWN ISSUE (found 2026-08-04, NOT yet fixed): this early exit skips
+    # every stage below — Spotted, the Marana DLLC poll, both dev-watch
+    # pollers, the Monday short, the geographic editions, and the staleness
+    # check. They therefore only run on days a council posted a new agenda.
+    # The diff-based pollers catch up on their next run so no data is lost, but
+    # Spotted filings and Around Town items are delayed by however many days
+    # pass without a new municipal agenda. The Bluesky poster is unaffected —
+    # it has its own 6:45 AM / 4:45 PM crons.
     echo "No new previews generated."
     exit 0
 fi
