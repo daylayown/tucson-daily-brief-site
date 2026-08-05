@@ -356,7 +356,7 @@ def analyze_with_claude(event: dict, substantive_items: list[dict]) -> str | Non
 
 {context_block}
 
-Your job: identify up to the 5-8 most newsworthy items and explain WHY they matter to Tucson/Pima County residents. Think like a beat reporter — what would your editor want you to cover? What affects people's lives, money, safety, or rights?
+Your job: identify up to the 5-8 most newsworthy items and explain WHY they matter to Tucson/Pima County residents. Think like a beat reporter: what affects people's lives, money, safety, or rights? Write for a resident who has never read an agenda, not for an editor and not for other reporters.
 
 Prioritize:
 1. Policy changes that affect residents (ordinances, zoning, regulations)
@@ -377,7 +377,7 @@ For each item you highlight, write:
 - 2-3 sentences explaining what it is and why it matters
 - Note if it's on the consent calendar (which means it could pass without any discussion)
 
-Format as markdown. Start with a 2-sentence overview: the first sentence must lead with the single most newsworthy item, named concretely ("new rules for where data centers can be built," not "a significant land use item"); the second sentence rounds up the rest of the meeting. Never spend the overview describing the meeting's size or routineness ("a light agenda," "a routine meeting") — describe the news, not the meeting. End after your last item — do NOT append a closing note, editor's note, coverage plan, logistics paragraph, or any remark about the agenda's thinness or what is missing from it. Never state or imply that the Tucson Daily Brief will attend the meeting, and never address other reporters or newsrooms. You are writing for readers, not for an editor. Then list your picks.
+Format as markdown. Start with a 2-sentence overview: the first sentence must lead with the single most newsworthy item, named concretely ("new rules for where data centers can be built," not "a significant land use item"); the second sentence rounds up the rest of the meeting. Then list your picks. NOWHERE in the piece — not the overview, not an item, not a closing line — comment on the meeting's size, thinness, routineness, or on what is absent from the agenda ("a light agenda," "the agenda is thin on major votes," "notably missing is..."). Describe the news, not the meeting. The piece is a published web page: it opens with the overview and ENDS with the last item. There is no closing note, editor's note, coverage plan, logistics paragraph, or sign-off. Never write about the Tucson Daily Brief itself — do not say it will attend, cover, or follow anything.
 
 AGENDA ITEMS:
 

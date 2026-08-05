@@ -312,7 +312,19 @@ def generate_news_report(data: dict, force: bool = False) -> str | None:
     if has_diarization:
         # Count unique speakers
         speakers = set(s.get("speaker") for s in data["segments"] if s.get("speaker") is not None)
-        speaker_note = f"The transcript includes speaker diarization with {len(speakers)} identified speaker(s). Attribute statements using 'Speaker N said' where possible — these can be replaced with real names during editorial review."
+        # This note used to end "these can be replaced with real names during
+        # editorial review," which read as permission to do the replacing itself.
+        # Paired with the canonical-names block, the 2026-08-04 Marana draft
+        # resolved a diarization number into a named vice mayor and put contested
+        # claims in her mouth. Diarization labels are not identities; say so.
+        speaker_note = (
+            f"The transcript includes speaker diarization with {len(speakers)} "
+            f"distinct speaker label(s). These labels are ARBITRARY NUMBERS, not "
+            f"identities — the same person can be split across labels and two "
+            f"people can share one. Never map a label to a name, and never carry "
+            f"a label into the report. Attribute by role unless the transcript "
+            f"names the speaker in the ways rule 3 describes."
+        )
     else:
         speaker_note = "No speaker diarization is available. Attribute statements generically (e.g., 'a spokesperson said', 'one official noted')."
 
@@ -330,8 +342,22 @@ You have just monitored a meeting/briefing. Below is the full transcript. Write 
 Guidelines:
 1. Lead with the single most newsworthy action, decision, or announcement
 2. Use inverted pyramid structure — most important information first
-3. Attribute all statements to speakers
-4. Include specific numbers: vote counts, dollar amounts, dates, statistics
+3. Attribute every statement — but NEVER invent an identity. Diarization gives you
+   speaker NUMBERS, not names: "Speaker 9" is not a person you can name. Name a
+   speaker only where the transcript itself ties the words to that name — they
+   introduce themselves, a roll call establishes it, the chair calls on them by
+   name and they then speak, or someone addresses them by name mid-exchange.
+   Otherwise attribute by role: "a council member said," "staff said," "a
+   resident told the board." A plausible guess about who spoke is a fabricated
+   statement attributed to a real, named person — the worst error this report can
+   contain, and the one most likely to draw a correction demand. Note the
+   canonical-names list below is for SPELLING names the transcript already gives
+   you. It is not a roster to assign lines from.
+4. Include specific numbers: vote counts, dollar amounts, dates, statistics,
+   percentages and completion figures. Use the figure the source gives — never
+   soften a number into a qualifier. "About 30% of the design is done" is NOT
+   "the design is roughly complete." If a figure is spoken in words ("nine and
+   seventy"), render the digits (970) rather than dropping it.
 5. Cover 3-5 major items, with 2-3 paragraphs each
 6. Note any contentious items with disagreement or heated discussion
 7. Do NOT editorialize — report what happened factually
@@ -370,6 +396,17 @@ Guidelines:
     outranks a routine unanimous approval — even when it sits on the consent
     calendar and the routine item led the meeting. Consent items pulled for
     questioning are often the best story in the room.
+13. Names and quotes are for emphasis or genuinely distinctive wording — never to
+    describe what happened. We are not publishing minutes. Do not roster every
+    member who voted, every candidate acknowledged, or every person thanked; if a
+    name is not doing work in its sentence, cut the name and keep the fact. A
+    direct quotation must be verbatim from the transcript — if you cannot
+    reproduce it exactly, paraphrase rather than approximate inside quote marks.
+14. Never name a member of the public from the transcript alone. Their name
+    reached you through speech recognition, which mangles proper nouns, and a
+    misspelled private citizen in a published story is a correction we cannot
+    defend. Write "a resident," "one speaker," "a parent." Officials in the
+    canonical-names list are different — those spellings are verified.
 
 {speaker_note}
 {names_reference}
