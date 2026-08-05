@@ -1801,3 +1801,74 @@ article.post-page p.source {
 .report-table td strong {
   color: var(--accent);
 }
+
+/* ─── Bluesky comments ─── */
+.bsky-comments {
+  margin-top: var(--gap-xl);
+  padding-top: var(--gap-l);
+  border-top: 1px solid var(--rule);
+}
+
+.bsky-comments__head {
+  font-size: 1.25rem;
+  margin-bottom: var(--gap-s);
+}
+
+.bsky-comments__meta {
+  font-size: var(--t-small);
+  color: var(--ink-quiet);
+  margin-bottom: var(--gap-m);
+}
+
+.bsky-comment {
+  margin-bottom: var(--gap-m);
+}
+
+.bsky-comment--nested {
+  margin: var(--gap-m) 0 0 var(--gap-l);
+  padding-left: var(--gap-m);
+  border-left: 2px solid var(--rule);
+}
+
+.bsky-comment__author {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.bsky-comment__avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.bsky-comment__name {
+  font-weight: 600;
+  color: var(--terracotta-dark, var(--terracotta));
+  text-decoration: none;
+}
+
+.bsky-comment__name:hover {
+  text-decoration: underline;
+}
+
+.bsky-comment__date {
+  font-size: var(--t-small);
+  color: var(--ink-quiet);
+}
+
+.bsky-comment__text {
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+.bsky-comments__cta {
+  margin-top: var(--gap-l);
+}
+
+.bsky-comments__cta a {
+  color: var(--terracotta-dark, var(--terracotta));
+  font-weight: 600;
+}

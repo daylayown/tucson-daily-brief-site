@@ -498,6 +498,20 @@ SUBSCRIBE_PANEL_HTML = f"""<div class="subscribe__panel" id="subscribe">
 </div>
 </div>"""
 
+# Bluesky-powered comments on article pages (SOCIAL-AUTOPOST.md Part 3). The
+# section ships hidden; /assets/bsky-comments.js reveals it only when the
+# page's canonical URL appears in /assets/bluesky-posts.json (exported by
+# social/bluesky_poster.py from its posting ledger) — so pages that never got
+# a Bluesky post render nothing, and there is no backend. Every article
+# renderer interpolates this immediately before its closing </article>.
+BLUESKY_COMMENTS_HTML = """<section class="bsky-comments" id="bsky-comments" hidden>
+<h2 class="bsky-comments__head">Comments</h2>
+<p class="bsky-comments__meta" id="bsky-comments-meta"></p>
+<div class="bsky-comments__list" id="bsky-comments-list"></div>
+<p class="bsky-comments__cta"><a id="bsky-comments-link" href="https://bsky.app/profile/tucsondailybrief.com" target="_blank" rel="noopener">Join the conversation on Bluesky</a></p>
+</section>
+<script defer src="/assets/bsky-comments.js"></script>"""
+
 # Header used by every page on the site
 def site_header_html(h1: bool = False) -> str:
     # The wordmark is an <h1> only on the homepage; every other page reserves
@@ -687,6 +701,7 @@ def render_post(date: datetime, body_html: str, headline: str = "") -> str:
 <div class="brief-body">
 {body_html}
 </div>
+{BLUESKY_COMMENTS_HTML}
 </article>
 
 <!--PREVNEXT-START--><!--PREVNEXT-END-->

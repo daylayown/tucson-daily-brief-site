@@ -61,6 +61,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from generate_post import (
+    BLUESKY_COMMENTS_HTML,
     ANALYTICS_HTML,
     seo_head_html,
     derive_description,
@@ -441,6 +442,7 @@ def render_case_html(a: dict, summary: str, date: datetime, page_slug: str = "")
 <hr>
 
 <p class="filing-disclosure"><em>This development project was surfaced automatically from the {escape_html(BODY_NAME)}&rsquo;s public Current &amp; Proposed Projects records. It is in the town&rsquo;s development pipeline &mdash; nothing here is final or approved. Affiliated with this project and want to share more? <a href="mailto:editor@tucsondailybrief.com">Get in touch</a>.</em></p>
+{BLUESKY_COMMENTS_HTML}
 </article>
 </div>
 </main>

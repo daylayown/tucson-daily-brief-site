@@ -33,6 +33,8 @@ SITEMAP = ROOT / "sitemap.xml"
 LEDGER = SOCIAL_DIR / "bluesky-ledger.json"          # gitignored
 SESSION_FILE = SOCIAL_DIR / "bluesky-session.txt"    # gitignored
 
+PUBLIC_MAP = ROOT / "assets" / "bluesky-posts.json"        # published — feeds bsky-comments.js
+
 SITE = "https://tucsondailybrief.com/"
 # Content sections only — hub pages, ask, about, crossword never post.
 SECTIONS = ("posts/", "meeting-watch/", "news-reports/",
@@ -83,6 +85,36 @@ def load_ledger() -> dict:
 
 def save_ledger(ledger: dict) -> None:
     LEDGER.write_text(json.dumps(ledger, indent=1, sort_keys=True) + "\n")
+
+
+def export_public_map(ledger: dict) -> bool:
+    """Write the page-URL → post-URI map that /assets/bsky-comments.js reads.
+
+    Only real posts (entries with a "uri") are exported — seeded and stale
+    entries have no thread to show. Returns True when the file changed.
+    """
+    mapping = {url: rec["uri"] for url, rec in ledger["posted"].items() if rec.get("uri")}
+    text = json.dumps(mapping, indent=1, sort_keys=True) + "\n"
+    if PUBLIC_MAP.exists() and PUBLIC_MAP.read_text() == text:
+        return False
+    PUBLIC_MAP.write_text(text)
+    return True
+
+
+def push_public_map() -> None:
+    """Commit + push the public map so the live site's comment sections light
+    up. Non-fatal: every pipeline pushes from this machine, so failures here
+    just mean the map rides along with the next pipeline push."""
+    import subprocess
+    for cmd in (["git", "add", "assets/bluesky-posts.json"],
+                ["git", "commit", "-m", "Update Bluesky comments map"],
+                ["git", "push"]):
+        r = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
+        if r.returncode != 0:
+            log(f"WARNING: {' '.join(cmd[:2])} failed (non-fatal): "
+                f"{(r.stderr or r.stdout).strip()[:200]}")
+            return
+    log("comments map committed and pushed")
 
 
 def clean(text: str) -> str:
@@ -364,6 +396,8 @@ def main() -> None:
 
     if not args.dry_run:
         save_ledger(ledger)
+        if export_public_map(ledger):
+            push_public_map()
     if failures:
         sys.exit(1)
 

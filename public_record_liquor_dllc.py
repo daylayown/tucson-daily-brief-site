@@ -55,6 +55,7 @@ from pathlib import Path
 import requests
 
 from generate_post import (
+    BLUESKY_COMMENTS_HTML,
     ANALYTICS_HTML,
     ARROW_LEFT_SVG,
     SCROLL_TRIGGER_JS,
@@ -329,6 +330,7 @@ def render_dllc_filing_html(row: dict, discovered: datetime, page_slug: str) -> 
 <hr>
 
 <p class="filing-disclosure"><em>This liquor license was surfaced automatically from the Arizona Department of Liquor Licenses and Control&rsquo;s public license database. Tucson Daily Brief is interested in talking to the people behind new businesses opening in our community &mdash; if you&rsquo;re affiliated with this license and would like to share more about your plans, <a href="mailto:editor@tucsondailybrief.com">get in touch</a>.</em></p>
+{BLUESKY_COMMENTS_HTML}
 </article>
 </div>
 </main>

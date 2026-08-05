@@ -25,6 +25,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 from generate_post import (
+    BLUESKY_COMMENTS_HTML,
     ANALYTICS_HTML,
     seo_head_html,
     derive_description,
@@ -704,6 +705,7 @@ def render_meeting_post(title: str, date: datetime, body_html: str, page_slug: s
 <article id="meeting-{slug}" class="post-page">
 <p class="post-meta">{title}</p>
 {body_html}
+{BLUESKY_COMMENTS_HTML}
 </article>
 </div>
 </main>

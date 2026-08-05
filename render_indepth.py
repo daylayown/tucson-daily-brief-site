@@ -27,6 +27,7 @@ from datetime import datetime
 from pathlib import Path
 
 from generate_post import (
+    BLUESKY_COMMENTS_HTML,
     ANALYTICS_HTML,
     seo_head_html,
     derive_description,
@@ -152,6 +153,7 @@ def render_indepth_post(title: str, date: datetime, body_html: str, slug: str) -
 <article id="indepth-{slug}" class="post-page">
 <p class="post-meta">In Depth &middot; {date.strftime('%B %-d, %Y')}</p>
 {body_html}
+{BLUESKY_COMMENTS_HTML}
 </article>
 </div>
 </main>
