@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Canonical names and places for Southern Arizona municipalities. Loaded by ai_reporter.py and injected into the news-report generation prompt to correct Deepgram mistranscriptions.",
-    "last_updated": "2026-08-04",
+    "last_updated": "2026-08-05",
     "deepgram_misreads_note": "Each known misread observed in a transcript should be added to the `deepgram_misreads` array. The pipeline will tell the LLM to replace any of these with the canonical form.",
     "verification_needed": [
       "regional.people: Suzanne Droubie (Pima County Assessor) — re-verify on pima.gov before relying on",
@@ -17,7 +17,10 @@
       "sahuarita.people: John Sparks — addressed as 'doctor John Sparks' at roll call; confirm the doctorate on susd30.us before putting Dr. in his title (transcript-only for now).",
       "sahuarita.people: Lisette Huey (Chief Financial Officer) and an unnamed assistant superintendent were called at the 2026-07-08 roll call but are NOT on susd30.us's leadership page as fetched. Transcript-only = hypothesis; verify before adding.",
       "marana.people: Dennis Shannon and Bennett Burke — members of the public who gave speaker cards 2026-08-04. Transcript-only spellings; confirm before printing a private citizen's name (Burke referenced an article he submitted to the Arizona Daily Star, which is externally checkable).",
-      "marana: 'Seward Basin 20' (2026-08-04 wastewater item) — transcript-only, absent from the agenda and looks like a mangled development/basin name. Ear-check the recording before it appears in print."
+      "marana: 'Seward Basin 20' (2026-08-04 wastewater item) — transcript-only, absent from the agenda and looks like a mangled development/basin name. Ear-check the recording before it appears in print.",
+      "tucson.people: Roi Lusk — pronouns unset; 2026-08-05 transcript uses 'mister' honorific but the segment is garbled; confirm before adding (do not infer from name)",
+      "tucson.people: Piroschka Glinsky — nickname rendered 'Perry/Peri' in the 2026-08-05 memorial; likely 'Piri' (Hungarian diminutive) but unconfirmed; do not print a nickname",
+      "tucson.people: 2026-08-05 lesson — Mike Rankin was listed as City Attorney a year after his retirement, causing the drafter to 'correct' the transcript's accurate 'Lusk' into the stale 'Rankin'. Re-verify officeholders in this file on a schedule, not just misspellings."
     ],
     "scope_note": "Regional bucket also holds state-level officials (e.g., Arizona Auditor General) since they appear at any municipality's meetings and don't belong in any single municipality bucket. School districts get their own bucket keyed on the slug prefix used by agenda_mining_sahuarita.py / ai_reporter.py (e.g. 'sahuarita').",
     "pronouns_note": "Pronouns are injected so the model does not infer gender from a name (root cause of a 2026-07-14 Pima County draft misgendering Supervisor Andrés Cano). Only add pronouns that are evidenced — transcript honorifics/pronoun use, or documented public record. If unknown, leave the field off and add the person to verification_needed rather than guessing."
@@ -337,8 +340,13 @@
         "title": "Assistant City Manager / Chief Financial Officer"
       },
       {
-        "canonical": "Mike Rankin",
-        "title": "City Attorney"
+        "canonical": "Roi Lusk",
+        "title": "City Attorney (appointed September 2025, succeeding Mike Rankin, who retired 2025-09-10)",
+        "deepgram_misreads": [
+          "Roy Lusk",
+          "Oluskin",
+          "city attorney Rankin"
+        ]
       },
       {
         "canonical": "Yolanda Lozano",
@@ -364,6 +372,26 @@
           "Eric Koerner",
           "Erik Kerner",
           "Doctor Eric Kerner"
+        ]
+      },
+      {
+        "canonical": "Koren Manning",
+        "title": "Director, Planning and Development Services Department (appointed October 2025)",
+        "pronouns": "she/her",
+        "deepgram_misreads": [
+          "Corin Manning",
+          "Corinne Manning",
+          "Corrine Manning"
+        ]
+      },
+      {
+        "canonical": "Piroschka Glinsky",
+        "title": "Principal Assistant City Attorney, civil division (died 2026-08-03; memorialized 2026-08-05)",
+        "pronouns": "she/her",
+        "deepgram_misreads": [
+          "Parashka Puri Glinsky",
+          "Perry",
+          "Peri"
         ]
       }
     ],
@@ -418,6 +446,12 @@
       },
       {
         "canonical": "El Rio Health"
+      },
+      {
+        "canonical": "Rita Ranch",
+        "deepgram_misreads": [
+          "Reeder Ranch"
+        ]
       }
     ]
   },
