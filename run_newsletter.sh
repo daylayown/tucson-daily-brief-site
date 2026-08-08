@@ -62,5 +62,12 @@ echo "Step 2/2: upload_to_buttondown.py"
 echo "Draft file: $LATEST_DRAFT"
 "$PYTHON" upload_to_buttondown.py "$LATEST_DRAFT"
 
+# --- Step 3 (non-fatal): model bake-off on the identical prompt ---
+# Challenger drafts land in newsletter-bake-off/ for side-by-side reading
+# during the review. Never blocks the upload; publishes nothing.
+echo
+echo "Step 3 (optional): newsletter_model_ab.py"
+"$PYTHON" newsletter_model_ab.py || echo "WARN: bake-off failed (non-fatal)" >&2
+
 echo
 echo "$(date): Done"
