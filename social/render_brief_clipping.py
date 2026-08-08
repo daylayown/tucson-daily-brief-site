@@ -68,11 +68,7 @@ def extract_item(date: str, needle: str):
 
 def clipping_html(date: str, section: str, head: str, body: str,
                   sources: list[str]) -> str:
-    from datetime import datetime
-    d = datetime.strptime(date, "%Y-%m-%d")
-    dateline = d.strftime("%A, %B %-d, %Y").upper()
     sun = SUN_SVG.replace("{COLOR}", TERRA)
-    src_line = " &middot; ".join(_html.escape(x) for x in sources)
     return f"""<!DOCTYPE html><html><head><meta charset="utf-8">
 <link rel="stylesheet" href="{FONTS_HREF}">
 <style>
@@ -88,23 +84,18 @@ body {{ background:{SAND}; display:flex; align-items:center; justify-content:cen
 .mast svg {{ width:44px; height:44px; }}
 .wordmark {{ font-family:'Fraunces', serif; font-variation-settings:'opsz' 144,'SOFT' 70,'WONK' 1;
             font-weight:700; font-size:40px; color:{BROWN}; letter-spacing:-0.5px; }}
-.dateline {{ margin-left:auto; font-size:19px; letter-spacing:0.12em; color:{BROWN_L}; }}
 .section {{ margin-top:34px; font-size:20px; font-weight:600; letter-spacing:0.16em;
            text-transform:uppercase; color:{TERRA}; }}
 .head {{ margin-top:18px; font-size:41px; line-height:1.22; font-weight:600; color:{BROWN}; }}
 .body {{ margin-top:22px; font-size:31px; line-height:1.5; color:{BROWN_L}; }}
-.src {{ margin-top:26px; font-size:22px; font-style:italic; color:{BROWN_L};
-       padding-top:20px; border-top:1px solid {DUST}; }}
 .foot {{ margin-top:30px; display:flex; justify-content:space-between; font-size:22px;
         color:{TERRA}; font-weight:600; }}
 </style></head><body>
 <div class="paper">
-  <div class="mast">{sun}<span class="wordmark">Tucson Daily Brief</span>
-    <span class="dateline">{dateline}</span></div>
+  <div class="mast">{sun}<span class="wordmark">Tucson Daily Brief</span></div>
   <div class="section">{_html.escape(section)}</div>
   <div class="head">{_html.escape(head)}</div>
   <div class="body">{_html.escape(body)}</div>
-  <div class="src">Sources: {src_line}</div>
   <div class="foot"><span>Free every morning</span><span>tucsondailybrief.com</span></div>
 </div>
 </body></html>"""
