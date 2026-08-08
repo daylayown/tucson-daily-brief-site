@@ -452,6 +452,7 @@ def footer_html(path_prefix: str = "") -> str:
 <a href="https://www.facebook.com/tucsondailybrief">Facebook</a>
 <a href="https://www.instagram.com/tucsondailybrief">Instagram</a>
 <a href="https://bsky.app/profile/tucsondailybrief.com">Bluesky</a>
+<a href="https://x.com/tusdailybrief">X</a>
 <a href="https://www.linkedin.com/in/nicholas-de-leon-3b5b6a9">LinkedIn</a>
 <a href="mailto:nicholas@tucsondailybrief.com">Email</a>
 </p>
@@ -1284,19 +1285,24 @@ def render_week_glance() -> str:
             f'<section class="week">{"".join(cells)}</section>')
 
 
-# One-day homepage hero override: feature a specific news report as the lead story
-# instead of the daily brief, but ONLY on the given date — the next day's rebuild
-# (e.g. the 6 AM brief run) auto-reverts to the brief. Set to None to disable.
+# Homepage hero override: feature a specific page as the lead story instead of
+# the daily brief, active from "date" through "until" (inclusive; "until"
+# defaults to "date" for the original one-day behavior) — the first rebuild
+# after the window (e.g. the 6 AM brief run) auto-reverts to the brief.
+# Set to None to disable.
+# Sources: "report" / "indepth" (validated against that section's latest item
+# by slug) or "custom" (explicit href + title, any page on the site).
 FEATURED_REPORT_OVERRIDE = {
-    "source": "indepth",   # "report" (default) or "indepth"
-    "slug": "marana-data-center-election",
-    "date": "2026-07-22",
-    "kicker": "In Depth",
-    "cta": "Read the full story",
-    "dek": ("Marana nearly split down the middle on the $5 billion Luckett Road "
-            "data center — but the mayor and every incumbent who approved it kept "
-            "their seats, and the slate that fought it won just one of four council "
-            "seats. How a near-even vote produced a lopsided result."),
+    "source": "custom",
+    "href": "talk-to-us.html",
+    "title": "There are more ways than ever to follow TDB — and talk back",
+    "date": "2026-08-08",
+    "until": "2026-08-09",
+    "kicker": "From the Editor",
+    "cta": "See all the ways to reach us",
+    "dek": ("TDB is now on Bluesky and X, comments are live on every story, and "
+            "a real person answers the email. A quick tour of where to find us — "
+            "and how to talk back."),
 }
 
 
@@ -1330,12 +1336,19 @@ def render_homepage(posts: list[dict],
     # FEATURED_REPORT_OVERRIDE). Active only on its date and only if it's the
     # current latest_report; otherwise the daily brief leads as usual.
     hero_report = None
-    if (FEATURED_REPORT_OVERRIDE
-            and FEATURED_REPORT_OVERRIDE.get("date") == today.strftime("%Y-%m-%d")):
-        _src = FEATURED_REPORT_OVERRIDE.get("source", "report")
-        _cand = latest_indepth if _src == "indepth" else latest_report
-        if _cand and _cand["href"].endswith(f'{FEATURED_REPORT_OVERRIDE["slug"]}.html'):
-            hero_report = _cand
+    if FEATURED_REPORT_OVERRIDE:
+        _start = FEATURED_REPORT_OVERRIDE.get("date", "")
+        _until = FEATURED_REPORT_OVERRIDE.get("until", _start)
+        if _start and _start <= today.strftime("%Y-%m-%d") <= _until:
+            _src = FEATURED_REPORT_OVERRIDE.get("source", "report")
+            if _src == "custom":
+                hero_report = {"href": FEATURED_REPORT_OVERRIDE["href"],
+                               "title": FEATURED_REPORT_OVERRIDE["title"],
+                               "lede": FEATURED_REPORT_OVERRIDE.get("dek", "")}
+            else:
+                _cand = latest_indepth if _src == "indepth" else latest_report
+                if _cand and _cand["href"].endswith(f'{FEATURED_REPORT_OVERRIDE["slug"]}.html'):
+                    hero_report = _cand
 
     if hero_report and posts:
         # Report leads; the brief moves into the "This morning in Tucson" aside
@@ -1776,7 +1789,7 @@ def build_sitemap() -> None:
     root_pages = ["", "briefings.html", "local-government.html", "around-town.html",
                   "meeting-watch.html", "news-reports.html", "public-record.html",
                   "in-depth.html", "ask.html", "about.html", "newsletter.html",
-                  "responsiveness.html"]
+                  "responsiveness.html", "talk-to-us.html"]
     entries = []
 
     def add(path: str, lastmod: str | None = None) -> None:
