@@ -12,6 +12,8 @@ Delete an entry once it has actually sent.
 
 ## Queued editorial insert — 2026-08-09 send (user direction, 2026-08-05)
 
+**STATUS 2026-08-08: spliced into the 2026-08-09 draft as the "Talk to us" section (X added per user, `@tusdailybrief`) and uploaded to Buttondown. Delete this entry once the send actually goes out.**
+
 **Lead "story" this week = audience interactivity / how to reach TDB.** Not a news
 item — a warm walk through every way readers can talk to us and follow along:
 

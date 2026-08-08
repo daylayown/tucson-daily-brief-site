@@ -160,3 +160,22 @@ Reuse the existing TTS pipeline (`generate_podcast.py` flow). Weekly episode is 
    - First real send: Sunday 2026-05-10 (manually scheduled in Buttondown)
 4. Marana coverage in Public Record — pending
 5. Audio version of newsletter — after written newsletter is stable
+
+
+## Model bake-off (started 2026-08-08)
+
+`newsletter_model_ab.py` — can Sonnet 5, GPT-5.6 Sol, or Terra replace the
+production Sonnet 4.6? Same design as `brief_model_ab.py` (byte-identical
+prompt via monkeypatch, publishes nothing, output to gitignored
+`newsletter-bake-off/`); runs automatically as non-fatal Step 3 of
+`run_newsletter.sh`, so every Saturday send adds one comparison. Read
+`newsletter-bake-off/<send-date>-comparison.md` during the review; decision
+after ~2 weeks of data (user's call), on prose quality and hard-rule
+compliance — cost is pocket change at 4 runs/month.
+
+Week 1 (2026-08-09 send): no fabrications in any arm; **Sonnet 5 omitted the
+mandatory crossword link** (hard-rule violation — the disqualifier to watch);
+Sol had the best civic breadth at $0.21/run; Terra solid with the best
+hedging language at $0.08/run. Champion Sonnet 4.6 was the most complete.
+Sonnet 5 costs are INTRO-priced ($2/$10 per MTok) through 2026-08-31 in
+`ab.jsonl` rows — standard is $3/$15.
