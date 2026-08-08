@@ -162,6 +162,14 @@ Reuse the existing TTS pipeline (`generate_podcast.py` flow). Weekly episode is 
 5. Audio version of newsletter — after written newsletter is stable
 
 
+## Draft corrections after upload (learned 2026-08-08)
+
+**Never edit an uploaded draft in the Buttondown UI — it ruins the formatting**
+(user-reported). The fix loop is: edit the local markdown in
+`newsletter/drafts/`, `DELETE /v1/emails/{id}` via the API (the ID is printed
+by `upload_to_buttondown.py` at upload), then re-run
+`upload_to_buttondown.py` on the corrected file.
+
 ## Model bake-off (started 2026-08-08)
 
 `newsletter_model_ab.py` — can Sonnet 5, GPT-5.6 Sol, or Terra replace the
